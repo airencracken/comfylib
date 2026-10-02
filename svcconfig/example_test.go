@@ -35,19 +35,23 @@ func ExamplePaths_DataDir() {
 	config := filepath.Join(dir, "app.confd")
 	contents := "APP_DATA_DIR=\"/srv/app data/\" # where the board lives\nAPP_USER=board\n"
 	if err := os.WriteFile(config, []byte(contents), 0o600); err != nil {
-		log.Fatal(err)
+		log.Print(err)
+		return
 	}
 	if err := os.Unsetenv("APP_DATA_DIR"); err != nil {
-		log.Fatal(err)
+		log.Print(err)
+		return
 	}
 	paths := svcconfig.Paths{Name: "App", Prefix: "APP_", OpenRCConfig: config, OpenRCInstalled: true, DefaultDataDir: "/var/lib/app"}
 	dataDir, err := paths.DataDir("APP_DATA_DIR")
 	if err != nil {
-		log.Fatal(err)
+		log.Print(err)
+		return
 	}
 	user, group, managed, err := paths.Account("app")
 	if err != nil {
-		log.Fatal(err)
+		log.Print(err)
+		return
 	}
 	fmt.Println(dataDir)
 	fmt.Println(user, group, managed)

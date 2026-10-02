@@ -45,8 +45,9 @@ func Example_server() {
 		log.Fatal(err)
 	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
-	if err := sandbox.Run(ctx, bwrap, append(args, "--", "/app/server", "serve"), env); err != nil {
+	err = sandbox.Run(ctx, bwrap, append(args, "--", "/app/server", "serve"), env)
+	stop()
+	if err != nil {
 		log.Fatal(err)
 	}
 }
@@ -88,10 +89,12 @@ func ExampleService_Policy() {
 	data := filepath.Join(root, "data")
 	bundle := filepath.Join(root, "ca.pem")
 	if err := os.Mkdir(data, 0o700); err != nil {
-		log.Fatal(err)
+		log.Print(err)
+		return
 	}
 	if err := os.WriteFile(bundle, nil, 0o600); err != nil {
-		log.Fatal(err)
+		log.Print(err)
+		return
 	}
 	args, env, err := sandbox.Service{
 		Prefix:     "APP_",
@@ -101,7 +104,8 @@ func ExampleService_Policy() {
 		Env:        []string{"APP_SMTP_PASSWORD=secret", "TZ=UTC", "GITHUB_TOKEN=unrelated", "SSL_CERT_FILE=" + bundle},
 	}.Policy()
 	if err != nil {
-		log.Fatal(err)
+		log.Print(err)
+		return
 	}
 	for _, entry := range env {
 		if !strings.HasPrefix(entry, "APP_DATA_DIR=") {

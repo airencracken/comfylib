@@ -34,6 +34,12 @@ linters:
       - path: _test\.go
         linters: [gosec]
         text: "G101|G702"
+      # Property tests draw from a seeded math/rand so a failure replays;
+      # fixtures stand in for executables such as bwrap, so they need the
+      # execute bit; and integration tests request their own loopback servers.
+      - path: _test\.go
+        linters: [gosec]
+        text: "G404|G306|G704"
 
 formatters:
   enable:

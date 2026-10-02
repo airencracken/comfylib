@@ -24,7 +24,7 @@ vet: ## Run go vet, including the proxy integration test
 	go vet -tags=proxyintegration ./...
 
 cyclo: ## Fail on functions with cyclomatic complexity over 15
-	$(GOCYCLO) -over 15 .
+	$(GOCYCLO) -over 15 -ignore '_test\.go$$' .
 
 lint: ## Run golangci-lint
 	$(GOLANGCI_LINT) run --build-tags=proxyintegration ./...

@@ -160,7 +160,7 @@ func TestReaperConcurrencyWithManyOwners(t *testing.T) {
 				case code == 0 && err != nil:
 					failures <- err
 				case code != 0 && (!errors.As(err, &exit) || exit.ExitCode() != code):
-					failures <- fmt.Errorf("exit %d was reported as %v", code, err)
+					failures <- fmt.Errorf("exit %d was reported as %w", code, err)
 				}
 			}
 		})

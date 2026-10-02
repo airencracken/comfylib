@@ -190,12 +190,17 @@ func serviceHelper() int {
 }
 
 func get(url string, status int) int {
-	response, err := http.Get(url)
+	request, err := http.NewRequestWithContext(context.Background(), http.MethodGet, url, nil)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return status
 	}
-	if err := response.Body.Close(); err != nil || response.StatusCode != 200 {
+	response, err := http.DefaultClient.Do(request)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return status
+	}
+	if err := response.Body.Close(); err != nil || response.StatusCode != http.StatusOK {
 		return status + 1
 	}
 	return 0
@@ -212,9 +217,9 @@ func TestRealServiceBoundaryAndGracefulStop(t *testing.T) {
 	if err := os.WriteFile(secret, []byte("private"), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	host := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(200) }))
+	host := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusOK) }))
 	defer host.Close()
-	private := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(200) }))
+	private := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusOK) }))
 	defer private.Close()
 	bundle := filepath.Join(root, "private ca.pem")
 	if err := os.WriteFile(bundle, pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: private.Certificate().Raw}), 0o600); err != nil {

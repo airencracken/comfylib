@@ -19,13 +19,13 @@ app pins an exact version.
 | --- | --- |
 | [`clientip`](clientip) | Finds the client address behind trusted reverse proxies, groups IPv6 clients by /64 for rate limits, and tells whether the original request used HTTPS. |
 | [`keyfile`](keyfile) | Loads a key from its own file, creating it atomically on first use, in raw or hex form. |
+| [`privdrop`](privdrop) | Re-runs administrative commands as the service account, refusing to run them as root. |
 | [`proxyconfig`](proxyconfig) | Prints a validated Caddy, nginx or Apache site configuration from an app's own examples. |
 | [`proxyconfig/proxytest`](proxyconfig/proxytest) | Runs those configurations in real nginx and Apache servers for an app's integration tests. |
+| [`sandbox`](sandbox) | Confines a service and its child processes with Bubblewrap, and reaps orphans when the service is PID 1. |
 | [`smtp`](smtp) | Sends transactional mail through a relay with required TLS, header-injection checks, and no logging of message bodies. |
+| [`svcconfig`](svcconfig) | Reads a service's settings, data directory and account the way OpenRC and systemd pass them. |
 | [`token`](token) | Mints random tokens, hashes them for storage, and compares them in constant time. |
-
-The sandbox, service-configuration and privilege-dropping packages arrive
-separately.
 
 ## Checks
 

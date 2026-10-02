@@ -1,0 +1,6 @@
+func Credential(username, group string) (*syscall.Credential, error)
+func HasHelpFlag(args []string) bool
+func Reexec(r Request) (handled bool, status int, err error)
+func RefuseRoot(euid int, command, hint string) error
+func WithEnvironment(env []string, set map[string]string) []string
+type Request struct { Args []string; Commands map[string]bool; Paths svcconfig.Paths; DefaultUser string; Settings func(command, dataDir string) (map[string]string, error) }

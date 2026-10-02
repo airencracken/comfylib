@@ -1,0 +1,346 @@
+[
+    {
+        "name": "smtp Disabled logging nothing",
+        "file": "smtp/smtp.go",
+        "before": "func (Disabled) Send(context.Context, Message) error { return ErrDisabled }",
+        "after": "func (Disabled) Send(_ context.Context, msg Message) error { println(msg.Body); return ErrDisabled }",
+        "package": "./smtp",
+        "run": "^TestDisabledSenderRefusesWithoutLogging$"
+    },
+    {
+        "name": "smtp subject encoding",
+        "file": "smtp/smtp.go",
+        "before": "encodeSubject(sanitiseHeader(msg.Subject))",
+        "after": "sanitiseHeader(msg.Subject)",
+        "package": "./smtp",
+        "run": "^TestSubjectsAreEncodedForMail$"
+    },
+    {
+        "name": "smtp encoding of subjects that look encoded",
+        "file": "smtp/subject.go",
+        "before": "if strings.Contains(subject, \"=?\") {",
+        "after": "if false {",
+        "package": "./smtp",
+        "run": "^TestSubjectsAreEncodedForMail$"
+    },
+    {
+        "name": "smtp subject folding",
+        "file": "smtp/subject.go",
+        "before": "if column+1+len(word) > foldWidth {",
+        "after": "if false {",
+        "package": "./smtp",
+        "run": "^TestSubjectsAreEncodedForMail$"
+    },
+    {
+        "name": "smtp subject CRLF rejection",
+        "file": "smtp/smtp.go",
+        "before": "if strings.ContainsAny(msg.Subject, \"\\r\\n\") {",
+        "after": "if false {",
+        "package": "./smtp",
+        "run": "^TestSendRejectsHeaderInjection$"
+    },
+    {
+        "name": "smtp recipient CRLF rejection",
+        "file": "smtp/smtp.go",
+        "before": "if r < 0x21 || r == 0x7f ||",
+        "after": "if r == 0x7f ||",
+        "package": "./smtp",
+        "run": "^TestSendRejectsHeaderInjection$"
+    },
+    {
+        "name": "smtp From validation in New",
+        "file": "smtp/smtp.go",
+        "before": "return nil, fmt.Errorf(\"smtp: sender: %w\", err)",
+        "after": "address = &mail.Address{Address: cfg.From}",
+        "package": "./smtp",
+        "run": "^TestNewValidatesConfig$"
+    },
+    {
+        "name": "smtp From canonical form",
+        "file": "smtp/smtp.go",
+        "before": "\treturn address.String(), nil\n}",
+        "after": "\t_ = address\n\treturn value, nil\n}",
+        "package": "./smtp",
+        "run": "^TestParseFromCanonicalisesAndRejectsHostileSenders$"
+    },
+    {
+        "name": "smtp STARTTLS required",
+        "file": "smtp/smtp.go",
+        "before": "if s.cfg.Mode == TLSStartTLS {",
+        "after": "if s.cfg.Mode == TLSStartTLS && false {",
+        "package": "./smtp",
+        "run": "^TestStartTLSRefusesUnencryptedRelay$"
+    },
+    {
+        "name": "smtp certificate verification",
+        "file": "smtp/smtp.go",
+        "before": "RootCAs:    s.cfg.RootCAs,",
+        "after": "RootCAs: s.cfg.RootCAs, InsecureSkipVerify: true,",
+        "package": "./smtp",
+        "run": "^TestTLSRefusesRelaysThatDoNotVerify$"
+    },
+    {
+        "name": "smtp TLS mode validation",
+        "file": "smtp/smtp.go",
+        "before": "return \"\", fmt.Errorf(\"unknown TLS mode %q; use starttls, implicit, or none\", value)",
+        "after": "return mode, nil",
+        "package": "./smtp",
+        "run": "^(TestNewValidatesConfig|TestParseTLSMode)$"
+    },
+    {
+        "name": "smtp send timeout",
+        "file": "smtp/smtp.go",
+        "before": "ctx, cancel := context.WithTimeout(ctx, s.timeout)",
+        "after": "ctx, cancel := context.WithCancel(ctx)",
+        "package": "./smtp",
+        "run": "^TestSendBoundsStalledConnections$"
+    },
+    {
+        "name": "smtp cancellation of a connected relay",
+        "file": "smtp/smtp.go",
+        "before": "stop := context.AfterFunc(ctx, func() { _ = conn.Close() })",
+        "after": "stop := func() bool { return true }",
+        "package": "./smtp",
+        "run": "^TestSendBoundsStalledConnections$"
+    },
+    {
+        "name": "smtp Message-ID domain validation",
+        "file": "smtp/smtp.go",
+        "before": "validDomain(envelope[at+1:])",
+        "after": "envelope[at+1:] != \"\"",
+        "package": "./smtp",
+        "run": "^TestMessagesCarryAUniqueMessageID$"
+    },
+    {
+        "name": "smtp dot-stuffing only in the transport",
+        "file": "smtp/smtp.go",
+        "before": "return strings.ReplaceAll(body, \"\\n\", \"\\r\\n\")",
+        "after": "return strings.ReplaceAll(strings.ReplaceAll(body, \"\\n.\", \"\\n..\"), \"\\n\", \"\\r\\n\")",
+        "package": "./smtp",
+        "run": "^(TestSendPreservesLeadingDots|TestBodyLineEndings)$"
+    },
+    {
+        "name": "keyfile fsync before link",
+        "file": "keyfile/keyfile.go",
+        "before": "\t\terr = fs.sync(tmp)",
+        "after": "\t\terr = nil",
+        "package": "./keyfile",
+        "run": "^TestCreationSyncsBeforeLinkingAndSyncsTheDirectory$"
+    },
+    {
+        "name": "keyfile link never replaces",
+        "file": "keyfile/keyfile.go",
+        "before": "if err := fs.link(tmp.Name(), path); err != nil {",
+        "after": "if err := os.Rename(tmp.Name(), path); err != nil {",
+        "package": "./keyfile",
+        "run": "^TestTheFirstLinkedKeyWins$"
+    },
+    {
+        "name": "keyfile directory fsync",
+        "file": "keyfile/keyfile.go",
+        "before": "return fs.syncDir(dir)",
+        "after": "return nil",
+        "package": "./keyfile",
+        "run": "^TestCreationSyncsBeforeLinkingAndSyncsTheDirectory$"
+    },
+    {
+        "name": "keyfile race loser reads the winner",
+        "file": "keyfile/keyfile.go",
+        "before": "return load(path, size, enc)",
+        "after": "return key, nil",
+        "package": "./keyfile",
+        "run": "^TestTheFirstLinkedKeyWins$"
+    },
+    {
+        "name": "keyfile temporary name until linked",
+        "file": "keyfile/keyfile.go",
+        "before": "tmp, err := os.CreateTemp(dir, \".\"+filepath.Base(path)+\".tmp-*\")",
+        "after": "tmp, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0o600)",
+        "package": "./keyfile",
+        "run": "^TestACrashBeforeLinkingLeavesNoKeyFile$"
+    },
+    {
+        "name": "keyfile hex encoding",
+        "file": "keyfile/keyfile.go",
+        "before": "return []byte(hex.EncodeToString(key) + \"\\n\")",
+        "after": "return key",
+        "package": "./keyfile",
+        "run": "^TestNewFilesUseTheRequestedEncoding$"
+    },
+    {
+        "name": "keyfile raw length check",
+        "file": "keyfile/keyfile.go",
+        "before": "if len(data) != size {",
+        "after": "if len(data) < size {",
+        "package": "./keyfile",
+        "run": "^TestInvalidKeyFilesAreReportedAndNeverReplaced$"
+    },
+    {
+        "name": "keyfile owner-only permissions",
+        "file": "keyfile/keyfile.go",
+        "before": "err = tmp.Chmod(0o600)",
+        "after": "err = tmp.Chmod(0o644)",
+        "package": "./keyfile",
+        "run": "^TestKeyFileIsCreatedOnceAndReused$"
+    },
+    {
+        "name": "keyfile bounded read",
+        "file": "keyfile/keyfile.go",
+        "before": "io.LimitReader(file, int64(maxEncodedLen(size, enc))+1)",
+        "after": "file",
+        "package": "./keyfile",
+        "run": "^TestOversizedFilesAreNotReadWhole$"
+    },
+    {
+        "name": "token constant-time Equal",
+        "file": "token/token.go",
+        "before": "return subtle.ConstantTimeCompare(left[:], right[:]) == 1",
+        "after": "return string(left[:]) == string(right[:])",
+        "package": "./token",
+        "run": "^TestComparisonsAreConstantTime$"
+    },
+    {
+        "name": "token constant-time VerifyPrefixed",
+        "file": "token/token.go",
+        "before": "return subtle.ConstantTimeCompare([]byte(Hash(presented)), []byte(storedHash)) == 1",
+        "after": "return Hash(presented) == storedHash",
+        "package": "./token",
+        "run": "^TestComparisonsAreConstantTime$"
+    },
+    {
+        "name": "token prefixed alphabet",
+        "file": "token/token.go",
+        "before": "if !base36(parts[1], PrefixLen) || !base36(parts[2], SecretLen) {",
+        "after": "if len(parts[1]) != PrefixLen || len(parts[2]) != SecretLen {",
+        "package": "./token",
+        "run": "^TestSplitPrefixedRejectsAnythingElse$"
+    },
+    {
+        "name": "token unbiased characters",
+        "file": "token/token.go",
+        "before": "if b < 252 && len(out) < n {",
+        "after": "if len(out) < n {",
+        "package": "./token",
+        "run": "^TestPrefixedCharactersAreUniform$"
+    },
+    {
+        "name": "clientip untrusted peers' headers ignored",
+        "file": "clientip/clientip.go",
+        "before": "\tif !res.trusts(peer) {\n\t\treturn peer\n\t}\n",
+        "after": "",
+        "package": "./clientip",
+        "run": "^TestUntrustedPeersHeadersAreIgnored$"
+    },
+    {
+        "name": "clientip header fields walked from the right",
+        "file": "clientip/clientip.go",
+        "before": "for field := len(values) - 1; field >= 0; field-- {",
+        "after": "for field := 0; field < len(values); field++ {",
+        "package": "./clientip",
+        "run": "^TestClientTrustBoundary$"
+    },
+    {
+        "name": "clientip hops walked from the right",
+        "file": "clientip/clientip.go",
+        "before": "comma := strings.LastIndexByte(rest, ',')",
+        "after": "comma := strings.IndexByte(rest, ',')",
+        "package": "./clientip",
+        "run": "^TestClientTrustBoundary$"
+    },
+    {
+        "name": "clientip trusted hops skipped",
+        "file": "clientip/clientip.go",
+        "before": "if !res.trusts(client) {",
+        "after": "if true {",
+        "package": "./clientip",
+        "run": "^TestClientTrustBoundary$"
+    },
+    {
+        "name": "clientip malformed hops fall back",
+        "file": "clientip/clientip.go",
+        "before": "if err != nil || addr.Zone() != \"\" {\n\t\t\t\treturn peer",
+        "after": "if err != nil {\n\t\t\t\treturn peer",
+        "package": "./clientip",
+        "run": "^TestClientTrustBoundary$"
+    },
+    {
+        "name": "clientip mapped hops unmapped",
+        "file": "clientip/clientip.go",
+        "before": "client = addr.Unmap()",
+        "after": "client = addr",
+        "package": "./clientip",
+        "run": "^TestClientTrustBoundary$"
+    },
+    {
+        "name": "clientip /64 key",
+        "file": "clientip/clientip.go",
+        "before": "return netip.PrefixFrom(addr, 64).Masked().String()",
+        "after": "return netip.PrefixFrom(addr, 128).Masked().String()",
+        "package": "./clientip",
+        "run": "^(TestNetworkKey|TestNetworkKeyIsStableWithinA64)$"
+    },
+    {
+        "name": "clientip ForwardedHTTPS trust",
+        "file": "clientip/clientip.go",
+        "before": "if !ok || !res.trusts(peer) {",
+        "after": "if !ok || !peer.IsValid() {",
+        "package": "./clientip",
+        "run": "^TestForwardedHTTPS$"
+    },
+    {
+        "name": "clientip right-most X-Forwarded-Proto",
+        "file": "clientip/clientip.go",
+        "before": "last := values[len(values)-1]",
+        "after": "last := values[0]",
+        "package": "./clientip",
+        "run": "^TestForwardedHTTPS$"
+    },
+    {
+        "name": "clientip zoned proxy entries rejected",
+        "file": "clientip/clientip.go",
+        "before": "if addrErr != nil || addr.Zone() != \"\" {",
+        "after": "if addrErr != nil {",
+        "package": "./clientip",
+        "run": "^TestParseTrustedRejectsAnythingAmbiguous$"
+    },
+    {
+        "name": "proxyconfig domain validation",
+        "file": "proxyconfig/proxyconfig.go",
+        "before": "if !asciiAlphanumeric(ch) && ch != '-' {",
+        "after": "if ch == '/' {",
+        "package": "./proxyconfig",
+        "run": "^TestProxyConfigRejectsInjectionAndInvalidAddresses$"
+    },
+    {
+        "name": "proxyconfig loopback upstream",
+        "file": "proxyconfig/proxyconfig.go",
+        "before": "return err == nil && address.Zone() == \"\" && address.IsLoopback()",
+        "after": "return err == nil && address.IsValid()",
+        "package": "./proxyconfig",
+        "run": "^TestProxyConfigRejectsInjectionAndInvalidAddresses$"
+    },
+    {
+        "name": "proxyconfig certificate path quoting",
+        "file": "proxyconfig/proxyconfig.go",
+        "before": "strconv.Quote(options.Certificate)",
+        "after": "options.Certificate",
+        "package": "./proxyconfig",
+        "run": "^TestProxyConfigurations$"
+    },
+    {
+        "name": "proxyconfig certificate path characters",
+        "file": "proxyconfig/proxyconfig.go",
+        "before": "!strings.ContainsRune(\"/._- \", ch)",
+        "after": "!strings.ContainsRune(\"/._- ;$\\\"\\\\{}\", ch)",
+        "package": "./proxyconfig",
+        "run": "^TestProxyConfigRejectsInjectionAndInvalidAddresses$"
+    },
+    {
+        "name": "proxyconfig spec check",
+        "file": "proxyconfig/proxyconfig.go",
+        "before": "\tif err := spec.check(); err != nil {\n\t\treturn \"\", err\n\t}\n",
+        "after": "",
+        "package": "./proxyconfig",
+        "run": "^TestInvalidSpecsAreRefused$"
+    }
+]

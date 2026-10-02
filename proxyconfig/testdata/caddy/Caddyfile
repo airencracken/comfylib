@@ -1,0 +1,5 @@
+# Replace this hostname and set the same EXAMPLEAPP_BASE_URL in the service config.
+app.example.org {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:8082
+}

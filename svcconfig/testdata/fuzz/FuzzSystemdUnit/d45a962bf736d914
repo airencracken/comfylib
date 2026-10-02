@@ -1,0 +1,2 @@
+go test fuzz v1
+string("[Service]\nEnvironment=\xf1\xf1\xf1\xf1\xf1\xf1\xf1\U0005c71c00")

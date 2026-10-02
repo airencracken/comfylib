@@ -265,6 +265,11 @@ func TestSystemdEnvironmentFileRejectsHostilePaths(t *testing.T) {
 	if got, err := p.DataDir("APP_DATA_DIR"); err != nil || got != "/srv/unit" {
 		t.Fatalf("resolve = %q, %v; want /srv/unit", got, err)
 	}
+	// On its own, an optional missing file is skipped rather than an error.
+	p = systemdPaths(t, "[Service]\nEnvironment=APP_DATA_DIR=/srv/unit\nEnvironmentFile=-"+filepath.Join(root, "missing.env")+"\n")
+	if got, err := p.DataDir("APP_DATA_DIR"); err != nil || got != "/srv/unit" {
+		t.Fatalf("optional missing file: resolve = %q, %v; want /srv/unit", got, err)
+	}
 	// A symlink is followed like any path; it is the operator's own file.
 	link := filepath.Join(root, "link.env")
 	if err := os.Symlink(present, link); err != nil {

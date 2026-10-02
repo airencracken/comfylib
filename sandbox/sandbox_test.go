@@ -377,6 +377,37 @@ func TestCustomCertificateBundleMustBeAnExistingFile(t *testing.T) {
 	}
 }
 
+// Paths that name real files are still refused when they are relative or
+// contain a line break, so the refusal cannot hinge on the file being absent.
+func TestExistingFilesWithUnsafeNamesAreRefused(t *testing.T) {
+	dir := t.TempDir()
+	t.Chdir(dir)
+	for _, name := range []string{"relative.pem", "line\nbreak.pem", "carriage\rreturn.pem"} {
+		if err := os.WriteFile(filepath.Join(dir, name), nil, 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for _, path := range []string{"relative.pem", "./relative.pem", filepath.Join(dir, "line\nbreak.pem"), filepath.Join(dir, "carriage\rreturn.pem")} {
+		service := Service{Prefix: "TEST_", DataDir: t.TempDir(), Executable: "/usr/bin/true", Env: []string{"SSL_CERT_FILE=" + path}}
+		if _, _, err := service.Policy(); err == nil {
+			t.Errorf("accepted certificate bundle %q", path)
+		}
+		service = Service{Prefix: "TEST_", DataDir: t.TempDir(), Executable: "/usr/bin/true", ReadFiles: []string{path}}
+		if _, _, err := service.Policy(); err == nil {
+			t.Errorf("accepted read mount %q", path)
+		}
+	}
+	if _, _, err := (Service{Prefix: "TEST_", DataDir: t.TempDir(), Executable: "relative.pem"}).Policy(); err == nil {
+		t.Error("accepted a relative executable that exists")
+	}
+	if err := os.Mkdir(filepath.Join(dir, "data"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := (Service{Prefix: "TEST_", DataDir: "data", Executable: "/usr/bin/true"}).Policy(); err == nil {
+		t.Error("accepted a relative data directory that exists")
+	}
+}
+
 func TestReadMountsMustBeExistingFiles(t *testing.T) {
 	dir := t.TempDir()
 	file := filepath.Join(dir, "credentials")

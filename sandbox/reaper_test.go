@@ -62,6 +62,30 @@ func TestReaperLeavesTrackedChildrenForTheirOwner(t *testing.T) {
 	}
 }
 
+// While a child runs, its PID is in the registry, so the reaper cannot take
+// it between its exit and os/exec's Wait. Racing a real reaper finds a missing
+// record only by luck; checking the registry finds it every time.
+func TestRunChildRecordsItsChildWhileRunning(t *testing.T) {
+	cmd := exec.Command("sleep", "5")
+	done := make(chan error, 1)
+	go func() { done <- RunChild(cmd) }()
+	recorded := false
+	for deadline := time.Now().Add(3 * time.Second); time.Now().Before(deadline) && !recorded; time.Sleep(5 * time.Millisecond) {
+		owned.Lock()
+		if cmd.Process != nil {
+			_, recorded = owned.pids[cmd.Process.Pid]
+		}
+		owned.Unlock()
+	}
+	if cmd.Process != nil {
+		_ = cmd.Process.Kill() // ends the sleep; its status is not under test
+	}
+	<-done
+	if !recorded {
+		t.Fatal("RunChild did not record its child")
+	}
+}
+
 // RunChild must forget a child once it has been waited for; otherwise a
 // recycled PID would be shielded from the reaper forever.
 func TestRunChildReleasesItsRecord(t *testing.T) {

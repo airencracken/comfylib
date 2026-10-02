@@ -1,0 +1,10 @@
+[
+    {
+        "name": "addition",
+        "file": "fixture.go",
+        "before": "return a + b",
+        "after": "return a - b",
+        "package": "./",
+        "run": "^TestAdd$"
+    }
+]

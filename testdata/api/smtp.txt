@@ -1,0 +1,63 @@
+package smtp // import "github.com/airencracken/comfylib/smtp"
+
+const DefaultTimeout = 15 * time.Second
+
+var ErrDisabled = errors.New("mail is not configured")
+
+var ErrInvalidMessage = errors.New("smtp: invalid message")
+
+func ParseFrom(value string) (string, error)
+
+type Config struct {
+	Host     string
+	Port     int
+	Username string
+	Password string
+
+	From string
+
+	Mode TLSMode
+
+	Timeout time.Duration
+
+	RootCAs *x509.CertPool
+}
+
+type Disabled struct{}
+
+func (Disabled) Enabled() bool
+
+func (Disabled) Send(context.Context, Message) error
+
+type Message struct {
+	To      string
+	Subject string
+	Body    string
+}
+
+type SMTP struct {
+	// contains filtered or unexported fields
+}
+
+func New(cfg Config) (*SMTP, error)
+
+func (s *SMTP) Enabled() bool
+
+func (s *SMTP) Send(ctx context.Context, msg Message) (err error)
+
+type Sender interface {
+	Enabled() bool
+	Send(ctx context.Context, msg Message) error
+}
+
+type TLSMode string
+
+const (
+	TLSStartTLS TLSMode = "starttls"
+
+	TLSImplicit TLSMode = "implicit"
+
+	TLSNone TLSMode = "none"
+)
+
+func ParseTLSMode(value string) (TLSMode, error)

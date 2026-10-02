@@ -1,0 +1,24 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://github.com/airencracken/comfylib/tools/mutation-schema.json",
+    "title": "Mutation table for tools/mutate.py",
+    "type": "array",
+    "minItems": 1,
+    "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "file", "before", "after", "package", "run"],
+        "properties": {
+            "name": {"type": "string", "minLength": 1},
+            "file": {"type": "string", "minLength": 1, "pattern": "^[^/\\s]\\S*$"},
+            "before": {"type": "string", "minLength": 1},
+            "after": {"type": "string"},
+            "package": {"type": "string", "pattern": "^\\./\\S*$"},
+            "run": {"type": "string", "minLength": 1},
+            "env": {
+                "type": "object",
+                "additionalProperties": {"type": "string"}
+            }
+        }
+    }
+}

@@ -1,0 +1,30 @@
+package proxyconfig // import "github.com/airencracken/comfylib/proxyconfig"
+
+func Render(spec Spec, options Options) (string, error)
+
+func Run(spec Spec, args []string, out io.Writer) error
+
+type Options struct {
+	Server string
+
+	Domain string
+
+	Upstream string
+
+	Certificate, Key string
+}
+
+type Spec struct {
+	App string
+
+	EnvPrefix string
+
+	ExampleDomain   string
+	DefaultUpstream string
+
+	ProxyEnvironment string
+
+	Examples fs.FS
+
+	Paths map[string]string
+}

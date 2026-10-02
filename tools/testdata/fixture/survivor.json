@@ -1,0 +1,10 @@
+[
+    {
+        "name": "greeting",
+        "file": "fixture.go",
+        "before": "return \"hello\"",
+        "after": "return \"goodbye\"",
+        "package": "./",
+        "run": "^TestAdd$"
+    }
+]

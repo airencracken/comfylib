@@ -1,0 +1,17 @@
+package keyfile // import "github.com/airencracken/comfylib/keyfile"
+
+const MaxSize = 1024
+
+var ErrInvalid = errors.New("key file does not hold a valid key")
+
+func Decode(data []byte, size int, enc Encoding) ([]byte, error)
+
+func LoadOrCreate(path string, size int, enc Encoding) ([]byte, error)
+
+type Encoding int
+
+const (
+	Raw Encoding = iota + 1
+
+	Hex
+)

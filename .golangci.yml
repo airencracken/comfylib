@@ -1,0 +1,40 @@
+version: "2"
+
+# The default set (errcheck, govet, ineffassign, staticcheck, unused) plus
+# checks that catch the mistakes this library exists to avoid: unwrapped
+# error comparisons, unclosed bodies, and swallowed errors.
+linters:
+  enable:
+    - bodyclose
+    - copyloopvar
+    - errorlint
+    - gocritic
+    - gosec
+    - misspell
+    - nilerr
+    - unconvert
+    - usestdlibvars
+
+  settings:
+    gosec:
+      excludes:
+        # Opening a path the caller chose is the purpose of keyfile and
+        # the sandbox packages; the paths come from the operator, not a
+        # request.
+        - G304
+        - G703
+        # Starting a configured program (bwrap, a test's own binary) is
+        # deliberate; arguments are passed as a vector, never to a shell.
+        - G204
+
+  exclusions:
+    rules:
+      # Test fixtures are fake secrets by design, and tests re-run their
+      # own binary as a child process.
+      - path: _test\.go
+        linters: [gosec]
+        text: "G101|G702"
+
+formatters:
+  enable:
+    - gofmt

@@ -1,0 +1,28 @@
+package token // import "github.com/airencracken/comfylib/token"
+
+const (
+	PrefixLen = 12
+	SecretLen = 32
+)
+
+const Size = 32
+
+func Equal(a, b string) bool
+
+func Hash(token string) string
+
+func New() (token, hash string)
+
+func SplitPrefixed(scheme, full string) (string, bool)
+
+func VerifyPrefixed(presented, storedHash string) bool
+
+type Prefixed struct {
+	Full string
+
+	Prefix string
+
+	Hash string
+}
+
+func NewPrefixed(scheme string) Prefixed

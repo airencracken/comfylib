@@ -1,0 +1,1 @@
+package comfylib // import "github.com/airencracken/comfylib"

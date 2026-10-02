@@ -1,0 +1,3 @@
+package proxytest // import "github.com/airencracken/comfylib/proxyconfig/proxytest"
+
+func ReverseProxies(t *testing.T, spec proxyconfig.Spec)

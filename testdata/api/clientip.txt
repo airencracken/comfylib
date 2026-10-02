@@ -1,0 +1,13 @@
+package clientip // import "github.com/airencracken/comfylib/clientip"
+
+func NetworkKey(addr netip.Addr) string
+
+func ParseTrusted(value, settingName string) ([]netip.Prefix, error)
+
+type Resolver struct {
+	Trusted []netip.Prefix
+}
+
+func (res Resolver) Client(r *http.Request) netip.Addr
+
+func (res Resolver) ForwardedHTTPS(r *http.Request) bool

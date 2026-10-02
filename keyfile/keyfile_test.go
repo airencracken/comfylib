@@ -15,6 +15,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"syscall"
 	"testing"
 	"testing/quick"
 	"time"
@@ -211,27 +212,41 @@ func TestInvalidKeyFilesAreReportedAndNeverReplaced(t *testing.T) {
 	}
 }
 
-func TestHugeFilesAreRejectedWithoutReadingThemWhole(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "huge.key")
-	file, err := os.Create(path)
-	if err != nil {
-		t.Fatal(err)
-	}
-	// A sparse file costs no disk space but would take gigabytes to read.
-	if err := file.Truncate(8 << 30); err != nil {
-		t.Skip("sparse files unsupported:", err)
-	}
-	if err := file.Close(); err != nil {
-		t.Fatal(err)
-	}
+// An oversized key file is rejected after reading only a little more than a
+// valid one could hold. A FIFO stands in for a huge file: the writer counts
+// what it managed to hand over before the reader stopped listening.
+func TestOversizedFilesAreNotReadWhole(t *testing.T) {
 	for _, enc := range []Encoding{Raw, Hex} {
-		started := time.Now()
-		if _, err := LoadOrCreate(path, 32, enc); !errors.Is(err, ErrInvalid) {
-			t.Fatalf("%s: %v", encodingName(enc), err)
-		}
-		if elapsed := time.Since(started); elapsed > 2*time.Second {
-			t.Fatalf("%s: rejecting the file took %s", encodingName(enc), elapsed)
-		}
+		t.Run(encodingName(enc), func(t *testing.T) {
+			path := filepath.Join(t.TempDir(), "huge.key")
+			if err := syscall.Mkfifo(path, 0o600); err != nil {
+				t.Skip("FIFOs unsupported:", err)
+			}
+			written := make(chan int, 1)
+			go func() {
+				total := 0
+				defer func() { written <- total }()
+				pipe, err := os.OpenFile(path, os.O_WRONLY, 0)
+				if err != nil {
+					return
+				}
+				defer func() { _ = pipe.Close() }() // the count is the result
+				chunk := bytes.Repeat([]byte("a"), 4096)
+				for total < 64<<20 {
+					n, err := pipe.Write(chunk)
+					total += n
+					if err != nil {
+						return
+					}
+				}
+			}()
+			if _, err := LoadOrCreate(path, 32, enc); !errors.Is(err, ErrInvalid) {
+				t.Fatalf("an oversized file was not rejected as invalid: %v", err)
+			}
+			if total := <-written; total >= 1<<20 {
+				t.Fatalf("read %d bytes of an oversized file", total)
+			}
+		})
 	}
 }
 

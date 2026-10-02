@@ -97,13 +97,14 @@ func TestPrefixedTokensRoundTrip(t *testing.T) {
 	}
 }
 
-// A biased alphabet would make some prefixes more likely than others. With
-// 36 symbols and tens of thousands of draws, every symbol must show up at a
-// rate close to its fair share.
+// A biased alphabet would make some prefixes more likely than others. Taking
+// each byte modulo 36 without rejection makes four symbols 12.5% more likely;
+// with 640,000 draws every symbol must land within 6% of its fair share, which
+// an unbiased generator misses by chance far less than once in a billion runs.
 func TestPrefixedCharactersAreUniform(t *testing.T) {
 	counts := map[rune]int{}
 	total := 0
-	for range 1500 {
+	for range 20000 {
 		for _, r := range randomBase36(SecretLen) {
 			counts[r]++
 			total++
@@ -114,7 +115,7 @@ func TestPrefixedCharactersAreUniform(t *testing.T) {
 	}
 	fair := total / len(alphabet)
 	for r, n := range counts {
-		if n < fair*8/10 || n > fair*12/10 {
+		if n < fair*94/100 || n > fair*106/100 {
 			t.Errorf("%q appeared %d times; a fair share is about %d", r, n, fair)
 		}
 	}

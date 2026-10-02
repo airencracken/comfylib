@@ -97,89 +97,104 @@ func (r *fakeRelay) serve() {
 	}
 }
 
+// relayConn is one client connection to the fake relay.
+type relayConn struct {
+	relay     *fakeRelay
+	conn      net.Conn
+	reader    *bufio.Reader
+	writer    *bufio.Writer
+	encrypted bool
+	authed    bool
+	current   session
+}
+
 func (r *fakeRelay) handle(conn net.Conn) {
+	_, encrypted := conn.(*tls.Conn)
+	c := &relayConn{relay: r, conn: conn, reader: bufio.NewReader(conn), writer: bufio.NewWriter(conn), encrypted: encrypted}
 	// A session can outlive its test, so there is nowhere to report a failed
 	// close; the client side observes any real problem.
-	defer func() { _ = conn.Close() }()
+	defer func() { _ = c.conn.Close() }()
+	defer func() { r.sessions <- c.current }()
 	_ = conn.SetDeadline(time.Now().Add(10 * time.Second))
-	_, encrypted := conn.(*tls.Conn)
-	reader := bufio.NewReader(conn)
-	writer := bufio.NewWriter(conn)
-	// A failed reply means the client has hung up, and the next read ends
-	// the session.
-	reply := func(line string) {
-		if _, err := writer.WriteString(line + "\r\n"); err == nil {
-			_ = writer.Flush()
-		}
-	}
-	var current session
-	authed := false
-	finish := func() { r.sessions <- current }
-	defer finish()
-
-	reply("220 fake ESMTP ready")
+	c.reply("220 fake ESMTP ready")
 	for {
-		line, err := reader.ReadString('\n')
-		if err != nil {
+		line, err := c.reader.ReadString('\n')
+		if err != nil || !c.command(strings.TrimSpace(line)) {
 			return
-		}
-		command := strings.TrimSpace(line)
-		upper := strings.ToUpper(command)
-		verb, _, _ := strings.Cut(upper, " ")
-		verb, _, _ = strings.Cut(verb, ":")
-		if encrypted {
-			verb = "tls:" + verb
-		}
-		current.commands = append(current.commands, verb)
-
-		switch {
-		case strings.HasPrefix(upper, "EHLO"), strings.HasPrefix(upper, "HELO"):
-			reply("250-fake greets you")
-			if r.advertiseStartTLS && !encrypted {
-				reply("250-STARTTLS")
-			}
-			reply("250 AUTH PLAIN")
-		case upper == "STARTTLS":
-			if r.certificate == nil || encrypted {
-				reply("454 TLS not available")
-				continue
-			}
-			reply("220 go ahead")
-			server := tls.Server(conn, &tls.Config{Certificates: []tls.Certificate{*r.certificate}})
-			if err := server.Handshake(); err != nil {
-				current.commands = append(current.commands, "handshake-failed")
-				return
-			}
-			conn, encrypted = server, true
-			reader, writer = bufio.NewReader(conn), bufio.NewWriter(conn)
-		case strings.HasPrefix(upper, "AUTH"):
-			authed = true
-			reply("235 authenticated")
-		case strings.HasPrefix(upper, "MAIL FROM:"):
-			if r.requireAuth && !authed {
-				reply("530 authentication required")
-				continue
-			}
-			current.from = strings.TrimSpace(command[len("MAIL FROM:"):])
-			reply("250 ok")
-		case strings.HasPrefix(upper, "RCPT TO:"):
-			current.to = append(current.to, strings.TrimSpace(command[len("RCPT TO:"):]))
-			reply("250 ok")
-		case upper == "DATA":
-			reply("354 end with <CRLF>.<CRLF>")
-			body, err := textproto.NewReader(reader).ReadDotBytes()
-			if err != nil {
-				return
-			}
-			current.data = string(body)
-			reply("250 queued")
-		case upper == "QUIT":
-			reply("221 bye")
-			return
-		default:
-			reply("250 ok")
 		}
 	}
+}
+
+// reply sends one line. A failed reply means the client has hung up, and the
+// next read ends the session.
+func (c *relayConn) reply(line string) {
+	if _, err := c.writer.WriteString(line + "\r\n"); err == nil {
+		_ = c.writer.Flush()
+	}
+}
+
+// command handles one command and reports whether the session continues.
+func (c *relayConn) command(command string) bool {
+	upper := strings.ToUpper(command)
+	verb, _, _ := strings.Cut(upper, " ")
+	verb, _, _ = strings.Cut(verb, ":")
+	if c.encrypted {
+		verb = "tls:" + verb
+	}
+	c.current.commands = append(c.current.commands, verb)
+	switch {
+	case strings.HasPrefix(upper, "EHLO"), strings.HasPrefix(upper, "HELO"):
+		c.reply("250-fake greets you")
+		if c.relay.advertiseStartTLS && !c.encrypted {
+			c.reply("250-STARTTLS")
+		}
+		c.reply("250 AUTH PLAIN")
+	case upper == "STARTTLS":
+		return c.startTLS()
+	case strings.HasPrefix(upper, "AUTH"):
+		c.authed = true
+		c.reply("235 authenticated")
+	case strings.HasPrefix(upper, "MAIL FROM:"):
+		if c.relay.requireAuth && !c.authed {
+			c.reply("530 authentication required")
+			return true
+		}
+		c.current.from = strings.TrimSpace(command[len("MAIL FROM:"):])
+		c.reply("250 ok")
+	case strings.HasPrefix(upper, "RCPT TO:"):
+		c.current.to = append(c.current.to, strings.TrimSpace(command[len("RCPT TO:"):]))
+		c.reply("250 ok")
+	case upper == "DATA":
+		c.reply("354 end with <CRLF>.<CRLF>")
+		body, err := textproto.NewReader(c.reader).ReadDotBytes()
+		if err != nil {
+			return false
+		}
+		c.current.data = string(body)
+		c.reply("250 queued")
+	case upper == "QUIT":
+		c.reply("221 bye")
+		return false
+	default:
+		c.reply("250 ok")
+	}
+	return true
+}
+
+func (c *relayConn) startTLS() bool {
+	if c.relay.certificate == nil || c.encrypted {
+		c.reply("454 TLS not available")
+		return true
+	}
+	c.reply("220 go ahead")
+	server := tls.Server(c.conn, &tls.Config{Certificates: []tls.Certificate{*c.relay.certificate}})
+	if err := server.Handshake(); err != nil {
+		c.current.commands = append(c.current.commands, "handshake-failed")
+		return false
+	}
+	c.conn, c.encrypted = server, true
+	c.reader, c.writer = bufio.NewReader(server), bufio.NewWriter(server)
+	return true
 }
 
 // wait returns the next finished session, or fails.

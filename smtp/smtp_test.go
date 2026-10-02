@@ -370,59 +370,60 @@ func TestImplicitTLSDelivers(t *testing.T) {
 // step: the greeting, the TLS handshake, or after STARTTLS was accepted.
 func TestSendBoundsStalledConnections(t *testing.T) {
 	_, pool := testCertificate(t, "127.0.0.1")
-	for _, stall := range []string{"greeting", "starttls"} {
-		for _, mode := range []TLSMode{TLSNone, TLSImplicit, TLSStartTLS} {
-			if stall == "starttls" && mode != TLSStartTLS {
-				continue
+	for _, tc := range []struct {
+		stall string
+		mode  TLSMode
+	}{
+		{"greeting", TLSNone}, {"greeting", TLSImplicit}, {"greeting", TLSStartTLS}, {"starttls", TLSStartTLS},
+	} {
+		for _, cancelAfterConnect := range []bool{false, true} {
+			name := tc.stall + "/" + string(tc.mode) + "/timeout"
+			if cancelAfterConnect {
+				name = tc.stall + "/" + string(tc.mode) + "/cancel"
 			}
-			for _, cancelAfterConnect := range []bool{false, true} {
-				name := stall + "/" + string(mode) + "/timeout"
-				if cancelAfterConnect {
-					name = stall + "/" + string(mode) + "/cancel"
-				}
-				t.Run(name, func(t *testing.T) {
-					listener, err := net.Listen("tcp", "127.0.0.1:0")
-					if err != nil {
-						t.Fatal(err)
-					}
-					defer closeTest(t, listener)
-					accepted := make(chan net.Conn, 1)
-					go stallingRelay(listener, stall, accepted)
-					timeout := 50 * time.Millisecond
-					if cancelAfterConnect {
-						timeout = time.Minute
-					}
-					cfg := Config{Host: "127.0.0.1", Port: listener.Addr().(*net.TCPAddr).Port, From: "a@example.org", Mode: mode, Timeout: timeout, RootCAs: pool}
-					sender, err := New(cfg)
-					if err != nil {
-						t.Fatal(err)
-					}
-					// A longer caller deadline must not disable the sender's timeout.
-					ctx, cancel := context.WithTimeout(t.Context(), time.Minute)
-					defer cancel()
-					done := make(chan error, 1)
-					go func() { done <- sender.Send(ctx, Message{To: "b@example.org", Body: "secret"}) }()
-					select {
-					case conn := <-accepted:
-						defer closeTest(t, conn)
-					case <-time.After(time.Second):
-						t.Fatal("sender did not connect")
-					}
-					if cancelAfterConnect {
-						time.Sleep(20 * time.Millisecond)
-						cancel()
-					}
-					select {
-					case err := <-done:
-						if err == nil {
-							t.Fatal("stalled send succeeded")
-						}
-					case <-time.After(2 * time.Second):
-						t.Fatal("send ignored its timeout or cancellation while waiting for the relay")
-					}
-				})
-			}
+			t.Run(name, func(t *testing.T) { checkStalledSend(t, tc.stall, tc.mode, cancelAfterConnect, pool) })
 		}
+	}
+}
+
+func checkStalledSend(t *testing.T, stall string, mode TLSMode, cancelAfterConnect bool, pool *x509.CertPool) {
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer closeTest(t, listener)
+	accepted := make(chan net.Conn, 1)
+	go stallingRelay(listener, stall, accepted)
+	timeout := 50 * time.Millisecond
+	if cancelAfterConnect {
+		timeout = time.Minute
+	}
+	sender, err := New(Config{Host: "127.0.0.1", Port: listener.Addr().(*net.TCPAddr).Port, From: "a@example.org", Mode: mode, Timeout: timeout, RootCAs: pool})
+	if err != nil {
+		t.Fatal(err)
+	}
+	// A longer caller deadline must not disable the sender's timeout.
+	ctx, cancel := context.WithTimeout(t.Context(), time.Minute)
+	defer cancel()
+	done := make(chan error, 1)
+	go func() { done <- sender.Send(ctx, Message{To: "b@example.org", Body: "secret"}) }()
+	select {
+	case conn := <-accepted:
+		defer closeTest(t, conn)
+	case <-time.After(time.Second):
+		t.Fatal("sender did not connect")
+	}
+	if cancelAfterConnect {
+		time.Sleep(20 * time.Millisecond)
+		cancel()
+	}
+	select {
+	case err := <-done:
+		if err == nil {
+			t.Fatal("stalled send succeeded")
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("send ignored its timeout or cancellation while waiting for the relay")
 	}
 }
 

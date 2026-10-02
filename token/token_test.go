@@ -176,35 +176,39 @@ func TestComparisonsAreConstantTime(t *testing.T) {
 			continue
 		}
 		checked[fn.Name.Name] = true
-		constantTime := 0
-		ast.Inspect(fn.Body, func(node ast.Node) bool {
-			switch node := node.(type) {
-			case *ast.BinaryExpr:
-				if node.Op != gotoken.EQL && node.Op != gotoken.NEQ {
-					return true
-				}
-				if !isConstantTimeCall(node.X) && !isConstantTimeCall(node.Y) {
-					t.Errorf("%s compares with %s outside crypto/subtle", fn.Name.Name, node.Op)
-				}
-			case *ast.CallExpr:
-				if isConstantTimeCall(node) {
-					constantTime++
-				}
-				if selector, ok := node.Fun.(*ast.SelectorExpr); ok {
-					if pkg, ok := selector.X.(*ast.Ident); ok && (pkg.Name == "bytes" || pkg.Name == "strings") {
-						t.Errorf("%s calls %s.%s", fn.Name.Name, pkg.Name, selector.Sel.Name)
-					}
-				}
-			}
-			return true
-		})
-		if constantTime == 0 {
+		if !constantTimeOnly(t, fn) {
 			t.Errorf("%s does not use subtle.ConstantTimeCompare", fn.Name.Name)
 		}
 	}
 	if !checked["Equal"] || !checked["VerifyPrefixed"] {
 		t.Fatalf("comparison functions not found: %v", checked)
 	}
+}
+
+// constantTimeOnly reports each comparison in fn that is not on the result of
+// subtle.ConstantTimeCompare, and whether fn calls it at all.
+func constantTimeOnly(t *testing.T, fn *ast.FuncDecl) bool {
+	t.Helper()
+	constantTime := 0
+	ast.Inspect(fn.Body, func(node ast.Node) bool {
+		switch node := node.(type) {
+		case *ast.BinaryExpr:
+			if (node.Op == gotoken.EQL || node.Op == gotoken.NEQ) && !isConstantTimeCall(node.X) && !isConstantTimeCall(node.Y) {
+				t.Errorf("%s compares with %s outside crypto/subtle", fn.Name.Name, node.Op)
+			}
+		case *ast.CallExpr:
+			if isConstantTimeCall(node) {
+				constantTime++
+			}
+			if selector, ok := node.Fun.(*ast.SelectorExpr); ok {
+				if pkg, ok := selector.X.(*ast.Ident); ok && (pkg.Name == "bytes" || pkg.Name == "strings") {
+					t.Errorf("%s calls %s.%s", fn.Name.Name, pkg.Name, selector.Sel.Name)
+				}
+			}
+		}
+		return true
+	})
+	return constantTime > 0
 }
 
 func isConstantTimeCall(expr ast.Expr) bool {

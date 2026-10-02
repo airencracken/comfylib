@@ -356,15 +356,23 @@ func validDomain(domain string) bool {
 		return false
 	}
 	for _, label := range strings.Split(domain, ".") {
-		if label == "" || len(label) > 63 || label[0] == '-' || label[len(label)-1] == '-' {
+		if !validLabel(label) {
 			return false
 		}
-		for i := 0; i < len(label); i++ {
-			c := label[i]
-			letter := c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z'
-			if !letter && (c < '0' || c > '9') && c != '-' {
-				return false
-			}
+	}
+	return true
+}
+
+// validLabel accepts one DNS label: ASCII letters, digits and inner hyphens.
+func validLabel(label string) bool {
+	if label == "" || len(label) > 63 || label[0] == '-' || label[len(label)-1] == '-' {
+		return false
+	}
+	for i := 0; i < len(label); i++ {
+		c := label[i]
+		letter := c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z'
+		if !letter && (c < '0' || c > '9') && c != '-' {
+			return false
 		}
 	}
 	return true

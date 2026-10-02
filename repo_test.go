@@ -99,73 +99,84 @@ func loadSchema(t *testing.T) *mutationSchema {
 
 // validate returns every way value breaks schema, located by path.
 func validate(schema *mutationSchema, value any, path string) []string {
-	var problems []string
-	fail := func(format string, args ...any) { problems = append(problems, path+": "+fmt.Sprintf(format, args...)) }
 	switch schema.Type {
 	case "array":
-		items, ok := value.([]any)
-		if !ok {
-			fail("want an array")
-			return problems
-		}
-		if schema.MinItems != nil && len(items) < *schema.MinItems {
-			fail("want at least %d items", *schema.MinItems)
-		}
-		for i, item := range items {
-			if schema.Items != nil {
-				problems = append(problems, validate(schema.Items, item, fmt.Sprintf("%s[%d]", path, i))...)
-			}
-		}
+		return validateArray(schema, value, path)
 	case "object":
-		object, ok := value.(map[string]any)
-		if !ok {
-			fail("want an object")
-			return problems
-		}
-		for _, key := range schema.Required {
-			if _, ok := object[key]; !ok {
-				fail("missing %q", key)
-			}
-		}
-		var additional *mutationSchema
-		allowAdditional := true
-		if len(schema.AdditionalProperties) > 0 {
-			if string(schema.AdditionalProperties) == "false" {
-				allowAdditional = false
-			} else if err := json.Unmarshal(schema.AdditionalProperties, &additional); err != nil {
-				fail("bad additionalProperties in schema: %v", err)
-			}
-		}
-		keys := make([]string, 0, len(object))
-		for key := range object {
-			keys = append(keys, key)
-		}
-		sort.Strings(keys)
-		for _, key := range keys {
-			property, known := schema.Properties[key]
-			switch {
-			case known:
-				problems = append(problems, validate(property, object[key], path+"."+key)...)
-			case !allowAdditional:
-				fail("unknown field %q", key)
-			case additional != nil:
-				problems = append(problems, validate(additional, object[key], path+"."+key)...)
-			}
-		}
+		return validateObject(schema, value, path)
 	case "string":
-		text, ok := value.(string)
-		if !ok {
-			fail("want a string")
-			return problems
-		}
-		if schema.MinLength != nil && utf8.RuneCountInString(text) < *schema.MinLength {
-			fail("want at least %d characters", *schema.MinLength)
-		}
-		if schema.Pattern != "" && !regexp.MustCompile(schema.Pattern).MatchString(text) {
-			fail("%q does not match %s", text, schema.Pattern)
-		}
+		return validateString(schema, value, path)
 	default:
-		fail("schema type %q is not supported by this test", schema.Type)
+		return []string{fmt.Sprintf("%s: schema type %q is not supported by this test", path, schema.Type)}
+	}
+}
+
+func validateArray(schema *mutationSchema, value any, path string) []string {
+	items, ok := value.([]any)
+	if !ok {
+		return []string{path + ": want an array"}
+	}
+	var problems []string
+	if schema.MinItems != nil && len(items) < *schema.MinItems {
+		problems = append(problems, fmt.Sprintf("%s: want at least %d items", path, *schema.MinItems))
+	}
+	for i, item := range items {
+		if schema.Items != nil {
+			problems = append(problems, validate(schema.Items, item, fmt.Sprintf("%s[%d]", path, i))...)
+		}
+	}
+	return problems
+}
+
+func validateObject(schema *mutationSchema, value any, path string) []string {
+	object, ok := value.(map[string]any)
+	if !ok {
+		return []string{path + ": want an object"}
+	}
+	var problems []string
+	for _, key := range schema.Required {
+		if _, ok := object[key]; !ok {
+			problems = append(problems, fmt.Sprintf("%s: missing %q", path, key))
+		}
+	}
+	// additionalProperties is either false or a schema for the extra values.
+	var additional *mutationSchema
+	closed := string(schema.AdditionalProperties) == "false"
+	if len(schema.AdditionalProperties) > 0 && !closed {
+		if err := json.Unmarshal(schema.AdditionalProperties, &additional); err != nil {
+			return append(problems, fmt.Sprintf("%s: bad additionalProperties in schema: %v", path, err))
+		}
+	}
+	keys := make([]string, 0, len(object))
+	for key := range object {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	for _, key := range keys {
+		property, known := schema.Properties[key]
+		switch {
+		case known:
+			problems = append(problems, validate(property, object[key], path+"."+key)...)
+		case closed:
+			problems = append(problems, fmt.Sprintf("%s: unknown field %q", path, key))
+		case additional != nil:
+			problems = append(problems, validate(additional, object[key], path+"."+key)...)
+		}
+	}
+	return problems
+}
+
+func validateString(schema *mutationSchema, value any, path string) []string {
+	text, ok := value.(string)
+	if !ok {
+		return []string{path + ": want a string"}
+	}
+	var problems []string
+	if schema.MinLength != nil && utf8.RuneCountInString(text) < *schema.MinLength {
+		problems = append(problems, fmt.Sprintf("%s: want at least %d characters", path, *schema.MinLength))
+	}
+	if schema.Pattern != "" && !regexp.MustCompile(schema.Pattern).MatchString(text) {
+		problems = append(problems, fmt.Sprintf("%s: %q does not match %s", path, text, schema.Pattern))
 	}
 	return problems
 }

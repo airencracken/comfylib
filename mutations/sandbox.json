@@ -1,0 +1,354 @@
+[
+ {
+  "name": "media networking",
+  "file": "sandbox/sandbox.go",
+  "before": "\"--unshare-net\", \"--die-with-parent\"",
+  "after": "\"--die-with-parent\"",
+  "package": "./sandbox",
+  "run": "^TestRealBubblewrapMediaBoundary$",
+  "env": {
+   "COMFYWARE_SANDBOX_TEST": "1"
+  }
+ },
+ {
+  "name": "environment filtering",
+  "file": "sandbox/service.go",
+  "before": "(strings.HasPrefix(key, s.Prefix) || allowed[key]) && key != s.Prefix+\"DATA_DIR\"",
+  "after": "key != s.Prefix+\"DATA_DIR\"",
+  "package": "./sandbox",
+  "run": "^TestServicePolicyKeepsSecretsOutOfArguments$"
+ },
+ {
+  "name": "credential chain forwarding",
+  "file": "sandbox/service.go",
+  "before": "(strings.HasPrefix(key, s.Prefix) || allowed[key])",
+  "after": "strings.HasPrefix(key, s.Prefix)",
+  "package": "./sandbox",
+  "run": "^TestServicePolicyKeepsSecretsOutOfArguments$"
+ },
+ {
+  "name": "nested namespaces",
+  "file": "sandbox/service.go",
+  "before": "if !s.NestedSandbox {",
+  "after": "if false {",
+  "package": "./sandbox",
+  "run": "^TestServicePolicyKeepsSecretsOutOfArguments$"
+ },
+ {
+  "name": "orphan reaping",
+  "file": "sandbox/reaper.go",
+  "before": "if _, mine := owned.pids[pid]; mine || !zombieChildOf(pid, self) {",
+  "after": "if _, mine := owned.pids[pid]; mine || !zombieChildOf(pid, self) || true {",
+  "package": "./sandbox",
+  "run": "^TestRealOrphanedChildrenAreReaped$",
+  "env": {
+   "COMFYWARE_SANDBOX_TEST": "1"
+  }
+ },
+ {
+  "name": "tracked children",
+  "file": "sandbox/reaper.go",
+  "before": "if _, mine := owned.pids[pid]; mine || !zombieChildOf(pid, self) {",
+  "after": "if !zombieChildOf(pid, self) {",
+  "package": "./sandbox",
+  "run": "^TestReaperLeavesTrackedChildrenForTheirOwner$"
+ },
+ {
+  "name": "broad filesystem mounts",
+  "file": "sandbox/service.go",
+  "before": "name == \"/\" ||",
+  "after": "false ||",
+  "package": "./sandbox",
+  "run": "^TestWritableDirectoriesRejectBroadAndAdversarialPaths$"
+ },
+ {
+  "name": "writable data directory",
+  "file": "sandbox/service.go",
+  "before": "args = append(args, \"--bind\", path, path)",
+  "after": "args = append(args, \"--ro-bind\", path, path)",
+  "package": "./sandbox",
+  "run": "^TestServicePolicyKeepsSecretsOutOfArguments$"
+ },
+ {
+  "name": "merged-usr symlinks",
+  "file": "sandbox/sandbox.go",
+  "before": "if insideMount(path, target, real, bound) {",
+  "after": "if insideMount(path, target, real, nil) {",
+  "package": "./sandbox",
+  "run": "^TestRuntimeMountsRecreateMergedUsrSymlinks$"
+ },
+ {
+  "name": "symlink containment",
+  "file": "sandbox/sandbox.go",
+  "before": "if insideMount(path, target, real, bound) {",
+  "after": "if true {",
+  "package": "./sandbox",
+  "run": "^TestRuntimeMountsRecreateMergedUsrSymlinks$"
+ },
+ {
+  "name": "check command",
+  "file": "sandbox/sandbox.go",
+  "before": "append(append(append([]string{}, args...), \"--\"), command...)",
+  "after": "append(append([]string{}, args...), \"--\", \"/usr/bin/true\")",
+  "package": "./sandbox",
+  "run": "^TestCheckRunsTheGivenCommand$"
+ },
+ {
+  "name": "custom certificate bundle",
+  "file": "sandbox/service.go",
+  "before": "if custom != \"\" {",
+  "after": "if false && custom != \"\" {",
+  "package": "./sandbox",
+  "run": "^TestServicePolicyHonoursCustomCertificateBundle$"
+ },
+ {
+  "name": "certificate bundle validation",
+  "file": "sandbox/service.go",
+  "before": "if info, err := os.Stat(custom); err != nil || !info.Mode().IsRegular() {",
+  "after": "if info, err := os.Stat(custom); err != nil && info.Mode().IsRegular() {",
+  "package": "./sandbox",
+  "run": "^TestCustomCertificateBundleMustBeAnExistingFile$"
+ },
+ {
+  "name": "merged-usr symlinks seen from inside the sandbox",
+  "file": "sandbox/sandbox.go",
+  "before": "within(target, m.path) && within(real, m.real)",
+  "after": "within(real, m.real)",
+  "package": "./sandbox",
+  "run": "^TestRuntimeMountsRecreateMergedUsrSymlinks$"
+ },
+ {
+  "name": "merged-usr symlinks on a real host",
+  "file": "sandbox/sandbox.go",
+  "before": "if info.Mode()&os.ModeSymlink != 0 {",
+  "after": "if info.Mode()&os.ModeSymlink != 0 && false {",
+  "package": "./sandbox",
+  "run": "^TestRealBubblewrapRuntimeBoundary$",
+  "env": {
+   "COMFYWARE_SANDBOX_TEST": "1"
+  }
+ },
+ {
+  "name": "certificate bundle path syntax",
+  "file": "sandbox/service.go",
+  "before": "if !filepath.IsAbs(custom) || strings.ContainsAny(custom, \"\\x00\\r\\n\") {",
+  "after": "if false {",
+  "package": "./sandbox",
+  "run": "^TestExistingFilesWithUnsafeNamesAreRefused$"
+ },
+ {
+  "name": "certificate bundle bound in place of the system one",
+  "file": "sandbox/service.go",
+  "before": "args = append(args, \"--ro-bind\", bundle, \"/app/ca-bundle.crt\")",
+  "after": "_ = bundle",
+  "package": "./sandbox",
+  "run": "^TestRealServiceBoundaryAndGracefulStop$",
+  "env": {
+   "COMFYWARE_SANDBOX_TEST": "1"
+  }
+ },
+ {
+  "name": "check needs a command",
+  "file": "sandbox/sandbox.go",
+  "before": "if len(command) == 0 {",
+  "after": "if false {",
+  "package": "./sandbox",
+  "run": "^TestSandboxSetupFailureIsAnError$"
+ },
+ {
+  "name": "check reports launcher output",
+  "file": "sandbox/sandbox.go",
+  "before": "strings.TrimSpace(output.String())",
+  "after": "\"\"",
+  "package": "./sandbox",
+  "run": "^TestCheckReportsTheLauncherOutput$"
+ },
+ {
+  "name": "disable-userns on a real host",
+  "file": "sandbox/service.go",
+  "before": "args = append(args, \"--disable-userns\")",
+  "after": "_ = args",
+  "package": "./sandbox",
+  "run": "^TestRealServiceUserNamespacesFollowNestedSandbox$",
+  "env": {
+   "COMFYWARE_SANDBOX_TEST": "1"
+  }
+ },
+ {
+  "name": "disable-userns invariant",
+  "file": "sandbox/service.go",
+  "before": "args = append(args, \"--disable-userns\")",
+  "after": "_ = args",
+  "package": "./sandbox",
+  "run": "^TestPolicyInvariants$"
+ },
+ {
+  "name": "network unshare for children",
+  "file": "sandbox/sandbox.go",
+  "before": "if !o.Network {",
+  "after": "if o.Network {",
+  "package": "./sandbox",
+  "run": "^TestServerBaseKeepsTheNetwork$"
+ },
+ {
+  "name": "network unshare for children on a real host",
+  "file": "sandbox/sandbox.go",
+  "before": "if !o.Network {",
+  "after": "if false {",
+  "package": "./sandbox",
+  "run": "^TestRealBubblewrapMediaBoundary$",
+  "env": {
+   "COMFYWARE_SANDBOX_TEST": "1"
+  }
+ },
+ {
+  "name": "server keeps the network",
+  "file": "sandbox/service.go",
+  "before": "Base(Options{Network: true})",
+  "after": "Base(Options{})",
+  "package": "./sandbox",
+  "run": "^TestServicePolicyKeepsSecretsOutOfArguments$"
+ },
+ {
+  "name": "ForwardEnv allowlist",
+  "file": "sandbox/service.go",
+  "before": "allowed[name] = true",
+  "after": "_ = name",
+  "package": "./sandbox",
+  "run": "^TestServicePolicyKeepsSecretsOutOfArguments$"
+ },
+ {
+  "name": "ForwardEnv reserved names",
+  "file": "sandbox/service.go",
+  "before": "if !validName(name) || reservedName(name) {",
+  "after": "if !validName(name) {",
+  "package": "./sandbox",
+  "run": "^TestServicePolicyRejectsUnsafeSettings$"
+ },
+ {
+  "name": "ForwardEnv overriding the runtime",
+  "file": "sandbox/service.go",
+  "before": "if key, _, _ := strings.Cut(entry, \"=\"); key == name {",
+  "after": "if key, _, _ := strings.Cut(entry, \"=\"); key == name && false {",
+  "package": "./sandbox",
+  "run": "^TestServicePolicyRejectsUnsafeSettings$"
+ },
+ {
+  "name": "prefix validation",
+  "file": "sandbox/service.go",
+  "before": "if !validName(s.Prefix) || !strings.HasSuffix(s.Prefix, \"_\") || strings.HasPrefix(s.Prefix, \"LD_\") {",
+  "after": "if !strings.HasSuffix(s.Prefix, \"_\") {",
+  "package": "./sandbox",
+  "run": "^TestServicePolicyRejectsUnsafeSettings$"
+ },
+ {
+  "name": "executable validation",
+  "file": "sandbox/service.go",
+  "before": "return fmt.Errorf(\"sandbox server executable must be an existing file: %q\", s.Executable)",
+  "after": "return nil",
+  "package": "./sandbox",
+  "run": "^TestServicePolicyRejectsUnsafeSettings$"
+ },
+ {
+  "name": "read files must exist",
+  "file": "sandbox/service.go",
+  "before": "return nil, fmt.Errorf(\"sandbox read file must exist and be regular: %q\", path)",
+  "after": "continue",
+  "package": "./sandbox",
+  "run": "^TestReadMountsMustBeExistingFiles$"
+ },
+ {
+  "name": "read files must be clean absolute paths",
+  "file": "sandbox/service.go",
+  "before": "return nil, fmt.Errorf(\"sandbox read file must be a clean absolute path: %q\", path)",
+  "after": "_ = path",
+  "package": "./sandbox",
+  "run": "^TestReadMountsMustBeExistingFiles$"
+ },
+ {
+  "name": "extra writable directories validated",
+  "file": "sandbox/service.go",
+  "before": "path, err := writableDir(dir)",
+  "after": "path, err := dir, error(nil)",
+  "package": "./sandbox",
+  "run": "^TestWritableDirectoriesRejectBroadAndAdversarialPaths$"
+ },
+ {
+  "name": "symlinked writable directory",
+  "file": "sandbox/service.go",
+  "before": "if err := validateWriteMount(real); err != nil {",
+  "after": "if err := validateWriteMount(path + real[:0]); err != nil {",
+  "package": "./sandbox",
+  "run": "^TestWritableDirectoriesRejectBroadAndAdversarialPaths$"
+ },
+ {
+  "name": "setuid launcher",
+  "file": "sandbox/sandbox.go",
+  "before": "if info.Mode()&os.ModeSetuid != 0 {",
+  "after": "if info.Mode()&os.ModeSetuid != 0 && false {",
+  "package": "./sandbox",
+  "run": "^TestSetuidBubblewrapIsRejected$"
+ },
+ {
+  "name": "reaper ownership recorded",
+  "file": "sandbox/reaper.go",
+  "before": "owned.pids[cmd.Process.Pid] = struct{}{}",
+  "after": "_ = cmd.Process.Pid",
+  "package": "./sandbox",
+  "run": "^TestRunChildRecordsItsChildWhileRunning$"
+ },
+ {
+  "name": "reaper ownership released",
+  "file": "sandbox/reaper.go",
+  "before": "delete(owned.pids, cmd.Process.Pid)",
+  "after": "_ = cmd.Process.Pid",
+  "package": "./sandbox",
+  "run": "^TestRunChildReleasesItsRecord$"
+ },
+ {
+  "name": "reaper only as PID 1",
+  "file": "sandbox/reaper.go",
+  "before": "if os.Getpid() != 1 {",
+  "after": "if false {",
+  "package": "./sandbox",
+  "run": "^TestStartReaperOnlyActsAsPIDOne$"
+ },
+ {
+  "name": "reaper runs as PID 1",
+  "file": "sandbox/reaper.go",
+  "before": "if os.Getpid() != 1 {",
+  "after": "if true {",
+  "package": "./sandbox",
+  "run": "^TestRealOrphanedChildrenAreReaped$",
+  "env": {
+   "COMFYWARE_SANDBOX_TEST": "1"
+  }
+ },
+ {
+  "name": "zombie state field",
+  "file": "sandbox/reaper.go",
+  "before": "fields[0] == \"Z\"",
+  "after": "fields[0] != \"R\"",
+  "package": "./sandbox",
+  "run": "^TestZombieDetectionReadsTheRightFields$"
+ },
+ {
+  "name": "exited server at shutdown",
+  "file": "sandbox/run.go",
+  "before": "if err := child.Signal(syscall.SIGTERM); err != nil && !errors.Is(err, os.ErrProcessDone) {",
+  "after": "if err := child.Signal(syscall.SIGTERM); err != nil {",
+  "package": "./sandbox",
+  "run": "^TestShutdownOfAnExitedServerIsClean$"
+ },
+ {
+  "name": "SIGTERM forwarded to the server",
+  "file": "sandbox/run.go",
+  "before": "child.Signal(syscall.SIGTERM)",
+  "after": "child.Signal(syscall.Signal(0))",
+  "package": "./sandbox",
+  "run": "^TestRealServiceBoundaryAndGracefulStop$",
+  "env": {
+   "COMFYWARE_SANDBOX_TEST": "1"
+  }
+ }
+]

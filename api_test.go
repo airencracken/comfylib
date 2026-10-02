@@ -75,7 +75,9 @@ func goPackages(t *testing.T) []string {
 		if err != nil {
 			return err
 		}
-		if entry.IsDir() && path != "." && (entry.Name() == "testdata" || strings.HasPrefix(entry.Name(), ".")) {
+		// internal packages are not importable outside the module, so they are
+		// not part of the API the apps depend on.
+		if entry.IsDir() && path != "." && (entry.Name() == "testdata" || entry.Name() == "internal" || strings.HasPrefix(entry.Name(), ".")) {
 			return filepath.SkipDir
 		}
 		if !entry.IsDir() && strings.HasSuffix(path, ".go") && !strings.HasSuffix(path, "_test.go") {

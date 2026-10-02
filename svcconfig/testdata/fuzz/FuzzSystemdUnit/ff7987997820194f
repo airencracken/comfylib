@@ -1,0 +1,2 @@
+go test fuzz v1
+string("[Service]\nEnvironment=\"APP_DATA_DIR=\xdf0\xaf\xf3\x9f\xeb\xfb\xf2\xff\"")

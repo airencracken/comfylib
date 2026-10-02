@@ -1,0 +1,266 @@
+[
+ {
+  "name": "EnvironmentFile literal path",
+  "file": "svcconfig/systemd.go",
+  "before": "environmentFiles = append(environmentFiles, raw)",
+  "after": "environmentFiles = append(environmentFiles, strings.Fields(raw)...)",
+  "package": "./svcconfig",
+  "run": "^TestSystemdEnvironmentFilePathsAreLiteral$"
+ },
+ {
+  "name": "EnvironmentFile specifiers",
+  "file": "svcconfig/systemd.go",
+  "before": "strings.ContainsAny(path, \"%\\x00\")",
+  "after": "strings.ContainsAny(path, \"\\x00\")",
+  "package": "./svcconfig",
+  "run": "^TestSystemdEnvironmentFileRejectsHostilePaths$"
+ },
+ {
+  "name": "EnvironmentFile relative paths",
+  "file": "svcconfig/systemd.go",
+  "before": "if !filepath.IsAbs(path) || strings.ContainsAny",
+  "after": "if strings.ContainsAny",
+  "package": "./svcconfig",
+  "run": "^TestSystemdEnvironmentFileRejectsHostilePaths$"
+ },
+ {
+  "name": "EnvironmentFile optional prefix",
+  "file": "svcconfig/systemd.go",
+  "before": "if optional && errors.Is(err, os.ErrNotExist) {",
+  "after": "if optional && errors.Is(err, os.ErrNotExist) && false {",
+  "package": "./svcconfig",
+  "run": "^TestSystemdEnvironmentFileRejectsHostilePaths$"
+ },
+ {
+  "name": "EnvironmentFile reset",
+  "file": "svcconfig/systemd.go",
+  "before": "environmentFiles = nil",
+  "after": "environmentFiles = environmentFiles[:len(environmentFiles):len(environmentFiles)]",
+  "package": "./svcconfig",
+  "run": "^TestSystemdEnvironmentFileRejectsHostilePaths$"
+ },
+ {
+  "name": "Environment reset",
+  "file": "svcconfig/systemd.go",
+  "before": "clear(values)",
+  "after": "_ = values",
+  "package": "./svcconfig",
+  "run": "^TestSystemdDropInsApplyInOrder$"
+ },
+ {
+  "name": "drop-in precedence",
+  "file": "svcconfig/systemd.go",
+  "before": "if _, exists := selected[name]; !exists {",
+  "after": "if true {",
+  "package": "./svcconfig",
+  "run": "^TestSystemdDropInsApplyInOrder$"
+ },
+ {
+  "name": "drop-ins only .conf",
+  "file": "svcconfig/systemd.go",
+  "before": "if entry.IsDir() || !strings.HasSuffix(name, \".conf\") {",
+  "after": "if entry.IsDir() {",
+  "package": "./svcconfig",
+  "run": "^TestSystemdDropInsApplyInOrder$"
+ },
+ {
+  "name": "data dir from service is clean",
+  "file": "svcconfig/svcconfig.go",
+  "before": "return filepath.Clean(value), nil",
+  "after": "return value, nil",
+  "package": "./svcconfig",
+  "run": "^TestDataDir$"
+ },
+ {
+  "name": "data dir from service is absolute",
+  "file": "svcconfig/svcconfig.go",
+  "before": "if !filepath.IsAbs(value) {",
+  "after": "if false {",
+  "package": "./svcconfig",
+  "run": "^TestDataDir$"
+ },
+ {
+  "name": "data dir from environment is absolute",
+  "file": "svcconfig/svcconfig.go",
+  "before": "return filepath.Abs(value)",
+  "after": "return value, nil",
+  "package": "./svcconfig",
+  "run": "^TestDataDir$"
+ },
+ {
+  "name": "portable data dir is absolute",
+  "file": "svcconfig/svcconfig.go",
+  "before": "return filepath.Abs(\"data\")",
+  "after": "return \"./data\", nil",
+  "package": "./svcconfig",
+  "run": "^TestDataDir$"
+ },
+ {
+  "name": "data dir invariant",
+  "file": "svcconfig/svcconfig.go",
+  "before": "return filepath.Clean(value), nil",
+  "after": "return value, nil",
+  "package": "./svcconfig",
+  "run": "^TestDataDirIsAlwaysAbsoluteAndClean$"
+ },
+ {
+  "name": "environment overrides the service",
+  "file": "svcconfig/svcconfig.go",
+  "before": "if value := os.Getenv(envKey); value != \"\" {",
+  "after": "if value := os.Getenv(envKey); false {",
+  "package": "./svcconfig",
+  "run": "^TestDataDir$"
+ },
+ {
+  "name": "running manager wins",
+  "file": "svcconfig/svcconfig.go",
+  "before": "case p.OpenRCActive && openRC:",
+  "after": "case false:",
+  "package": "./svcconfig",
+  "run": "^TestDataDirRefusesAmbiguousOrDynamicConfig$"
+ },
+ {
+  "name": "managers must agree",
+  "file": "svcconfig/svcconfig.go",
+  "before": "case m.openRC && m.systemd && openRCValue != systemdValue:",
+  "after": "case false:",
+  "package": "./svcconfig",
+  "run": "^TestDataDirRefusesAmbiguousOrDynamicConfig$"
+ },
+ {
+  "name": "accounts must agree",
+  "file": "svcconfig/svcconfig.go",
+  "before": "if m.openRC && m.systemd && (openRCUser != systemdUser || openRCGroup != systemdGroup) {",
+  "after": "if false {",
+  "package": "./svcconfig",
+  "run": "^TestAccount$"
+ },
+ {
+  "name": "systemd default account is root",
+  "file": "svcconfig/svcconfig.go",
+  "before": "cmp.Or(user, \"root\")",
+  "after": "cmp.Or(user, \"app\")",
+  "package": "./svcconfig",
+  "run": "^TestAccount$"
+ },
+ {
+  "name": "installed service detection",
+  "file": "svcconfig/svcconfig.go",
+  "before": "return m.openRC || m.systemd",
+  "after": "return m.openRC",
+  "package": "./svcconfig",
+  "run": "^TestManaged$"
+ },
+ {
+  "name": "Settings environment first",
+  "file": "svcconfig/svcconfig.go",
+  "before": "value := os.Getenv(key)",
+  "after": "value := \"\"",
+  "package": "./svcconfig",
+  "run": "^TestSettingReadsArbitraryKeys$"
+ },
+ {
+  "name": "Setting fallback when unmanaged",
+  "file": "svcconfig/svcconfig.go",
+  "before": "\treturn fallback, nil\n}",
+  "after": "\treturn \"\", nil\n}",
+  "package": "./svcconfig",
+  "run": "^TestSettingReadsArbitraryKeys$"
+ },
+ {
+  "name": "Detect refuses path-like names",
+  "file": "svcconfig/svcconfig.go",
+  "before": "if app == \"\" || app == \".\" || app == \"..\" || strings.ContainsAny(app, \"/\\x00\") {",
+  "after": "if app == \"\" {",
+  "package": "./svcconfig",
+  "run": "^TestDetect$"
+ },
+ {
+  "name": "shell expansion refused",
+  "file": "svcconfig/shell.go",
+  "before": "strings.ContainsRune(\"$`;|&<>()~\", r)",
+  "after": "strings.ContainsRune(\"`;\", r)",
+  "package": "./svcconfig",
+  "run": "^TestParseShellValue$"
+ },
+ {
+  "name": "shell agrees with sh on operators",
+  "file": "svcconfig/shell.go",
+  "before": "strings.ContainsRune(\"$`;|&<>()~\", r)",
+  "after": "strings.ContainsRune(\"$`;\", r)",
+  "package": "./svcconfig",
+  "run": "^TestParseShellValueAgreesWithTheShell$"
+ },
+ {
+  "name": "double-quoted backslash",
+  "file": "svcconfig/shell.go",
+  "before": "if p.shell && p.quote == '\"' && !strings.ContainsRune(\"$`\\\"\\\\\", r) {",
+  "after": "if false {",
+  "package": "./svcconfig",
+  "run": "^TestParseShellValue$"
+ },
+ {
+  "name": "double-quoted expansion refused",
+  "file": "svcconfig/shell.go",
+  "before": "if p.shell && p.quote == '\"' && (r == '$' || r == '`') {",
+  "after": "if false {",
+  "package": "./svcconfig",
+  "run": "^TestParseShellValue$"
+ },
+ {
+  "name": "hash inside a shell value",
+  "file": "svcconfig/shell.go",
+  "before": "\tif p.shell {\n\t\treturn false\n\t}\n",
+  "after": "",
+  "package": "./svcconfig",
+  "run": "^TestParseShellValue$"
+ },
+ {
+  "name": "unquoted whitespace refused",
+  "file": "svcconfig/shell.go",
+  "before": "return false, fmt.Errorf(\"unquoted whitespace in %q\", p.raw)",
+  "after": "return false, nil",
+  "package": "./svcconfig",
+  "run": "^TestParseShellValue$"
+ },
+ {
+  "name": "unterminated quotes refused",
+  "file": "svcconfig/shell.go",
+  "before": "if p.escaped || p.quote != 0 {",
+  "after": "if false {",
+  "package": "./svcconfig",
+  "run": "^TestParseShellValue$"
+ },
+ {
+  "name": "bytes that are not UTF-8 kept",
+  "file": "svcconfig/shell.go",
+  "before": "p.value.WriteString(text)\n\t}\n\treturn false, nil",
+  "after": "p.value.WriteRune(r)\n\t}\n\treturn false, nil",
+  "package": "./svcconfig",
+  "run": "^TestParseShellValue$"
+ },
+ {
+  "name": "exact shell assignment name",
+  "file": "svcconfig/shell.go",
+  "before": "return raw, ok && name == key",
+  "after": "return raw, ok && strings.TrimSpace(name) == key",
+  "package": "./svcconfig",
+  "run": "^TestShellAssignmentsNeedTheExactName$"
+ },
+ {
+  "name": "split keeps empty quoted words",
+  "file": "svcconfig/shell.go",
+  "before": "s.quote, s.started = r, true",
+  "after": "s.quote = r",
+  "package": "./svcconfig",
+  "run": "^TestSplitConfigWordsRoundTrips$"
+ },
+ {
+  "name": "unreadable conf.d is an error",
+  "file": "svcconfig/shell.go",
+  "before": "if errors.Is(err, os.ErrNotExist) {\n\t\t\treturn \"\", false, nil",
+  "after": "if true {\n\t\t\treturn \"\", false, nil",
+  "package": "./svcconfig",
+  "run": "^TestUnreadableConfigurationIsAnError$"
+ }
+]

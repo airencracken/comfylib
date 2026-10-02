@@ -1,0 +1,2 @@
+go test fuzz v1
+string("APP_DATA_DIR= 0\x98݉\xfb\b\xe9\xf6\xca\xe5\b\xeb\xbd")

@@ -1,0 +1,41 @@
+package sandbox // import "github.com/airencracken/comfylib/sandbox"
+
+func Base(o Options) ([]string, error)
+
+func Binary(path string) (string, error)
+
+func Check(ctx context.Context, binary string, args, env []string, command ...string) error
+
+func ReapOrphans() int
+
+func Run(ctx context.Context, binary string, args, env []string) (err error)
+
+func RunChild(cmd *exec.Cmd) error
+
+func RuntimeEnv() []string
+
+func StartReaper(ctx context.Context)
+
+type Options struct {
+	Network bool
+}
+
+type Service struct {
+	Prefix string
+
+	DataDir string
+
+	Executable string
+
+	WriteDirs []string
+
+	ReadFiles []string
+
+	Env []string
+
+	ForwardEnv []string
+
+	NestedSandbox bool
+}
+
+func (s Service) Policy() (args, env []string, err error)

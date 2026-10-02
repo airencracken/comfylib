@@ -1,0 +1,114 @@
+[
+ {
+  "name": "root refusal",
+  "file": "privdrop/credential.go",
+  "before": "if euid != 0 {",
+  "after": "if true {",
+  "package": "./privdrop",
+  "run": "^TestRefuseRoot$"
+ },
+ {
+  "name": "root service user",
+  "file": "privdrop/privdrop.go",
+  "before": "if username == \"root\" {",
+  "after": "if false {",
+  "package": "./privdrop",
+  "run": "^TestReexecRefusesUnsafeAccounts$"
+ },
+ {
+  "name": "UID 0 refused",
+  "file": "privdrop/credential.go",
+  "before": "if err != nil || uid == 0 {",
+  "after": "if err != nil {",
+  "package": "./privdrop",
+  "run": "^TestCredential$"
+ },
+ {
+  "name": "GID 0 refused",
+  "file": "privdrop/credential.go",
+  "before": "if gid == 0 {",
+  "after": "if false {",
+  "package": "./privdrop",
+  "run": "^TestCredential$"
+ },
+ {
+  "name": "root supplementary group refused",
+  "file": "privdrop/credential.go",
+  "before": "if parsed == 0 {",
+  "after": "if false {",
+  "package": "./privdrop",
+  "run": "^TestCredential$"
+ },
+ {
+  "name": "supplementary groups passed on",
+  "file": "privdrop/credential.go",
+  "before": "groups = append(groups, uint32(parsed))",
+  "after": "_ = parsed",
+  "package": "./privdrop",
+  "run": "^TestReexecRunsTheCommandAsTheServiceAccount$"
+ },
+ {
+  "name": "only root re-executes",
+  "file": "privdrop/privdrop.go",
+  "before": "if r.hooks.euid() != 0 ||",
+  "after": "if false ||",
+  "package": "./privdrop",
+  "run": "^TestReexecLeavesOtherCasesToTheCaller$"
+ },
+ {
+  "name": "only listed commands re-execute",
+  "file": "privdrop/privdrop.go",
+  "before": "|| !r.Commands[r.Args[0]] ||",
+  "after": "||",
+  "package": "./privdrop",
+  "run": "^TestReexecLeavesOtherCasesToTheCaller$"
+ },
+ {
+  "name": "help is not re-executed",
+  "file": "privdrop/credential.go",
+  "before": "case \"-h\", \"--h\", \"-help\", \"--help\":",
+  "after": "case \"--help\":",
+  "package": "./privdrop",
+  "run": "^TestHasHelpFlag$"
+ },
+ {
+  "name": "no service, no re-execution",
+  "file": "privdrop/privdrop.go",
+  "before": "if !managed {",
+  "after": "if !managed && false {",
+  "package": "./privdrop",
+  "run": "^TestReexecLeavesOtherCasesToTheCaller$"
+ },
+ {
+  "name": "resolved data directory wins",
+  "file": "privdrop/privdrop.go",
+  "before": "settings[dataKey] = dataDir",
+  "after": "_ = dataDir",
+  "package": "./privdrop",
+  "run": "^TestReexecRunsTheCommandAsTheServiceAccount$"
+ },
+ {
+  "name": "credential applied to the child",
+  "file": "privdrop/privdrop.go",
+  "before": "child.SysProcAttr = &syscall.SysProcAttr{Credential: credential}",
+  "after": "child.SysProcAttr = &syscall.SysProcAttr{}; _ = credential",
+  "package": "./privdrop",
+  "run": "^TestReexecRunsTheCommandAsTheServiceAccount$"
+ },
+ {
+  "name": "exit status passed on",
+  "file": "privdrop/privdrop.go",
+  "before": "return true, exitError.ExitCode(), nil",
+  "after": "return true, 1, nil",
+  "package": "./privdrop",
+  "run": "^TestReexecPassesTheExitStatusOn$"
+ },
+ {
+  "name": "WithEnvironment replaces stale entries",
+  "file": "privdrop/credential.go",
+  "before": "set[name] == \"\"",
+  "after": "name != \"\" || set[name] == \"\"",
+  "package": "./privdrop",
+  "run": "^TestWithEnvironmentReplacesOnlyTheConfiguredKeys$"
+ }
+]

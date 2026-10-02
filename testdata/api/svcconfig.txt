@@ -1,0 +1,38 @@
+package svcconfig // import "github.com/airencracken/comfylib/svcconfig"
+
+func ParseShellValue(raw string) (string, error)
+
+func ReadSystemdEnvironment(unitPath, key string) (value string, found bool, err error)
+
+func ScanSystemdService(unitPath string, visit func(name, value, path string, line int) error) error
+
+type Paths struct {
+	Name string
+
+	Prefix string
+
+	OpenRCConfig string
+
+	OpenRCInstalled bool
+
+	OpenRCActive bool
+
+	SystemdUnit string
+
+	SystemdActive bool
+
+	DefaultDataDir string
+	// contains filtered or unexported fields
+}
+
+func Detect(app, defaultDataDir string) Paths
+
+func (p Paths) Account(defaultUser string) (user, group string, managed bool, err error)
+
+func (p Paths) DataDir(envKey string) (string, error)
+
+func (p Paths) Managed() bool
+
+func (p Paths) Setting(key, fallback, what string) (string, error)
+
+func (p Paths) Settings(keys ...string) (map[string]string, error)

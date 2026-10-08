@@ -18,6 +18,8 @@ app pins an exact version.
 
 | Package | What it does |
 | --- | --- |
+| [`brandimage`](brandimage) | Bounds and normalizes uploaded PNG, JPEG and GIF branding images. |
+| [`password`](password) | Reads confirmed passwords through an app-supplied hidden terminal reader. |
 | [`clientip`](clientip) | Finds the client address behind trusted reverse proxies, groups IPv6 clients by /64 for rate limits, and tells whether the original request used HTTPS. |
 | [`keyfile`](keyfile) | Loads a key from its own file, creating it atomically on first use, in raw or hex form. |
 | [`privdrop`](privdrop) | Re-runs administrative commands as the service account, refusing to run them as root. |
@@ -70,3 +72,14 @@ The same release adds `token.SessionCSRF(session, purpose)`. It
 preserves the existing Witmoot and Imvault HMAC-SHA256 outputs for their
 application purpose strings and rejects empty inputs. No existing exported
 API is removed, and the library still uses only the Go standard library.
+
+## Shared administration helpers (v0.1.2)
+
+`password.Confirm` handles two labeled password prompts and propagates reader
+and writer failures without printing secrets. Applications keep terminal echo
+control and their own password strength policy.
+
+`brandimage.Normalize` accepts PNG, JPEG and GIF uploads up to 2 MiB and
+2048 by 2048 pixels. It validates dimensions before decoding and emits one PNG,
+preserving transparency while removing animation and metadata. Songstead,
+Imvault and Witmoot use the same normalization policy.

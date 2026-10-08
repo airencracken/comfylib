@@ -149,7 +149,7 @@ def go_env(entry):
 def go_test(checkout, entry):
     command = ["go", "test", "-count=1", "-timeout=" + TEST_TIMEOUT, "-run", entry["run"], entry["package"]]
     try:
-        return subprocess.run(command, cwd=checkout, env=go_env(entry), text=True,
+        return subprocess.run(command, cwd=checkout, env=go_env(entry), text=True, encoding="utf-8", errors="replace",
                               capture_output=True, timeout=PROCESS_TIMEOUT, check=False)
     except subprocess.TimeoutExpired as error:
         return subprocess.CompletedProcess(command, -1, error.stdout or "", "go test did not finish")

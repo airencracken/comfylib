@@ -1,0 +1,26 @@
+[
+  {
+    "name": "confirmation mismatch rejection",
+    "file": "password/confirm.go",
+    "before": "if string(first) != string(second) {",
+    "after": "if false && string(first) != string(second) {",
+    "package": "./password",
+    "run": "^TestConfirmationContract$"
+  },
+  {
+    "name": "image width bound",
+    "file": "brandimage/image.go",
+    "before": "config.Width > MaxDimension",
+    "after": "false",
+    "package": "./brandimage",
+    "run": "^TestRejectsAdversarialImages$"
+  },
+  {
+    "name": "encoded input bound",
+    "file": "brandimage/image.go",
+    "before": "len(data) > MaxBytes",
+    "after": "len(data) > MaxBytes+1024",
+    "package": "./brandimage",
+    "run": "^TestRejectsAdversarialImages$"
+  }
+]

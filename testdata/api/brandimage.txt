@@ -1,0 +1,9 @@
+package brandimage // import "github.com/airencracken/comfylib/brandimage"
+
+const (
+	MaxBytes     = 2 << 20
+	MaxDimension = 2048
+	MaxPixels    = MaxDimension * MaxDimension
+)
+
+func Normalize(data []byte) ([]byte, error)

@@ -11,6 +11,7 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 TOOLS = Path(__file__).resolve().parent
 FIXTURE = TOOLS / "testdata" / "fixture"
@@ -41,6 +42,17 @@ def entry(**changes):
 
 
 class MutateTest(unittest.TestCase):
+    def test_adversarial_non_utf8_test_output_is_a_failure(self):
+        original = mutate.subprocess.run
+        def noisy_test(command, **kwargs):
+            return original([sys.executable, "-c",
+                             "import sys; sys.stdout.buffer.write(b'--- FAIL: bad input \\xff\\n'); sys.exit(1)"],
+                            **kwargs)
+        with patch.object(mutate.subprocess, "run", side_effect=noisy_test):
+            result = mutate.go_test(FIXTURE, entry())
+        self.assertIn("\ufffd", result.stdout)
+        self.assertEqual(mutate.verdict(result), "failed")
+
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory(prefix="mutate-test-")
         self.addCleanup(self.temporary.cleanup)

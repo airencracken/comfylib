@@ -1,0 +1,5 @@
+[
+  {"name":"CSRF application domain separation","file":"token/csrf.go","before":"mac.Write([]byte(purpose))","after":"mac.Write([]byte(\"shared\"))","package":"./token","run":"^TestSessionCSRF"},
+  {"name":"CSRF session secret binding","file":"token/csrf.go","before":"hmac.New(sha256.New, []byte(session))","after":"hmac.New(sha256.New, []byte(purpose))","package":"./token","run":"^TestSessionCSRF"},
+  {"name":"CSRF empty inputs fail closed","file":"token/csrf.go","before":"session == \"\" || purpose == \"\"","after":"session == \"\" && purpose == \"\"","package":"./token","run":"^TestSessionCSRFDomains$"}
+]

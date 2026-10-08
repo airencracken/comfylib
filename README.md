@@ -25,7 +25,7 @@ app pins an exact version.
 | [`sandbox`](sandbox) | Confines a service and its child processes with Bubblewrap, and reaps orphans when the service is PID 1. |
 | [`smtp`](smtp) | Sends transactional mail through a relay with required TLS, header-injection checks, and no logging of message bodies. |
 | [`svcconfig`](svcconfig) | Reads a service's settings, data directory and account the way OpenRC and systemd pass them. |
-| [`token`](token) | Mints random tokens, hashes them for storage, and compares them in constant time. |
+| [`token`](token) | Mints random tokens, hashes them for storage, and compares them in constant time, and derives session-bound CSRF tokens. |
 
 ## Checks
 

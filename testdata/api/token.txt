@@ -13,6 +13,8 @@ func Hash(token string) string
 
 func New() (token, hash string)
 
+func SessionCSRF(session, purpose string) string
+
 func SplitPrefixed(scheme, full string) (string, bool)
 
 func VerifyPrefixed(presented, storedHash string) bool

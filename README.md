@@ -1,7 +1,8 @@
 # comfylib
 
 Shared Go packages for the Comfyware apps, [Imvault](https://github.com/airencracken/imvault)
-and [Witmoot](https://github.com/airencracken/witmoot).
+and [Witmoot](https://github.com/airencracken/witmoot), plus
+[Songstead](https://github.com/airencracken/songstead).
 
 It holds the security-sensitive plumbing both apps need and should get right
 once: Bubblewrap confinement, systemd and OpenRC configuration lookup, SMTP
@@ -22,6 +23,7 @@ app pins an exact version.
 | [`privdrop`](privdrop) | Re-runs administrative commands as the service account, refusing to run them as root. |
 | [`proxyconfig`](proxyconfig) | Prints a validated Caddy, nginx or Apache site configuration from an app's own examples. |
 | [`proxyconfig/proxytest`](proxyconfig/proxytest) | Runs those configurations in real nginx and Apache servers for an app's integration tests. |
+| [`reference`](reference) | Validates web addresses and prepares explicit browser discussion drafts without networking or automatic posting. |
 | [`sandbox`](sandbox) | Confines a service and its child processes with Bubblewrap, and reaps orphans when the service is PID 1. |
 | [`smtp`](smtp) | Sends transactional mail through a relay with required TLS, header-injection checks, and no logging of message bodies. |
 | [`svcconfig`](svcconfig) | Reads a service's settings, data directory and account the way OpenRC and systemd pass them. |
@@ -62,3 +64,8 @@ handoff again and requires its normal posting flow. No networking, tokens,
 service discovery or plugin machinery is added. Do not put private notes or
 private album metadata in a handoff. The exported API golden records the
 additive package. Publish v0.1.1 before resolving application release checksums.
+
+The same proposed release adds `token.SessionCSRF(session, purpose)`. It
+preserves the existing Witmoot and Imvault HMAC-SHA256 outputs for their
+application purpose strings and rejects empty inputs. No existing exported
+API is removed, and the library still uses only the Go standard library.

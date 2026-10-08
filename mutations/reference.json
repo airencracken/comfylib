@@ -1,0 +1,34 @@
+[
+  {
+    "name": "URL port lower boundary",
+    "file": "reference/reference.go",
+    "before": "n >= 1",
+    "after": "n >= 0",
+    "package": "./reference",
+    "run": "^TestURLPortBoundaries$"
+  },
+  {
+    "name": "URL port upper boundary",
+    "file": "reference/reference.go",
+    "before": "n <= 65535",
+    "after": "n <= 65536",
+    "package": "./reference",
+    "run": "^TestURLPortBoundaries$"
+  },
+  {
+    "name": "URL credentials refused",
+    "file": "reference/reference.go",
+    "before": "u.User != nil",
+    "after": "false",
+    "package": "./reference",
+    "run": "^TestAdversarialURLs$"
+  },
+  {
+    "name": "handoff duplicate fields refused",
+    "file": "reference/reference.go",
+    "before": "len(q[key]) != 1",
+    "after": "len(q[key]) < 1",
+    "package": "./reference",
+    "run": "^TestHandoffContract$"
+  }
+]

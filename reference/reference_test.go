@@ -4,8 +4,10 @@ package reference
 
 import (
 	"net/url"
+	"strconv"
 	"strings"
 	"testing"
+	"testing/quick"
 )
 
 func TestHandoffContract(t *testing.T) {
@@ -33,6 +35,25 @@ func TestAdversarialURLs(t *testing.T) {
 		if _, err := URL(raw); err == nil {
 			t.Fatalf("accepted %q", raw)
 		}
+	}
+}
+
+func TestURLPortBoundaries(t *testing.T) {
+	for _, port := range []string{"0", "65536", "999999", "-1", "words"} {
+		if _, err := URL("https://host:" + port + "/"); err == nil {
+			t.Fatalf("accepted invalid port %q", port)
+		}
+	}
+	for _, raw := range []string{"https://host/", "https://host:1/", "https://host:65535/", "http://[::1]:8083/prefix"} {
+		if _, err := URL(raw); err != nil {
+			t.Fatalf("rejected valid URL %q: %v", raw, err)
+		}
+	}
+	if err := quick.Check(func(port uint16) bool {
+		_, err := URL("https://host:" + strconv.Itoa(int(port)) + "/")
+		return (err == nil) == (port != 0)
+	}, nil); err != nil {
+		t.Fatal(err)
 	}
 }
 func TestHandoffRejectsInvalidDraftAndBase(t *testing.T) {

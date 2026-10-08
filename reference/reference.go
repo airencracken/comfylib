@@ -25,13 +25,18 @@ func URL(raw string) (*url.URL, error) {
 	if strings.IndexFunc(u.Path, unicode.IsControl) >= 0 {
 		return nil, errors.New("invalid web address")
 	}
-	if u.Port() != "" {
-		n, err := strconv.Atoi(u.Port())
-		if err != nil || n < 1 || n > 65535 {
-			return nil, errors.New("invalid web port")
-		}
+	if !validPort(u.Port()) {
+		return nil, errors.New("invalid web port")
 	}
 	return u, nil
+}
+
+func validPort(port string) bool {
+	if port == "" {
+		return true
+	}
+	n, err := strconv.Atoi(port)
+	return err == nil && n >= 1 && n <= 65535
 }
 
 // Draft contains deliberately shared text and a link back to its source.

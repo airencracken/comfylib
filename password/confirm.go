@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 // Package password provides confirmed password prompting. The caller supplies
-// a terminal reader that disables echo and applies its own password policy.
+// a terminal reader and applies its own password policy. WithHiddenInput guards
+// the entire prompt sequence so echo is disabled before a prompt is visible.
 package password
 
 import (

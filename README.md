@@ -83,3 +83,8 @@ control and their own password strength policy.
 2048 by 2048 pixels. It validates dimensions before decoding and emits one PNG,
 preserving transparency while removing animation and metadata. Songstead,
 Imvault and Witmoot use the same normalization policy.
+
+`password.WithHiddenInput` disables Linux terminal echo before the first prompt
+is displayed and keeps it disabled through confirmation. It restores the original
+terminal state on success, failure and panic, without changing other terminal flags.
+Wrap the entire `Confirm` call with it when using a terminal password reader.

@@ -1,0 +1,26 @@
+[
+  {
+    "name": "terminal-echo-remains-enabled",
+    "file": "password/terminal_linux.go",
+    "before": "hidden.Lflag &^= syscall.ECHO | syscall.ECHONL",
+    "after": "hidden.Lflag |= syscall.ECHO | syscall.ECHONL",
+    "package": "./password",
+    "run": "^TestHiddenInputTerminalContract$"
+  },
+  {
+    "name": "terminal-state-not-restored",
+    "file": "password/terminal_linux.go",
+    "before": "terminalIOCTL(fd, syscall.TCSETS, &original)",
+    "after": "terminalIOCTL(fd, syscall.TCSETS, &hidden)",
+    "package": "./password",
+    "run": "^TestHiddenInputTerminalContract$"
+  },
+  {
+    "name": "terminal-error-returns-password",
+    "file": "password/terminal.go",
+    "before": "value = \"\"",
+    "after": "value = \"leaked-secret\"",
+    "package": "./password",
+    "run": "^TestHiddenInputFailuresReturnNoPassword$"
+  }
+]

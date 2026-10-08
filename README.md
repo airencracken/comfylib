@@ -55,17 +55,18 @@ resolve comfylib through the Go module proxy.
 
 Licensed under AGPL-3.0-or-later. See [LICENSE](LICENSE).
 
-## Discussion references (v0.1.1 preparation)
+## Discussion references (v0.1.1)
 
 `reference.URL`, `reference.Draft`, `reference.Handoff` and `reference.Read`
 validate ordinary web addresses and prepare an explicit Witmoot browser draft.
-Songstead and imvault use the same URL and text limits; Witmoot validates the
+Songstead and Imvault use the same URL and text limits; Witmoot validates the
 handoff again and requires its normal posting flow. No networking, tokens,
 service discovery or plugin machinery is added. Do not put private notes or
 private album metadata in a handoff. The exported API golden records the
-additive package. Publish v0.1.1 before resolving application release checksums.
+additive package. [v0.1.1](https://github.com/airencracken/comfylib/releases/tag/v0.1.1)
+is published and used by Songstead, Witmoot and Imvault.
 
-The same proposed release adds `token.SessionCSRF(session, purpose)`. It
+The same release adds `token.SessionCSRF(session, purpose)`. It
 preserves the existing Witmoot and Imvault HMAC-SHA256 outputs for their
 application purpose strings and rejects empty inputs. No existing exported
 API is removed, and the library still uses only the Go standard library.

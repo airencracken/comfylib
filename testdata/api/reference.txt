@@ -1,0 +1,15 @@
+package reference // import "github.com/airencracken/comfylib/reference"
+
+func Handoff(base string, d Draft) (string, error)
+
+func URL(raw string) (*url.URL, error)
+
+type Draft struct {
+	Source string
+	Title  string
+	Body   string
+}
+
+func Read(q url.Values) (Draft, error)
+
+func (d Draft) Validate() error

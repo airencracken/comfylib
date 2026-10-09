@@ -1,0 +1,8 @@
+[
+  {"name":"profile name bound","file":"memberprofile/profile.go","before":"utf8.RuneCountInString(value) > limit","after":"false","package":"./memberprofile","run":"^TestRejectsAdversarialProfiles$"},
+  {"name":"profile control characters","file":"memberprofile/profile.go","before":"unicode.IsControl(r) &&","after":"false &&","package":"./memberprofile","run":"^TestRejectsAdversarialProfiles$"},
+  {"name":"profile link count bound","file":"memberprofile/profile.go","before":"len(p.Links) > MaxLinks","after":"false","package":"./memberprofile","run":"^TestRejectsAdversarialProfiles$"},
+  {"name":"profile URL credentials","file":"memberprofile/profile.go","before":"parsed.User != nil","after":"false","package":"./memberprofile","run":"^TestRejectsAdversarialProfiles$"},
+  {"name":"profile URL schemes","file":"memberprofile/profile.go","before":"(parsed.Scheme != \"http\" && parsed.Scheme != \"https\")","after":"false","package":"./memberprofile","run":"^TestRejectsAdversarialProfiles$"},
+  {"name":"profile duplicate bio field","file":"memberprofile/profile.go","before":"len(values[\"profile_bio\"]) > 1","after":"false","package":"./memberprofile","run":"^TestProfileFormContractsAndAdversarialFields$"}
+]

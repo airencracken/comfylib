@@ -22,6 +22,8 @@ app pins an exact version.
 | [`password`](password) | Reads confirmed passwords through an app-supplied hidden terminal reader. |
 | [`clientip`](clientip) | Finds the client address behind trusted reverse proxies, groups IPv6 clients by /64 for rate limits, and tells whether the original request used HTTPS. |
 | [`keyfile`](keyfile) | Loads a key from its own file, creating it atomically on first use, in raw or hex form. |
+| [`memberprofile`](memberprofile) | Validates optional names, plain-text bios and labeled HTTP/HTTPS links without fetching them. Apps own visibility and storage. |
+| [`profileimage`](profileimage) | Bounds account pictures and supplies still and animated renditions. |
 | [`privdrop`](privdrop) | Re-runs administrative commands as the service account, refusing to run them as root. |
 | [`proxyconfig`](proxyconfig) | Prints a validated Caddy, nginx or Apache site configuration from an app's own examples. |
 | [`proxyconfig/proxytest`](proxyconfig/proxytest) | Runs those configurations in real nginx and Apache servers for an app's integration tests. |

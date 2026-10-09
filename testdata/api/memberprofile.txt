@@ -1,0 +1,26 @@
+package memberprofile // import "github.com/airencracken/comfylib/memberprofile"
+
+const (
+	MaxName  = 80
+	MaxBio   = 1000
+	MaxLinks = 5
+	MaxLabel = 80
+	MaxURL   = 2048
+)
+
+type Link struct {
+	Label string `json:"label"`
+	URL   string `json:"url"`
+}
+
+type Profile struct {
+	Name  string `json:"name"`
+	Bio   string `json:"bio"`
+	Links []Link `json:"links"`
+}
+
+func Normalize(p Profile) (Profile, error)
+
+func ParseForm(values url.Values) (Profile, error)
+
+func (p Profile) LinkFields() [MaxLinks]Link

@@ -84,6 +84,11 @@ control and their own password strength policy.
 preserving transparency while removing animation and metadata. Songstead,
 Imvault and Witmoot use the same normalization policy.
 
+`profileimage.Normalize` adds an account-picture policy: 2 MiB encoded input,
+512 by 512 pixels, at most 64 GIF frames, and 4 MiB per output rendition.
+It re-encodes a GIF animation and a PNG still for viewer motion preferences;
+compressed frame counts and dimensions are checked before animation decoding.
+
 `password.WithHiddenInput` disables Linux terminal echo before the first prompt
 is displayed and keeps it disabled through confirmation. It restores the original
 terminal state on success, failure and panic, without changing other terminal flags.

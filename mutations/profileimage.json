@@ -1,0 +1,26 @@
+[
+  {
+    "name": "profile dimension bound",
+    "file": "profileimage/image.go",
+    "before": "config.Width > MaxDimension",
+    "after": "false",
+    "package": "./profileimage",
+    "run": "^TestRejectsAdversarialProfiles$"
+  },
+  {
+    "name": "animation frame bound",
+    "file": "profileimage/image.go",
+    "before": "count > MaxFrames",
+    "after": "false",
+    "package": "./profileimage",
+    "run": "^TestRejectsAdversarialProfiles$"
+  },
+  {
+    "name": "static GIF rendition",
+    "file": "profileimage/image.go",
+    "before": "len(frames.Image) < 2",
+    "after": "false",
+    "package": "./profileimage",
+    "run": "^TestProfileImageContracts$"
+  }
+]

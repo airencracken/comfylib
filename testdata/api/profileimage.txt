@@ -1,0 +1,14 @@
+package profileimage // import "github.com/airencracken/comfylib/profileimage"
+
+const MaxDimension = 512
+
+const MaxFrames = 64
+
+const MaxOutputBytes = 4 << 20
+
+type Picture struct {
+	Still     []byte
+	Animation []byte
+}
+
+func Normalize(data []byte) (Picture, error)

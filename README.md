@@ -18,6 +18,7 @@ app pins an exact version.
 
 | Package | What it does |
 | --- | --- |
+| [`autobackup`](autobackup) | Schedules verified private snapshots, prefers zstd with gzip fallback, and bounds archive retention and copy size. |
 | [`brandimage`](brandimage) | Bounds and normalizes uploaded PNG, JPEG and GIF branding images. |
 | [`password`](password) | Reads confirmed passwords through an app-supplied hidden terminal reader. |
 | [`clientip`](clientip) | Finds the client address behind trusted reverse proxies, groups IPv6 clients by /64 for rate limits, and tells whether the original request used HTTPS. |

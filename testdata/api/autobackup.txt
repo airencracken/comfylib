@@ -1,0 +1,50 @@
+package autobackup // import "github.com/airencracken/comfylib/autobackup"
+
+func CheckDatabase(ctx context.Context, db *sql.DB, limit int64) error
+
+func CopyPrivate(ctx context.Context, source, destination string, limit int64) (err error)
+
+func Create(ctx context.Context, c Config, snapshot Snapshot) (output string, err error)
+
+type Config struct {
+	Name         string
+	Directory    string
+	Interval     time.Duration
+	Keep         int
+	MaxBytes     int64
+	CopyMaxBytes int64
+}
+
+func Load(name, dataDir string, lookup func(string) string) (Config, error)
+
+func (c Config) Validate() error
+
+type Runner struct {
+	// contains filtered or unexported fields
+}
+
+func New(c Config, snapshot Snapshot, logger *slog.Logger) (*Runner, error)
+
+func (r *Runner) Run(ctx context.Context)
+
+func (r *Runner) Status() Status
+
+type Snapshot func(ctx context.Context, destination string, limit int64) error
+
+type Status struct {
+	Enabled      bool
+	Directory    string
+	Interval     time.Duration
+	Keep         int
+	MaxBytes     int64
+	CopyMaxBytes int64
+	Running      bool
+	LastAttempt  time.Time
+	LastSuccess  time.Time
+	LastError    string
+	NextAttempt  time.Time
+}
+
+func (s Status) ArchiveCap() string
+
+func (s Status) CopyCap() string

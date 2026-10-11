@@ -1,0 +1,66 @@
+[
+  {
+    "name": "automatic backup count cap",
+    "file": "autobackup/archive.go",
+    "before": "count < c.Keep &&",
+    "after": "true &&",
+    "package": "./autobackup",
+    "run": "^TestRetentionCountsByteCapsAndFailureAtomicity$"
+  },
+  {
+    "name": "automatic backup byte retention",
+    "file": "autobackup/archive.go",
+    "before": "entry.size <= c.MaxBytes-used",
+    "after": "true",
+    "package": "./autobackup",
+    "run": "^TestRetentionCountsByteCapsAndFailureAtomicity$"
+  },
+  {
+    "name": "compressed output cap",
+    "file": "autobackup/archive.go",
+    "before": "int64(len(p)) > w.remaining",
+    "after": "false",
+    "package": "./autobackup",
+    "run": "^TestRetentionCountsByteCapsAndFailureAtomicity$"
+  },
+  {
+    "name": "post-copy size bound",
+    "file": "autobackup/archive.go",
+    "before": "if info.Size() > limit {\n\t\t\treturn errors.New(\"backup exceeds uncompressed copy cap\")",
+    "after": "if false {\n\t\t\treturn errors.New(\"backup exceeds uncompressed copy cap\")",
+    "package": "./autobackup",
+    "run": "^TestHostileTreeAndDestination$"
+  },
+  {
+    "name": "backup directory symlink rejection",
+    "file": "autobackup/archive.go",
+    "before": "!info.IsDir() || info.Mode().Perm()&0o077 != 0",
+    "after": "!info.IsDir() && false",
+    "package": "./autobackup",
+    "run": "^TestHostileTreeAndDestination$"
+  },
+  {
+    "name": "backup schedule persistence",
+    "file": "autobackup/runner.go",
+    "before": "r.state.LastAttempt, r.state.LastSuccess, r.state.LastError = state.LastAttempt, state.LastSuccess, state.LastError",
+    "after": "r.state.LastAttempt, r.state.LastSuccess, r.state.LastError = state.LastAttempt, time.Time{}, state.LastError",
+    "package": "./autobackup",
+    "run": "^TestRunnerPersistenceFailureStatusAndCancellation$"
+  },
+  {
+    "name": "backup state schema version",
+    "file": "autobackup/runner.go",
+    "before": "s.Version != 1",
+    "after": "false",
+    "package": "./autobackup",
+    "run": "^TestStateSchemaAndCopyContracts$"
+  },
+  {
+    "name": "reject zero automatic copy count",
+    "file": "autobackup/config.go",
+    "before": "c.Keep < 1",
+    "after": "c.Keep < 0",
+    "package": "./autobackup",
+    "run": "^TestConfigAdversarial$"
+  }
+]

@@ -1,0 +1,20 @@
+package invitation // import "github.com/airencracken/comfylib/invitation"
+
+type State struct {
+	Revoked       bool
+	ExpiresAt     *time.Time
+	Uses, MaxUses int
+}
+
+func (s State) Status(now time.Time) Status
+
+type Status string
+
+const (
+	Open    Status = "open"
+	Revoked Status = "revoked"
+	Expired Status = "expired"
+	UsedUp  Status = "used up"
+)
+
+func (s Status) Label() string

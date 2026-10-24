@@ -33,7 +33,7 @@ jobs:
         run: |
           sudo apt-get update || exit 1
           sudo systemctl mask --runtime nginx.service apache2.service || exit 1
-          sudo apt-get install -y bubblewrap nginx apache2 zstd || exit 1
+          sudo apt-get install -y bubblewrap nginx apache2 zstd nodejs || exit 1
       - name: Allow test namespaces on the disposable runner
         run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || exit 1
       - name: Formatting
@@ -59,6 +59,8 @@ jobs:
         run: go test -tags=proxyintegration -count=1 -timeout=60s ./proxyconfig/proxytest || exit 1
       - name: Fuzz smoke
         run: sh tools/fuzz.sh 10s || exit 1
+      - name: Browser helper unit and mutation tests
+        run: make test-ui || exit 1
       - name: Mutation engine self-test
         run: python3 tools/test_mutate.py || exit 1
       - name: Mutations

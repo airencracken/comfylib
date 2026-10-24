@@ -7,8 +7,8 @@ and [Witmoot](https://github.com/airencracken/witmoot), plus
 It holds the security-sensitive plumbing both apps need and should get right
 once: Bubblewrap confinement, systemd and OpenRC configuration lookup, SMTP
 sending, key files, tokens, client addresses behind trusted proxies, and
-reverse-proxy configuration. Application policy, storage schemas, and user
-interfaces stay in each app.
+reverse-proxy configuration. Application policy, storage schemas, templates and
+palettes stay in each app. Shared form layout assets and browser assertions keep common screens aligned.
 
 comfylib uses only the Go standard library, so it adds no further modules to
 either app's dependency tree. It is versioned as v0 while its API settles; each
@@ -22,6 +22,8 @@ app pins an exact version.
 | [`brandimage`](brandimage) | Bounds and normalizes uploaded PNG, JPEG and GIF branding images. |
 | [`password`](password) | Reads confirmed passwords through an app-supplied hidden terminal reader. |
 | [`clientip`](clientip) | Finds the client address behind trusted reverse proxies, groups IPv6 clients by /64 for rate limits, and tells whether the original request used HTTPS. |
+| [`invitation`](invitation) | Describes invitation availability at an explicit time; apps retain atomic redemption and permissions. |
+| [`ui`](ui) | Embeds shared account and invitation styles, with browser assertions under `ui/uitest`. |
 | [`keyfile`](keyfile) | Loads a key from its own file, creating it atomically on first use, in raw or hex form. |
 | [`memberprofile`](memberprofile) | Validates optional names, plain-text bios and labeled HTTP/HTTPS links without fetching them. Apps own visibility and storage. |
 | [`profileimage`](profileimage) | Bounds account pictures and supplies still and animated renditions. |
@@ -96,3 +98,32 @@ compressed frame counts and dimensions are checked before animation decoding.
 is displayed and keeps it disabled through confirmation. It restores the original
 terminal state on success, failure and panic, without changing other terminal flags.
 Wrap the entire `Confirm` call with it when using a terminal password reader.
+
+## Shared invitation and account UI (v0.1.7)
+
+`ui.Assets()` exposes a read-only filesystem containing `accounts.css`. Serve it
+from `/static/comfyware/` and load `/static/comfyware/accounts.css` after the
+application stylesheet. The styles preserve each application's palette through
+CSS custom properties and align account forms, invitation controls and responsive
+records. Templates, application routes and content remain application-owned.
+
+`invitation.State.Status(now)` describes open, revoked, expired and used-up
+invitations. Revocation wins over expiry, and expiry wins over exhausted uses.
+Expiry includes the exact deadline; a nil expiry means never and a nonpositive
+maximum means unlimited. `Status.Label()` supplies a sentence-case label. This is
+a display helper; redemption still needs each app's permission checks and atomic
+storage transaction.
+
+Browser suites resolve this exact pinned Go module with `go list -m -f '{{.Dir}}'
+github.com/airencracken/comfylib`. Import `ui/uitest/layout.mjs` for driver-neutral
+DOM checks or `ui/uitest/invitations.mjs` for the Playwright invitation flow. The
+Playwright caller supplies `path`, `revokePath`, `app` and optional `screenshots`;
+the helper adds no Playwright dependency. CDP callers evaluate the same serialized
+DOM functions. The default matrix covers 320, 390, 768 and 1280 pixels, both color
+schemes and JavaScript enabled and disabled. Browser helpers are excluded from
+`ui.Assets()`.
+
+`make test-ui` requires Node and runs the helper unit tests plus actual mutations
+of width limits, overflow checks, control height, contrast, breakpoints and
+structure. `make check` includes it. The Go module still uses only the standard
+library.

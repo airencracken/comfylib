@@ -7,12 +7,12 @@ FUZZTIME ?= 10s
 export GOWORK := off
 
 .DEFAULT_GOAL := help
-.PHONY: help check fmt vet cyclo lint test test-race test-sandbox test-proxies test-mutations test-engine fuzz-smoke
+.PHONY: help check fmt vet cyclo lint test test-race test-sandbox test-proxies test-mutations test-engine test-ui fuzz-smoke
 
 help: ## Show available commands
 	@awk 'BEGIN {FS = ":.*## "} /^[a-zA-Z0-9_-]+:.*## / {printf "  %-16s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-check: fmt vet cyclo lint test-race test-engine test-mutations ## Run every check that needs no extra services
+check: fmt vet cyclo lint test-race test-engine test-ui test-mutations ## Run every check that needs no extra services
 	@echo 'All checks passed.'
 
 fmt: ## Fail if any Go file needs gofmt
@@ -49,3 +49,6 @@ test-engine: ## Self-test the mutation engine
 
 fuzz-smoke: ## Run every fuzz target for FUZZTIME (default 10s)
 	sh tools/fuzz.sh "$(FUZZTIME)"
+
+test-ui: ## Check shared browser assertions and their mutations (requires node)
+	node tools/test_ui_mutations.mjs

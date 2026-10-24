@@ -1,0 +1,42 @@
+[
+  {
+    "name": "invitation revocation precedence",
+    "file": "invitation/state.go",
+    "before": "case s.Revoked:",
+    "after": "case false:",
+    "package": "./invitation",
+    "run": "^TestAvailabilityBoundariesAndPrecedence$"
+  },
+  {
+    "name": "invitation inclusive expiry",
+    "file": "invitation/state.go",
+    "before": "!s.ExpiresAt.After(now)",
+    "after": "s.ExpiresAt.Before(now)",
+    "package": "./invitation",
+    "run": "^TestAvailabilityBoundariesAndPrecedence$"
+  },
+  {
+    "name": "invitation exhausted uses boundary",
+    "file": "invitation/state.go",
+    "before": "s.Uses >= s.MaxUses",
+    "after": "s.Uses > s.MaxUses",
+    "package": "./invitation",
+    "run": "^TestAvailabilityBoundariesAndPrecedence$"
+  },
+  {
+    "name": "invitation unlimited uses",
+    "file": "invitation/state.go",
+    "before": "s.MaxUses > 0 &&",
+    "after": "",
+    "package": "./invitation",
+    "run": "^TestAvailabilityBoundariesAndPrecedence$"
+  },
+  {
+    "name": "shared mobile invitation breakpoint",
+    "file": "ui/accounts.css",
+    "before": "@media (max-width: 900px)",
+    "after": "@media (max-width: 700px)",
+    "package": "./ui",
+    "run": "^TestAssetsContractAndIsolation$"
+  }
+]

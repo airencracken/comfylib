@@ -1,0 +1,27 @@
+package setup // import "github.com/airencracken/comfylib/setup"
+
+var ErrComplete = errors.New("this instance already has an owner; sign in or use create-owner to add another")
+
+type Config struct {
+	App, Directory, BaseURL, Address string
+
+	Ready func(context.Context) (bool, error)
+
+	Create func(context.Context, Owner) error
+}
+
+type Handler struct {
+	// contains filtered or unexported fields
+}
+
+func New(c Config) (*Handler, error)
+
+func (h *Handler) Enable(ctx context.Context, out io.Writer) error
+
+func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request)
+
+func (h *Handler) Wait(ctx context.Context) error
+
+func (h *Handler) Wrap(next http.Handler) http.Handler
+
+type Owner struct{ Username, Password string }

@@ -368,10 +368,15 @@ func runServer(t *testing.T, dir, binary string, args []string) {
 		// reports how it ended.
 		_ = cmd.Process.Signal(syscall.SIGTERM)
 		select {
-		case <-done:
+		case exitErr := <-done:
+			if exitErr != nil {
+				t.Logf("server stopped after SIGTERM: %v", exitErr)
+			}
 		case <-time.After(3 * time.Second):
 			_ = cmd.Process.Kill() // it may have exited after all
-			<-done
+			if exitErr := <-done; exitErr != nil {
+				t.Logf("server stopped after SIGKILL: %v", exitErr)
+			}
 		}
 		if err := log.Close(); err != nil {
 			t.Error(err)

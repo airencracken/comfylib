@@ -127,3 +127,11 @@ schemes and JavaScript enabled and disabled. Browser helpers are excluded from
 of width limits, overflow checks, control height, contrast, breakpoints and
 structure. `make check` includes it. The Go module still uses only the standard
 library.
+
+## Common setup
+
+`password.Flags` and `password.Source` supply one hidden-prompt, stdin, and
+private-file experience for account commands. The `setup` package supplies the
+host-authorized first-owner browser page and a private setup-key command.
+Applications retain atomic ownership checks in their own databases. See the
+[common setup contract](docs/setup.md) and its real-binary browser test harness.

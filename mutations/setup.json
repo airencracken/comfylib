@@ -1,0 +1,58 @@
+[
+  {
+    "name": "browser setup requires the host key",
+    "file": "setup/web.go",
+    "before": "!token.Equal(r.PostForm.Get(\"key\"), hex.EncodeToString(key))",
+    "after": "false && !token.Equal(r.PostForm.Get(\"key\"), hex.EncodeToString(key))",
+    "package": "./setup",
+    "run": "^TestSetupFlowRequiresHostKeyAndCloses$"
+  },
+  {
+    "name": "browser setup requires CSRF",
+    "file": "setup/web.go",
+    "before": "!token.Equal(r.PostForm.Get(\"csrf\"), csrf)",
+    "after": "false",
+    "package": "./setup",
+    "run": "^TestSetupFlowRequiresHostKeyAndCloses$"
+  },
+  {
+    "name": "existing owners disable browser setup",
+    "file": "setup/setup.go",
+    "before": "ready, err := h.config.Ready(ctx)",
+    "after": "ready, err := false, error(nil)",
+    "package": "./setup",
+    "run": "^TestInitializedInstanceNeedsNoSetupFiles$"
+  },
+  {
+    "name": "public setup keys are rejected",
+    "file": "setup/setup.go",
+    "before": "!info.Mode().IsRegular() || info.Mode().Perm()&0077 != 0",
+    "after": "!info.Mode().IsRegular()",
+    "package": "./setup",
+    "run": "^TestSetupKeyPermissionsAndAtomicCreation$"
+  },
+  {
+    "name": "multiline stdin passwords are rejected",
+    "file": "password/source.go",
+    "before": "strings.ContainsAny(value, \"\\r\\n\")",
+    "after": "false",
+    "package": "./password",
+    "run": "^TestPasswordSourceFlagsAndAdversarialInput$"
+  },
+  {
+    "name": "password files must be private",
+    "file": "password/source.go",
+    "before": "!info.Mode().IsRegular() || info.Mode().Perm()&0077 != 0",
+    "after": "!info.Mode().IsRegular()",
+    "package": "./password",
+    "run": "^TestCommonPasswordSources$"
+  },
+  {
+    "name": "browser setup requires HTTPS beyond loopback",
+    "file": "setup/web.go",
+    "before": "func (h *Handler) allowedTransport(r *http.Request) bool {\n\tif h.secure(r) {",
+    "after": "func (h *Handler) allowedTransport(r *http.Request) bool {\n\tif true {",
+    "package": "./setup",
+    "run": "^TestSetupTransportAndWorkerWait$"
+  }
+]

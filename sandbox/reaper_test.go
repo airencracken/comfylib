@@ -80,7 +80,9 @@ func TestRunChildRecordsItsChildWhileRunning(t *testing.T) {
 	if cmd.Process != nil {
 		_ = cmd.Process.Kill() // ends the sleep; its status is not under test
 	}
-	<-done
+	if err := <-done; err != nil {
+		t.Logf("child stopped: %v", err)
+	}
 	if !recorded {
 		t.Fatal("RunChild did not record its child")
 	}

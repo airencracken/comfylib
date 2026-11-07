@@ -61,6 +61,8 @@ jobs:
         run: sh tools/fuzz.sh 10s || exit 1
       - name: Browser helper unit and mutation tests
         run: make test-ui || exit 1
+      - name: Configuration convention and mutations
+        run: make test-config || exit 1
       - name: Mutation engine self-test
         run: python3 tools/test_mutate.py || exit 1
       - name: Mutations

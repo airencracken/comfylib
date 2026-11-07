@@ -38,6 +38,10 @@ app pins an exact version.
 
 ## Checks
 
+Shipped service examples follow the [configuration convention](docs/configuration.md):
+`KEY="value"` for every value, no required `export`, and an explicit manager and
+installed path. Existing user configuration remains supported unchanged.
+
 `make check` runs formatting, vet, cyclomatic complexity, golangci-lint, the
 race-enabled tests, the mutation engine's self-test, and every mutation table
 under `mutations/`. `make test-sandbox` needs a working `bwrap`;

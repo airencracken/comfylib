@@ -68,5 +68,5 @@ func ExampleParseShellValue() {
 	// Output:
 	// "/srv/it's" <nil>
 	// "/srv/a b" <nil>
-	// "" shell expression "${ROOT}/data" is not supported
+	// "" shell expression is not supported
 }

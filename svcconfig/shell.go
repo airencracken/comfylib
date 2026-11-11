@@ -104,7 +104,7 @@ func (p *valueParser) unquoted(index int, r rune, text string) (bool, error) {
 		if strings.HasPrefix(strings.TrimSpace(p.raw[index:]), "#") {
 			return true, nil
 		}
-		return false, fmt.Errorf("unquoted whitespace in %q", p.raw)
+		return false, errors.New("unquoted whitespace in value")
 	default:
 		p.value.WriteString(text)
 	}
@@ -122,7 +122,7 @@ func (p *valueParser) commentStarts(index int) bool {
 }
 
 func (p *valueParser) unsupported() error {
-	return fmt.Errorf("shell expression %q is not supported", p.raw)
+	return errors.New("shell expression is not supported")
 }
 
 // splitConfigWords splits a systemd Environment= value into its assignments,

@@ -14,6 +14,9 @@ comfylib uses only the Go standard library, so it adds no further modules to
 either app's dependency tree. It is versioned as v0 while its API settles; each
 app pins an exact version.
 
+Use a current Go security patch when building: Go 1.26.11 or later on the
+1.26 series, or Go 1.27.4 or later on the 1.27 series.
+
 ## Packages
 
 | Package | What it does |

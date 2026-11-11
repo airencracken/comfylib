@@ -218,7 +218,7 @@
  {
   "name": "unquoted whitespace refused",
   "file": "svcconfig/shell.go",
-  "before": "return false, fmt.Errorf(\"unquoted whitespace in %q\", p.raw)",
+  "before": "return false, errors.New(\"unquoted whitespace in value\")",
   "after": "return false, nil",
   "package": "./svcconfig",
   "run": "^TestParseShellValue$"
@@ -262,5 +262,29 @@
   "after": "if true {\n\t\t\treturn \"\", false, nil",
   "package": "./svcconfig",
   "run": "^TestUnreadableConfigurationIsAnError$"
+ },
+ {
+  "name": "shell error values remain private",
+  "file": "svcconfig/shell.go",
+  "before": "return errors.New(\"shell expression is not supported\")",
+  "after": "return fmt.Errorf(\"shell expression %q is not supported\", p.raw)",
+  "package": "./svcconfig",
+  "run": "^TestConfigurationErrorsDoNotDiscloseValues$"
+ },
+ {
+  "name": "whitespace error values remain private",
+  "file": "svcconfig/shell.go",
+  "before": "return false, errors.New(\"unquoted whitespace in value\")",
+  "after": "return false, fmt.Errorf(\"unquoted whitespace in %q\", p.raw)",
+  "package": "./svcconfig",
+  "run": "^TestConfigurationErrorsDoNotDiscloseValues$"
+ },
+ {
+  "name": "conflicting settings remain private",
+  "file": "svcconfig/svcconfig.go",
+  "before": "what, key)",
+  "after": "what+openRCValue+systemdValue, key)",
+  "package": "./svcconfig",
+  "run": "^TestConfigurationErrorsDoNotDiscloseValues$"
  }
 ]

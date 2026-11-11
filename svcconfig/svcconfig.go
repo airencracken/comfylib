@@ -143,7 +143,7 @@ func (p Paths) Setting(key, fallback, what string) (string, error) {
 	}
 	switch {
 	case m.openRC && m.systemd && openRCValue != systemdValue:
-		return "", fmt.Errorf("OpenRC and systemd configure different %s (%q and %q); set %s explicitly or run under the active service manager", what, openRCValue, systemdValue, key)
+		return "", fmt.Errorf("OpenRC and systemd configure different %s; set %s explicitly or run under the active service manager", what, key)
 	case m.openRC:
 		return openRCValue, nil
 	case m.systemd:

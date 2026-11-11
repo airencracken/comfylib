@@ -146,3 +146,6 @@ Applications retain atomic ownership checks in their own databases. See the
 Shared suite controls, optional app navigation, explicitly linked community sign-in,
 discussion returns and coordinated audit/release tooling are described in
 [Suite components and maintenance](docs/suite.md).
+
+The [0.2.0 release notes](docs/releases.md) describe the new suite helpers and
+patched compiler requirement.

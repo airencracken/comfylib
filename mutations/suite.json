@@ -1,0 +1,66 @@
+[
+  {
+    "name": "app credentials rejected",
+    "file": "suite/apps.go",
+    "before": "u.User == nil",
+    "after": "true",
+    "package": "./suite",
+    "run": "TestAppsConfigurationContract"
+  },
+  {
+    "name": "app destinations unique",
+    "file": "suite/apps.go",
+    "before": "seen[app.ID] ||",
+    "after": "false ||",
+    "package": "./suite",
+    "run": "TestAppsConfigurationContract"
+  },
+  {
+    "name": "sign in state bound to browser",
+    "file": "suite/auth.go",
+    "before": "subtle.ConstantTimeCompare([]byte(cookie.Value), []byte(state[0])) != 1",
+    "after": "false && (subtle.ConstantTimeCompare([]byte(cookie.Value), []byte(state[0])) != 1)",
+    "package": "./suite",
+    "run": "TestAuthFlowBindingExpiryReplayAndAdmission"
+  },
+  {
+    "name": "sign in callbacks consumed once",
+    "file": "suite/auth.go",
+    "before": "delete(a.flows, state[0])",
+    "after": "delete(a.flows, \"unrelated\")",
+    "package": "./suite",
+    "run": "TestAuthFlowBindingExpiryReplayAndAdmission"
+  },
+  {
+    "name": "sign in expiry enforced",
+    "file": "suite/auth.go",
+    "before": "ok && time.Now().Before(flow.Expires)",
+    "after": "ok",
+    "package": "./suite",
+    "run": "TestAuthFlowBindingExpiryReplayAndAdmission"
+  },
+  {
+    "name": "discussion bound to source",
+    "file": "suite/discussion.go",
+    "before": "p.source != sourcePath",
+    "after": "false",
+    "package": "./suite",
+    "run": "TestDiscussionRoundTrip"
+  },
+  {
+    "name": "discussion bound to session",
+    "file": "suite/discussion.go",
+    "before": "p.binding != sha256.Sum256([]byte(binding))",
+    "after": "false",
+    "package": "./suite",
+    "run": "TestDiscussionRoundTrip"
+  },
+  {
+    "name": "discussion configured origins",
+    "file": "suite/discussion.go",
+    "before": "u.Host != base.Host",
+    "after": "false",
+    "package": "./suite",
+    "run": "TestDiscussionRoundTrip"
+  }
+]

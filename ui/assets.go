@@ -9,10 +9,10 @@ import (
 	"io/fs"
 )
 
-//go:embed accounts.css
+//go:embed accounts.css components.css suite.js
 var assets embed.FS
 
-// Assets returns the read-only styles for invitation and account forms.
-// Serve accounts.css after the application's stylesheet to preserve its layout
+// Assets returns read-only shared styles and browser behavior.
+// Serve the styles after the application's stylesheet to preserve layout
 // overrides. Browser test helpers are deliberately outside this filesystem.
 func Assets() fs.FS { return assets }

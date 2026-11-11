@@ -12,7 +12,7 @@ export GOWORK := off
 help: ## Show available commands
 	@awk 'BEGIN {FS = ":.*## "} /^[a-zA-Z0-9_-]+:.*## / {printf "  %-16s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-check: fmt vet cyclo lint test-race test-engine test-ui test-config test-mutations ## Run every check that needs no extra services
+check: test-suite fmt vet cyclo lint test-race test-engine test-ui test-config test-mutations ## Run every check that needs no extra services
 	@echo 'All checks passed.'
 
 fmt: ## Fail if any Go file needs gofmt
@@ -56,3 +56,8 @@ test-ui: ## Check shared browser assertions and their mutations (requires node)
 .PHONY: test-config
 test-config: ## Check the shared service configuration convention
 	python3 tools/check_service_config.py
+
+.PHONY: test-suite
+test-suite: ## Check shared controls and release-independent suite tooling
+	node --test tools/test_suite.cjs
+	python3 tools/test_suite_tools.py

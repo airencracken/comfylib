@@ -1,0 +1,50 @@
+package suite // import "github.com/airencracken/comfylib/suite"
+
+func CheckDiscussion(token, sourcePath, binding, thread, forum string) bool
+
+func ConfiguredDiscussionReturn(raw, apps string) (string, error)
+
+func DiscussionResult(destination, thread string) string
+
+func DiscussionReturn(raw, source, apps string) (string, error)
+
+func FinishDiscussion(token string)
+
+func PrepareDiscussion(handoff, source, binding string) (string, error)
+
+func RenderDiscussion(w http.ResponseWriter, action, source, thread, state, csrfKey, csrf, css string)
+
+func TemplateFuncs(prefix string) (template.FuncMap, error)
+
+type App struct {
+	ID  string `json:"id"`
+	URL string `json:"url"`
+}
+
+func ParseApps(raw string) ([]App, error)
+
+func (a App) Name() string
+
+type Auth struct {
+	// contains filtered or unexported fields
+}
+
+func NewAuth(c AuthConfig, p Provider, db *sql.DB, h AuthHooks) (*Auth, error)
+
+func (a *Auth) Register(mux *http.ServeMux)
+
+type AuthConfig struct{ App, Issuer, ClientID, ClientSecret, BaseURL string }
+
+type AuthHooks struct {
+	RateKey func(*http.Request) string
+	Current func(*http.Request) (int64, string)
+	CSRF    func(*http.Request) (string, string)
+	SignIn  func(http.ResponseWriter, *http.Request, int64) (string, error)
+}
+
+type Identity struct{ Issuer, Subject string }
+
+type Provider interface {
+	Authorize(context.Context, string, string, string) (string, error)
+	Exchange(context.Context, string, string, string) (Identity, error)
+}

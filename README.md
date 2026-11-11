@@ -142,3 +142,7 @@ private-file experience for account commands. The `setup` package supplies the
 host-authorized first-owner browser page and a private setup-key command.
 Applications retain atomic ownership checks in their own databases. See the
 [common setup contract](docs/setup.md) and its real-binary browser test harness.
+
+Shared suite controls, optional app navigation, explicitly linked community sign-in,
+discussion returns and coordinated audit/release tooling are described in
+[Suite components and maintenance](docs/suite.md).

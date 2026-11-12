@@ -23,6 +23,7 @@ Use a current Go security patch when building: Go 1.26.11 or later on the
 
 | Package | What it does |
 | --- | --- |
+| [`displaytime`](displaytime) | Saved account timezone validation, formatting, shared controls and bounded template variants. See [integration](docs/display-time.md). |
 | [`analytics`](analytics) | Shared SQLite activity storage, successful sign-ins, deduplicated authorized content opens, retention and reporting. |
 | [`admin`](admin) | Presents owner-only aggregate metrics and operational summaries; apps own queries and access checks. |
 | [`ratelimit`](ratelimit) | Bounded fixed-window and token-bucket budgets with deterministic clocks. |

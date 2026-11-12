@@ -1,0 +1,3 @@
+package displaytimetest // import "github.com/airencracken/comfylib/displaytime/displaytimetest"
+
+func Run(t *testing.T, db *sql.DB)

@@ -113,3 +113,9 @@ main:has(> .comfy-admin-dashboard), .comfy-admin-dashboard { color-scheme: light
 main:has(> .comfy-admin-dashboard) { box-sizing: border-box; display: block; width: 100%; max-width: 1152px; min-width: 0; margin: 0 auto; padding: 32px 16px; background: light-dark(#f3f5f8, #151c27); }
 
 .comfy-admin-dashboard :focus-visible { outline: 3px solid light-dark(#2459a3, #a9ccff); outline-offset: 3px; }
+
+.comfy-timezone form { display: grid; gap: .75rem; max-width: 42rem; }
+.comfy-timezone input:not([type="hidden"]) { box-sizing: border-box; width: 100%; min-width: 0; }
+.comfy-timezone p { margin: 0; }
+.comfy-timezone-actions { display: flex; flex-wrap: wrap; gap: .75rem; }
+.comfy-timezone [hidden] { display: none !important; }

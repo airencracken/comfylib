@@ -1,0 +1,98 @@
+[
+  {
+    "name": "timezone names reject host-local and filesystem inputs",
+    "file": "displaytime/time.go",
+    "before": "len(name) > MaxName || !zoneName.MatchString(name)",
+    "after": "len(name) > MaxName",
+    "package": "./displaytime",
+    "run": "^TestTimezoneValidationAndForms$"
+  },
+  {
+    "name": "timezone forms reject duplicated scalar fields",
+    "file": "displaytime/time.go",
+    "before": "len(values[\"timezone\"]) != 1",
+    "after": "len(values[\"timezone\"]) < 1",
+    "package": "./displaytime",
+    "run": "^TestTimezoneValidationAndForms$"
+  },
+  {
+    "name": "timezone formatting applies the reader location",
+    "file": "displaytime/time.go",
+    "before": "t.In(f.Location()).Format(layout)",
+    "after": "t.UTC().Format(layout)",
+    "package": "./displaytime",
+    "run": "^TestLocalCalendarDSTAndMachineInstants$"
+  },
+  {
+    "name": "machine timestamps stay UTC",
+    "file": "displaytime/time.go",
+    "before": "return New(\"UTC\").Format(value, time.RFC3339)",
+    "after": "return New(\"Asia/Tokyo\").Format(value, time.RFC3339)",
+    "package": "./displaytime",
+    "run": "^TestLocalCalendarDSTAndMachineInstants$"
+  },
+  {
+    "name": "timezone templates remain isolated between readers",
+    "file": "displaytime/templates.go",
+    "before": "name := f.Name()",
+    "after": "name := \"UTC\"",
+    "package": "./displaytime",
+    "run": "^TestTemplateIsolationConcurrencyAndBoundedCache$"
+  },
+  {
+    "name": "timezone template cache remains bounded",
+    "file": "displaytime/templates.go",
+    "before": "if len(t.entries) == templateLimit {",
+    "after": "if false {",
+    "package": "./displaytime",
+    "run": "^TestTemplateIsolationConcurrencyAndBoundedCache$"
+  },
+  {
+    "name": "timezone updates retain native actor binding",
+    "file": "displaytime/time.go",
+    "before": "exec.ExecContext(ctx, statement, name, id)",
+    "after": "exec.ExecContext(ctx, statement, name, int64(1))",
+    "package": "./displaytime",
+    "run": "^TestSaveValidatesBindsAndFailsAtomically$"
+  },
+  {
+    "name": "inactive and partial preference writes are rejected",
+    "file": "displaytime/time.go",
+    "before": "if rows != 1 {",
+    "after": "if rows < 0 {",
+    "package": "./displaytime",
+    "run": "^TestSaveValidatesBindsAndFailsAtomically$"
+  },
+  {
+    "name": "timezone schema rejects nonpositive account IDs",
+    "file": "displaytime/store.go",
+    "before": "CHECK(member>0)",
+    "after": "CHECK(member>=0)",
+    "package": "./displaytime",
+    "run": "^TestTimezoneSchemaRejectsAdversarialRows$"
+  },
+  {
+    "name": "timezone initialization rejects unknown namespace versions",
+    "file": "displaytime/store.go",
+    "before": "if version != 1 {",
+    "after": "if version < 1 {",
+    "package": "./displaytime",
+    "run": "^TestInitializeRejectsPartialAndFutureNamespaces$"
+  },
+  {
+    "name": "timezone initialization never commits a failed setup",
+    "file": "displaytime/store.go",
+    "before": "defer func() { _ = tx.Rollback() }()",
+    "after": "defer func() { _ = tx.Commit() }()",
+    "package": "./displaytime",
+    "run": "^TestInitializeRejectsPartialAndFutureNamespaces$"
+  },
+  {
+    "name": "timezone controls reject CSRF field collisions",
+    "file": "displaytime/preference.go",
+    "before": "if p.CSRFField != \"csrf\" && p.CSRFField != \"csrf_token\" {",
+    "after": "if false {",
+    "package": "./displaytime",
+    "run": "^TestPreferenceEscapesDraftAndNativeCSRF$"
+  }
+]

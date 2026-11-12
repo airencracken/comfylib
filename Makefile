@@ -59,7 +59,7 @@ test-config: ## Check the shared service configuration convention
 
 .PHONY: test-suite
 test-suite: ## Check shared controls and release-independent suite tooling
-	node --test tools/test_suite.cjs
+	node --test tools/test_suite.cjs tools/test_timezone.cjs
 	python3 tools/test_suite_tools.py
 	python3 tools/test_app_tools.py
 	python3 tools/test_release_tools.py

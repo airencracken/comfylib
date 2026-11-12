@@ -1,3 +1,13 @@
+# Comfylib 0.6.0
+
+Adds shared saved display timezones, strict IANA validation, embedded timezone
+data, native account controls, device detection without autosaving, server-side
+formatters and a bounded concurrent template cache. The optional SQLite preference
+namespace is independently versioned and transactional. Apps retain their native
+permissions and account storage. Admin timestamp display follows the reader;
+analytics reporting days remain UTC. The core remains standard-library-only.
+See [account display timezones](display-time.md).
+
 # Comfylib 0.5.0
 
 Adds shared first-party sign-in and content-view analytics with bounded retention, atomic sessions and page batches, concurrent deduplication, account-deletion cleanup, and snapshot reporting. Admin dashboards share their entire layout, typography, neutral theme palette and tables; real browser checks enforce the same appearance across all five apps. Core runtime dependencies remain standard-library-only. See [analytics](analytics.md) for the counting and privacy rules.

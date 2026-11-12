@@ -1,0 +1,61 @@
+package displaytime // import "github.com/airencracken/comfylib/displaytime"
+
+const MaxName = 64
+
+var ErrTimezone = errors.New("choose a timezone such as UTC or America/Los_Angeles")
+
+func ForgetMember(ctx context.Context, exec Executor, id int64) error
+
+func ISO(value any) string
+
+func Initialize(ctx context.Context, db *sql.DB) error
+
+func Parse(name string) (*time.Location, error)
+
+func ParseForm(values url.Values) (string, error)
+
+func Read(ctx context.Context, db *sql.DB, id int64) (string, error)
+
+func RenderPreference(p Preference) (template.HTML, error)
+
+func Save(ctx context.Context, exec Executor, statement string, id int64, name string) error
+
+func Suggestions() []string
+
+type Executor interface {
+	ExecContext(context.Context, string, ...any) (sql.Result, error)
+}
+
+type Formatter struct {
+	// contains filtered or unexported fields
+}
+
+func In(location *time.Location) Formatter
+
+func New(name string) Formatter
+
+func (f Formatter) Clock(value any) string
+
+func (f Formatter) Date(value any) string
+
+func (f Formatter) Format(value any, layout string) string
+
+func (f Formatter) Funcs() template.FuncMap
+
+func (f Formatter) Location() *time.Location
+
+func (f Formatter) Name() string
+
+func (f Formatter) Stamp(value any) string
+
+type Preference struct{ Action, CSRF, CSRFField, Name, Error, Notice string }
+
+type Templates struct {
+	// contains filtered or unexported fields
+}
+
+func NewTemplates(source *template.Template, bind func(Formatter) template.FuncMap) (*Templates, error)
+
+func (t *Templates) ExecuteTemplate(w io.Writer, zone, name string, value any) error
+
+func (t *Templates) Has(name string) bool

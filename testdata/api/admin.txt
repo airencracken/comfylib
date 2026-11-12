@@ -20,6 +20,8 @@ type Query struct {
 }
 
 type View struct {
+	Timezone string
+
 	Metrics  []Metric
 	Items    []Item
 	Backup   autobackup.Status

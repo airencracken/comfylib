@@ -37,7 +37,7 @@ try {
   server = await spawnServer(binary, ['serve'], { env, health: origin + '/healthz' });
   browser = await chromium.launch({ executablePath: await findBrowser({ required: true }), headless: true });
   async function session(username, javaScriptEnabled = false) {
-    const context = await browser.newContext({ javaScriptEnabled });
+    const context = await browser.newContext({ javaScriptEnabled, timezoneId: 'Asia/Kolkata' });
     if (username) {
       const page = await context.newPage(); await page.goto(origin + '/login');
       await page.getByLabel('Username', { exact: true }).fill(username);
@@ -53,6 +53,38 @@ try {
   await member.close(); await guest.close(); await owner.close();
   for (const javascript of [false, true]) {
     const context = await session('metricsowner', javascript), page = await context.newPage();
+    const accountPath = app === 'imvault' ? '/settings/account' : '/account';
+    await page.goto(origin + accountPath);
+    const input = page.getByLabel('Display timezone', { exact: true });
+    const form = page.locator('form[action$="/timezone"]');
+    const save = form.getByRole('button', { name: 'Save timezone', exact: true });
+    await input.fill('UTC'); await save.click(); await page.waitForURL(url => url.pathname === accountPath && url.searchParams.get('saved') === 'timezone');
+    assert.equal(await input.inputValue(), 'UTC', `${app}: UTC defaults/reset`);
+    await input.fill('America/Los_Angeles'); await save.click(); await page.waitForURL(url => url.pathname === accountPath && url.searchParams.get('saved') === 'timezone');
+    assert.equal(await input.inputValue(), 'America/Los_Angeles', `${app}: saved timezone without relying on JavaScript`);
+    const device = form.getByRole('button', { name: "Use this device's timezone", exact: true });
+    if (javascript) {
+      assert.ok(await device.isVisible()); await input.fill('UTC'); await device.click();
+      assert.match(await input.inputValue(), /^Asia\/(Kolkata|Calcutta)$/);
+      await page.reload(); assert.equal(await input.inputValue(), 'America/Los_Angeles', 'device detection does not save automatically');
+    } else { assert.ok(await device.isHidden()); }
+    await input.fill('Local'); await save.click();
+    assert.ok(await form.getByRole('alert').isVisible(), `${app}: invalid local-host timezone rejected`);
+    assert.equal(await input.inputValue(), 'Local', 'invalid draft remains editable');
+    await input.fill('America/Los_Angeles'); await save.click();
+    const parallel = await session('metricsowner', javascript), parallelPage = await parallel.newPage();
+    await parallelPage.goto(origin + accountPath);
+    assert.equal(await parallelPage.getByLabel('Display timezone', { exact: true }).inputValue(), 'America/Los_Angeles', `${app}: account preference persists across sessions`);
+    await parallel.close();
+    const independent = await session('metricsmember', javascript), independentPage = await independent.newPage();
+    await independentPage.goto(origin + accountPath);
+    assert.equal(await independentPage.getByLabel('Display timezone', { exact: true }).inputValue(), 'UTC', `${app}: another account remains isolated`);
+    await independent.close();
+    await page.goto(origin + '/admin/metrics');
+    assert.match(await page.getByRole('table', { name: 'Recent sign-ins by account', exact: true }).innerText(), /P[DS]T/, `${app}: dashboard instants honor local time`);
+    assert.ok(await page.getByRole('columnheader', { name: 'UTC date', exact: true }).isVisible(), 'reporting days stay UTC');
+    await page.goto(origin + accountPath); await input.fill('UTC'); await save.click();
+
     for (const theme of ['light', 'dark']) for (const width of [320,390,768,1280]) {
       await page.setViewportSize({ width, height: 1000 }); await page.emulateMedia({ colorScheme: theme });
       await page.goto(origin + '/admin/metrics');

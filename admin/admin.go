@@ -17,6 +17,7 @@ import (
 
 	"github.com/airencracken/comfylib/analytics"
 	"github.com/airencracken/comfylib/autobackup"
+	"github.com/airencracken/comfylib/displaytime"
 	"github.com/airencracken/comfylib/suite"
 )
 
@@ -65,6 +66,8 @@ type Item struct{ Name, Status, Detail string }
 
 // View contains data already authorized by the application for its current owner.
 type View struct {
+	Timezone string
+
 	Metrics  []Metric
 	Items    []Item
 	Backup   autobackup.Status
@@ -128,7 +131,7 @@ func metricValue(metric Metric) string {
 	return fmt.Sprintf("%d bytes", metric.Value)
 }
 
-var summary = template.Must(template.New("admin").Funcs(template.FuncMap{"metricValue": metricValue, "utc": func(t time.Time) string { return t.UTC().Format("2 Jan 2006, 15:04 UTC") }}).Parse(`
+var summaryTemplate = template.Must(template.New("admin").Funcs(template.FuncMap{"metricValue": metricValue, "utc": displaytime.New("UTC").Stamp}).Parse(`
 <div class="comfy-admin-dashboard" data-comfy-dashboard="1">
 <header class="comfy-admin-heading"><div><h1>Instance metrics</h1><p>Usage and activity, available only to administrators.</p></div><a href="{{if .BackURL}}{{.BackURL}}{{else}}/{{end}}">Back to administration</a></header>
 <section class="comfy-admin-section" aria-labelledby="comfy-overview-title"><h2 id="comfy-overview-title">Instance overview</h2>
@@ -139,7 +142,7 @@ var summary = template.Must(template.New("admin").Funcs(template.FuncMap{"metric
 <dl class="comfy-metrics"><div><dt>Successful sign-ins</dt><dd>{{.Logins}}</dd></div><div><dt>Active accounts</dt><dd>{{.ActiveMembers}}</dd></div><div><dt>Content views</dt><dd>{{.Views}}</dd></div></dl>
 <p class="comfy-admin-help">A view is an authorized content open, counted once per account, item and UTC day. Thumbnails, background assets, failed requests and signed-out visits do not count. Activity is retained for 90 days. IP addresses and browser identifiers are not recorded. Earlier activity cannot be reconstructed.</p>
 <div class="comfy-metrics-table-wrap"><table class="comfy-metrics-table"><caption>Daily activity</caption><thead><tr><th scope="col">UTC date</th><th scope="col">Sign-ins</th><th scope="col">Views</th></tr></thead><tbody>{{range .Days}}<tr><th scope="row">{{.Day.Format "2 Jan 2006"}}</th><td>{{.Logins}}</td><td>{{.Views}}</td></tr>{{end}}</tbody></table></div>
-<div class="comfy-metrics-table-wrap"><table class="comfy-metrics-table"><caption>Recent sign-ins by account</caption><thead><tr><th scope="col">Account</th><th scope="col">Sign-ins</th><th scope="col">Last sign-in (UTC)</th></tr></thead><tbody>{{range .LoginsByAccount}}<tr><th scope="row">{{.Name}}</th><td>{{.Count}}</td><td>{{utc .Last}}</td></tr>{{else}}<tr><td colspan="3">No recorded sign-ins in this period.</td></tr>{{end}}</tbody></table></div>
+<div class="comfy-metrics-table-wrap"><table class="comfy-metrics-table"><caption>Recent sign-ins by account</caption><thead><tr><th scope="col">Account</th><th scope="col">Sign-ins</th><th scope="col">Last sign-in</th></tr></thead><tbody>{{range .LoginsByAccount}}<tr><th scope="row">{{.Name}}</th><td>{{.Count}}</td><td>{{utc .Last}}</td></tr>{{else}}<tr><td colspan="3">No recorded sign-ins in this period.</td></tr>{{end}}</tbody></table></div>
 <div class="comfy-metrics-table-wrap"><table class="comfy-metrics-table"><caption>Most viewed content</caption><thead><tr><th scope="col">Content</th><th scope="col">Views</th></tr></thead><tbody>{{range .Popular}}<tr><th scope="row">{{.Description}}</th><td>{{.Views}}</td></tr>{{else}}<tr><td colspan="2">No recorded content views in this period.</td></tr>{{end}}</tbody></table></div>
 </section>{{end}}
 <section class="comfy-admin-section" aria-labelledby="comfy-operations-title"><h2 id="comfy-operations-title">Operations</h2>
@@ -151,11 +154,16 @@ var summary = template.Must(template.New("admin").Funcs(template.FuncMap{"metric
 {{if and .Backup.Enabled (not .Backup.NextAttempt.IsZero)}}<p>Next attempt: {{utc .Backup.NextAttempt}}</p>{{end}}</dd></div></dl>
 <p class="comfy-admin-help">These totals describe this instance. Recent activity covers the past 7 UTC days, including today. Only administrators can access these details.</p></section></div>`))
 
+var summary, summaryErr = displaytime.NewTemplates(summaryTemplate, func(f displaytime.Formatter) template.FuncMap { return template.FuncMap{"utc": f.Stamp} })
+
 // Render returns escaped HTML for insertion into an application's own template.
 // Only call it after the application's owner or administrator check succeeds.
 func Render(view View) (template.HTML, error) {
 	var out bytes.Buffer
-	if err := summary.Execute(&out, view); err != nil {
+	if summaryErr != nil {
+		return "", summaryErr
+	}
+	if err := summary.ExecuteTemplate(&out, view.Timezone, "admin", view); err != nil {
 		return "", err
 	}
 	return template.HTML(out.String()), nil // #nosec G203 -- values are escaped by html/template above.

@@ -61,6 +61,25 @@ class ReleaseTools(unittest.TestCase):
             (root/'go.sum').write_text('changed')
             self.assertNotEqual(original['inputs'],plan.inspect(root)['inputs'])
 
+    def test_cold_cache_requests_explicit_version_for_origin_and_offline_consumer(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root=release_fixture(Path(directory))
+            revision='a'*40
+            result=subprocess.CompletedProcess([],0,stdout=json.dumps({'Origin':{'Hash':revision}}))
+            with patch.object(plan.subprocess,'check_output',return_value='v1.2.3\n'), patch.object(plan.subprocess,'run',return_value=result) as run, patch('check_consumer.verify_workflows') as verify:
+                plan.cold_cache(root)
+                calls=run.call_args_list
+                self.assertEqual(calls[0].args[0],['go','mod','download','-json','github.com/airencracken/comfylib@v1.2.3'])
+                self.assertEqual(calls[-1].kwargs['env']['GOPROXY'],'off')
+                self.assertEqual(calls[-1].kwargs['env']['GOWORK'],'off')
+                verify.assert_called_once_with(root,revision)
+            for version in ('', 'latest', 'v1.2.3;false', '../v1.2.3'):
+                with patch.object(plan.subprocess,'check_output',return_value=version), patch.object(plan.subprocess,'run') as run:
+                    with self.assertRaises(ValueError):plan.cold_cache(root)
+                    run.assert_not_called()
+            with patch.object(plan.subprocess,'check_output',return_value='v1.2.3'), patch.object(plan.subprocess,'run',return_value=subprocess.CompletedProcess([],0,stdout='{}')):
+                with self.assertRaises(ValueError):plan.cold_cache(root)
+
     def test_catalog_schema_property_and_adversarial_values(self):
         valid={'schema':1,'releases':dict.fromkeys(plan.APPS+('comfylib','comfylib/oidc','arise'),'1.2.3')}
         with tempfile.TemporaryDirectory() as directory:

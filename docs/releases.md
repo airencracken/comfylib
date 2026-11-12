@@ -1,3 +1,7 @@
+# Comfylib 0.4.3
+
+Requests the selected module version explicitly during cold-cache preflight so Go returns immutable origin metadata on its first download. Adds regression checks for exact version selection, origin rejection and offline consumer verification.
+
 # Comfylib 0.4.2
 
 Makes browser checks a required publication gate and forwards the exact requested source reference. Validates native deployment archives against their declared file layouts while retaining complete source archive checks. Adds workflow, archive and publication regression tests.

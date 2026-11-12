@@ -90,7 +90,10 @@ def suite(root, versions):
 def cold_cache(root):
     with tempfile.TemporaryDirectory(prefix='comfy-release-cache-') as directory:
         env = os.environ | {'GOWORK':'off','GOMODCACHE':directory}
-        result=subprocess.run(['go','mod','download','-json','github.com/airencracken/comfylib'],cwd=root,env=env,check=True,capture_output=True,text=True)
+        version=subprocess.check_output(['go','list','-m','-f','{{.Version}}','github.com/airencracken/comfylib'],cwd=root,env=env,text=True).strip()
+        if not version.startswith('v') or not VERSION.fullmatch(version[1:]):
+            raise ValueError('published module must use a stable version')
+        result=subprocess.run(['go','mod','download','-json','github.com/airencracken/comfylib@'+version],cwd=root,env=env,check=True,capture_output=True,text=True)
         revision=json.loads(result.stdout).get('Origin',{}).get('Hash')
         if not revision or not re.fullmatch('[a-f0-9]{40}',revision):
             raise ValueError('published module must identify its immutable source revision')

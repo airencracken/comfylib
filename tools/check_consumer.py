@@ -59,6 +59,15 @@ def verify_workflows(root, revision=None):
                     raise ValueError('shared workflow input is not forwarded: '+argument)
 
 
+def workflow_source(root, name):
+    path = root / '.github/workflows' / (name + '.yml')
+    text = path.read_text()
+    if 'uses: airencracken/comfylib/.github/workflows/' + name + '.yml@' in text:
+        verify_workflows(root)
+        return (Path(__file__).resolve().parents[1] / '.github/workflows' / (name + '.yml')).read_text()
+    return text
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('apps', nargs='*', type=Path)

@@ -179,7 +179,9 @@ class ConfigurationTests(unittest.TestCase):
             for required in ("USER 10001:10001", "ca-certificates tzdata zstd", "chmod 0700 /data",
                              "HEALTHCHECK", cfg["app"].upper() + ("_LISTEN" if cfg["app"] == "folkweave" else "_ADDR") + "##*:", "org.opencontainers.image.source"):
                 self.assertIn(required, dockerfile)
-        workflow = (release.ROOT / ".github/workflows/containers.yml").read_text()
+        sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
+        from check_consumer import workflow_source
+        workflow = workflow_source(release.ROOT,'containers')
         for required in ("arch: amd64", "arch: arm64", "ubuntu-24.04-arm", "needs: images",
                          "if: inputs.publish", "packages: write", "container-publication", "comfy.py container-release build", "comfy.py container-release publish"):
             self.assertIn(required, workflow)

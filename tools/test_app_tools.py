@@ -13,6 +13,7 @@ import unittest
 from unittest.mock import patch
 
 import app
+import check_metrics
 import check_consumer
 import rollout_comfylib
 
@@ -67,6 +68,20 @@ class ConsumerTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 check_consumer.verify(root)
 
+    def test_browser_runner_resolves_bare_and_qualified_module_names(self):
+        for name in app.APPS:
+            with self.subTest(app=name),tempfile.TemporaryDirectory() as directory:
+                root=fixture(Path(directory),name)
+                manifest=root/'go.mod'
+                if name in ('imvault','witmoot'):
+                    manifest.write_text(manifest.read_text().replace('github.com/airencracken/'+name,name))
+                self.assertEqual(app.application_name(root),name)
+                playwright=root/'playwright.mjs';playwright.write_text('fixture')
+                with patch.dict(os.environ,{'COMFYWARE_APP_ROOT':str(root),'COMFYWARE_PLAYWRIGHT_PATH':str(playwright)}),patch.object(subprocess,'run') as run:
+                    check_metrics.main()
+                self.assertEqual(run.call_args_list[0].args[0][-1],'./cmd/'+name)
+                self.assertEqual(run.call_args_list[1].args[0][-1],name)
+
     def test_shared_workflow_pins_inputs_and_copied_implementations(self):
         with tempfile.TemporaryDirectory() as directory:
             root=fixture(Path(directory));folder=root/'.github/workflows';folder.mkdir(parents=True)
@@ -75,6 +90,7 @@ class ConsumerTests(unittest.TestCase):
                 if name=='containers':text+='    with:\n'+''.join('      '+arg+': ${{ inputs.'+arg+' }}\n' for arg in ('source_ref','release_tag','publish'))
                 (folder/(name+'.yml')).write_text(text)
             check_consumer.verify_workflows(root,'a'*40)
+            self.assertIn('arch: amd64',check_consumer.workflow_source(root,'containers'))
             path=folder/'containers.yml';original=path.read_text()
             for broken in (original.replace('a'*40,'master'),original.replace('inputs.source_ref','inputs.other'),original+'    steps:\n      - run: copied\n'):
                 path.write_text(broken)

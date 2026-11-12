@@ -1,3 +1,7 @@
+# Comfylib 0.4.1
+
+Fixes native metrics browser tooling for applications with bare module names, and makes container contracts follow immutable shared workflow references. Adds regression coverage for all five module names and the delegated workflow source.
+
 # Comfylib 0.4.0
 
 Adds the admin and rate-limit packages, native metrics browser contracts, shared immutable workflows, release preparation and artifact validation, and source-bound suite preflight. The core remains standard-library-only. The optional OIDC module stays at 0.1.0.

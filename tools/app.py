@@ -36,6 +36,12 @@ def application(root):
     return root
 
 
+def application_name(root):
+    root = application(root)
+    module = re.search(r'^module\s+(\S+)\s*$',(root/'go.mod').read_text(),re.M)[1]
+    return module.rsplit('/',1)[-1]
+
+
 def command(tool, root):
     if tool == 'test-containers':
         return [sys.executable, '-B', '-m', 'unittest', 'discover', '-s', str(HERE / 'containers'), '-p', 'test_*.py', '-v']

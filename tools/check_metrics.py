@@ -4,12 +4,12 @@ from pathlib import Path
 import subprocess
 import tempfile
 
-from app import application
+from app import application, application_name
 
 
 def main():
     root = application(os.environ.get('COMFYWARE_APP_ROOT', Path.cwd()))
-    app = (root / 'go.mod').read_text().splitlines()[0].split('/')[-1]
+    app = application_name(root)
     playwright = Path(os.environ.get('COMFYWARE_PLAYWRIGHT_PATH', root / 'scripts/browser/node_modules/playwright/index.mjs'))
     if not playwright.is_file():
         raise ValueError('Install the browser fixtures with npm ci --prefix scripts/browser')

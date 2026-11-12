@@ -1,5 +1,30 @@
 # Comfylib releases
 
+## 0.3.0
+
+- Applications now consume the published `suite` package and embedded UI assets
+  directly; generated suite copies, adapter templates and synchronization manifests
+  are retired.
+- Add shared application maintenance commands for service configuration,
+  deployment forwarding, release validation, archive scanning, mutations and
+  container releases. A small application launcher resolves the exact module pin,
+  including with the proxy disabled. Container lifecycle profiles retain both
+  existing backup and restore flows.
+- Add consumer contracts, offline bootstrap tests, shared container schema,
+  property, atomicity and adversarial tests. Existing authentication mutations now
+  run centrally across the core and optional protocol module.
+- Add `--oidc-version` to coordinated dependency rollouts. Preserve all existing
+  exported Go APIs and the core module's standard-library-only dependency contract.
+
+## OIDC companion 0.1.0
+
+The new `github.com/airencracken/comfylib/oidc` module replaces application-local
+protocol adapters. It uses CoreOS go-oidc and OAuth2 for signed claims and PKCE,
+with bounded discovery requests and cached metadata. Applications keep their
+session and permission hooks. It requires Go 1.26.11 and is independently tagged
+as `oidc/v0.1.0`. Its integration tests cover explicit identity linking, CSRF,
+replay, account status and database atomicity; SQLite is a test dependency.
+
 ## 0.2.0
 
 - Add optional app navigation, bounded OpenID Connect flow state, explicit local

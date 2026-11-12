@@ -12,7 +12,7 @@ export GOWORK := off
 help: ## Show available commands
 	@awk 'BEGIN {FS = ":.*## "} /^[a-zA-Z0-9_-]+:.*## / {printf "  %-16s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-check: test-suite fmt vet cyclo lint test-race test-engine test-ui test-config test-mutations ## Run every check that needs no extra services
+check: test-suite test-oidc fmt vet cyclo lint test-race test-engine test-ui test-config test-mutations ## Run every check that needs no extra services
 	@echo 'All checks passed.'
 
 fmt: ## Fail if any Go file needs gofmt
@@ -61,3 +61,9 @@ test-config: ## Check the shared service configuration convention
 test-suite: ## Check shared controls and release-independent suite tooling
 	node --test tools/test_suite.cjs
 	python3 tools/test_suite_tools.py
+	python3 tools/test_app_tools.py
+
+.PHONY: test-oidc
+test-oidc: ## Check the separately versioned optional OIDC module and identity mutations
+	cd oidc && go vet ./... && go test -race -count=1 ./...
+	python3 tools/test_oidc_mutations.py

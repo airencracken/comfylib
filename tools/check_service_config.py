@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """Shared checks for shipped service configuration examples, not user files.
 
-The apps keep a copy as scripts/test_service_config.py, like the mutation engine.
+Applications run this from their pinned Comfylib module with scripts/comfy.py.
 Runtime parsers continue accepting existing bare and single-quoted values.
 """
 from pathlib import Path
@@ -16,7 +16,7 @@ import subprocess
 import unittest
 import tempfile
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(os.environ.get("COMFYWARE_APP_ROOT", Path(__file__).resolve().parents[1])).resolve()
 APP = re.search(r'^module\s+(\S+)', (ROOT / 'go.mod').read_text(), re.MULTILINE)[1].split('/')[-1]
 APPS = {'imvault', 'witmoot', 'songstead', 'folkweave', 'tidings'}
 ASSIGNMENT = re.compile(r'([A-Z][A-Z0-9_]*)=(.*)')

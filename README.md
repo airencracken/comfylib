@@ -11,7 +11,7 @@ reverse-proxy configuration. Application policy, storage schemas, templates and
 palettes stay in each app. Shared form layout assets and browser assertions keep common screens aligned.
 
 comfylib uses only the Go standard library, so it adds no further modules to
-either app's dependency tree. It is versioned as v0 while its API settles; each
+an application's dependency tree. It is versioned as v0 while its API settles; each
 app pins an exact version.
 
 Use a current Go security patch when building: Go 1.26.11 or later on the
@@ -149,3 +149,8 @@ discussion returns and coordinated audit/release tooling are described in
 
 The [0.2.0 release notes](docs/releases.md) describe the new suite helpers and
 patched compiler requirement.
+
+The optional [`comfylib/oidc`](oidc/README.md) companion module supplies the OIDC
+protocol adapter and has its own dependency manifest and release tags. Importing
+the core module does not pull in its dependencies. Shared application maintenance
+tools run directly from the pinned core module; see [suite maintenance](docs/suite.md).

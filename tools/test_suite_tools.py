@@ -18,19 +18,6 @@ def module(name):
     return result
 
 class SuiteToolsTest(unittest.TestCase):
-    def test_manifest_integrity_and_adversarial_paths(self):
-        verify=module('verify_suite').verify
-        with tempfile.TemporaryDirectory() as directory:
-            root=Path(directory);(root/'scripts').mkdir();(root/'internal').mkdir()
-            data=b'asset';(root/'internal/asset').write_bytes(data)
-            manifest={'source':'github.com/airencracken/comfylib','files':{'internal/asset':hashlib.sha256(data).hexdigest()}}
-            path=root/'scripts/suite-assets.json';path.write_text(json.dumps(manifest));verify(root)
-            (root/'internal/asset').write_bytes(b'changed')
-            with self.assertRaises(ValueError):verify(root)
-            for name in ('/etc/passwd','internal/../../etc/passwd','scripts/asset'):
-                manifest['files']={name:'0'*64};path.write_text(json.dumps(manifest))
-                with self.assertRaises(ValueError):verify(root)
-
     def test_archive_formats_paths_and_empty(self):
         scanner=module('scan_artifacts')
         with tempfile.TemporaryDirectory() as directory:
@@ -43,13 +30,6 @@ class SuiteToolsTest(unittest.TestCase):
                 if expected:self.assertEqual(list(scanner.binaries(archive)),[('app',b'\x7fELFfixture')])
                 else:
                     with self.assertRaises(ValueError):list(scanner.binaries(archive))
-
-    def test_sync_is_repeatable_and_checks_canonical_sources(self):
-        sync=module('sync_suite').sync
-        with tempfile.TemporaryDirectory() as directory:
-            root=Path(directory)/'feature-branch';root.mkdir();(root/'go.mod').write_text('module github.com/airencracken/songstead\n');sync(root);sync(root,True);sync(root);sync(root,True)
-            path=root/'internal/suite/apps.go';path.write_text(path.read_text()+'\n// changed\n')
-            with self.assertRaises(ValueError):sync(root,True)
 
     def test_rollout_requires_release_version(self):
         rollout=module('rollout_comfylib')

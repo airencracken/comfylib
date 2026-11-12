@@ -77,6 +77,11 @@ func goPackages(t *testing.T) []string {
 		}
 		// internal packages are not importable outside the module, so they are
 		// not part of the API the apps depend on.
+		if entry.IsDir() && path != "." {
+			if _, statErr := os.Stat(filepath.Join(path, "go.mod")); statErr == nil {
+				return filepath.SkipDir
+			}
+		}
 		if entry.IsDir() && path != "." && (entry.Name() == "testdata" || entry.Name() == "internal" || strings.HasPrefix(entry.Name(), ".")) {
 			return filepath.SkipDir
 		}

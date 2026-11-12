@@ -21,7 +21,7 @@ def checks(app, mutations=False, browsers=False, checkout=None):
         return [['make', 'check' if browsers else 'test-content'], ['make', 'test-http', 'test-deploy', 'check-config']]
     commands = [['go', 'vet', './...'], ['go', 'test', '-race', './...'], ['go', 'run', 'golang.org/x/vuln/cmd/govulncheck@v1.9.0', './...']]
     if app != 'comfylib':
-        commands.append(['python3', 'scripts/verify_suite.py'])
+        commands.append(['python3', 'scripts/comfy.py', 'check'])
     else:
         commands.append(['node', '--test', 'tools/test_suite.cjs'])
     if mutations:

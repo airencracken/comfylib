@@ -48,15 +48,14 @@ def verify(root):
 def verify_workflows(root, revision=None):
     for name in ('containers','browser'):
         source = (root / '.github/workflows' / (name + '.yml')).read_text()
-        references = re.findall(r'uses: airencracken/comfylib/\.github/workflows/' + name + r'\.yml@([a-f0-9]{40})(?:\s|$)',source)
+        references = re.findall(r'^\s*uses: airencracken/comfylib/\.github/workflows/' + name + r'\.yml@([a-f0-9]{40})(?:\s|$)',source,re.M)
         if len(references) != 1 or (revision and references[0] != revision):
             raise ValueError('shared workflow must pin the library revision: '+name)
         if re.search(r'^\s*(run:|steps:)',source,re.M):
             raise ValueError('shared workflow implementation was copied into the app: '+name)
-        if name == 'containers':
-            for argument in ('source_ref','release_tag','publish'):
-                if argument + ': ${{ inputs.' + argument + ' }}' not in source:
-                    raise ValueError('shared workflow input is not forwarded: '+argument)
+        for argument in (('source_ref','release_tag','publish') if name == 'containers' else ('source_ref',)):
+            if argument + ': ${{ inputs.' + argument + ' }}' not in source:
+                raise ValueError('shared workflow input is not forwarded: '+argument)
 
 
 def workflow_source(root, name):

@@ -57,6 +57,10 @@ def inspect(root, expected=None, require_clean=False):
                      'refusing to replace it','--verify-tag'):
         if contract not in workflow:
             raise ValueError('missing release publication contract: ' + contract)
+    if not re.search(r'needs:\s*\[\s*build\s*,\s*(?:packages\s*,\s*)?containers\s*,\s*browser\s*\]',workflow):
+        raise ValueError('browser checks must gate public release publication')
+    if 'uses: ./.github/workflows/browser.yml' not in workflow:
+        raise ValueError('release must invoke the shared browser workflow')
     dirty = bool(git(root,'status','--porcelain'))
     if require_clean and dirty:
         raise ValueError('release source must be committed and clean: ' + app)

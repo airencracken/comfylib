@@ -1,6 +1,11 @@
 name: Browser contracts
 on:
   workflow_call:
+    inputs:
+      source_ref:
+        type: string
+        required: false
+        default: ''
 permissions:
   contents: read
 env:
@@ -14,6 +19,8 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ inputs.source_ref || github.ref }}
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
         with:
           go-version: "1.26.11"

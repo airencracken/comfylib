@@ -188,7 +188,7 @@ class ConfigurationTests(unittest.TestCase):
         parent = (release.ROOT / ".github/workflows/release.yml").read_text()
         self.assertIn("./.github/workflows/containers.yml", parent)
         self.assertIn(f"github.repository == 'airencracken/{cfg['app']}'", parent)
-        self.assertRegex(parent, r"needs: \[build, (?:packages, )?containers\]")
+        self.assertRegex(parent, r"needs: \[build, (?:packages, )?containers, browser\]")
         self.assertIn("docs/containers.md", (release.ROOT / "README.md").read_text())
 
 

@@ -87,12 +87,12 @@ class ConsumerTests(unittest.TestCase):
             root=fixture(Path(directory));folder=root/'.github/workflows';folder.mkdir(parents=True)
             for name in ('containers','browser'):
                 text='jobs:\n  shared:\n    uses: airencracken/comfylib/.github/workflows/'+name+'.yml@'+'a'*40+'\n'
-                if name=='containers':text+='    with:\n'+''.join('      '+arg+': ${{ inputs.'+arg+' }}\n' for arg in ('source_ref','release_tag','publish'))
+                text+='    with:\n'+''.join('      '+arg+': ${{ inputs.'+arg+' }}\n' for arg in (('source_ref','release_tag','publish') if name=='containers' else ('source_ref',)))
                 (folder/(name+'.yml')).write_text(text)
             check_consumer.verify_workflows(root,'a'*40)
             self.assertIn('arch: amd64',check_consumer.workflow_source(root,'containers'))
             path=folder/'containers.yml';original=path.read_text()
-            for broken in (original.replace('a'*40,'master'),original.replace('inputs.source_ref','inputs.other'),original+'    steps:\n      - run: copied\n'):
+            for broken in (original.replace('uses:','# uses:'),original.replace('a'*40,'master'),original.replace('inputs.source_ref','inputs.other'),original+'    steps:\n      - run: copied\n'):
                 path.write_text(broken)
                 with self.assertRaises(ValueError):check_consumer.verify_workflows(root)
             path.write_text(original)

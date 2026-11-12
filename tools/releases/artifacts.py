@@ -75,6 +75,17 @@ def verify_source(root, source):
             raise ValueError('source archive differs: ' + name)
 
 
+def verify_native_documents(root, contents, layout):
+    tracked = subprocess.check_output(['git','ls-files','-z','--','docs',layout,'README.md','LICENSE'],cwd=root).decode().split('\0')
+    for relative in filter(None,tracked):
+        # layout/**/* includes descendants, while top-level adapters and test
+        # helpers belong to the full source archive checked by verify_source.
+        if relative.startswith(layout + '/') and len(PurePosixPath(relative).parts) < 3:
+            continue
+        if relative not in contents or contents[relative][0] != (root / relative).read_bytes():
+            raise ValueError('archive deployment document differs: ' + relative)
+
+
 def package(root, dist, temporary, app, arch, binary, config):
     packages = list(dist.glob(f'{app}_*_{arch}.deb'))
     if len(packages) != 1:
@@ -130,10 +141,7 @@ def main():
                     raise ValueError('archive operational document differs: ' + relative)
             if not contents[app][1] & 0o111:
                 raise ValueError('native executable has no executable permission')
-            tracked = subprocess.check_output(['git','ls-files','-z','--','docs',config['layout']],cwd=root).decode().split('\0')
-            for relative in filter(None,tracked):
-                if relative not in contents or contents[relative][0] != (root / relative).read_bytes():
-                    raise ValueError('archive deployment example differs: ' + relative)
+            verify_native_documents(root,contents,config['layout'])
             if config['debian']:
                 package(root,dist,temporary,app,arch,binary,config)
     sources = list(dist.glob(app + '_*_source.tar.gz'))

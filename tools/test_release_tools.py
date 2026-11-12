@@ -27,7 +27,8 @@ def release_fixture(root):
            'cmd/folkweave/main.go':'package main\nvar version = "1.2.3"\n',
            '.goreleaser.yaml':'version: 2\n',
            '.github/workflows/release.yml':'\n'.join(['RELEASE_TAG_INPUT: ${{ inputs.release_tag }}',
-             'git merge-base --is-ancestor HEAD origin/master','refusing to replace it','--verify-tag']),
+             'git merge-base --is-ancestor HEAD origin/master','refusing to replace it','--verify-tag',
+             'needs: [build, packages, containers, browser]','uses: ./.github/workflows/browser.yml']),
            '.github/workflows/containers.yml':'shared workflow',
            'LICENSE':'app license','deploy/licenses/go.LICENSE':'runtime license',
            'deploy/systemd/folkweave.service':'ExecStart=/usr/local/bin/folkweave serve\n',
@@ -113,6 +114,22 @@ class ReleaseTools(unittest.TestCase):
             with self.assertRaises(ValueError):debian.command(root,'folkweave','arm64')
             with self.assertRaises(ValueError):debian.command(root,'../../escape','amd64')
             with self.assertRaises(ValueError):debian.command(root,'folkweave','amd64;false')
+
+    def test_native_layout_globs_keep_deployment_docs_and_source_only_adapters(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root=release_fixture(Path(directory))
+            (root/'deploy/adapter.go').write_text('package deploy')
+            subprocess.run(['git','add','deploy/adapter.go'],cwd=root,check=True)
+            contents={}
+            for path in root.rglob('*'):
+                if path.is_file() and '.git' not in path.parts:
+                    relative=str(path.relative_to(root))
+                    contents[relative]=(path.read_bytes(),0o644)
+            del contents['deploy/adapter.go']
+            artifacts.verify_native_documents(root,contents,'deploy')
+            for relative in ['deploy/systemd/folkweave.service','README.md','docs/release-notes.md']:
+                broken=dict(contents);broken[relative]=(b'changed',0o644)
+                with self.subTest(relative=relative),self.assertRaises(ValueError):artifacts.verify_native_documents(root,broken,'deploy')
 
     def test_static_architecture_and_loader_mutations(self):
         value=bytearray(120);value[:6]=b'\x7fELF\x02\x01';struct.pack_into('<H',value,18,62);struct.pack_into('<Q',value,32,64);struct.pack_into('<HH',value,54,56,1)

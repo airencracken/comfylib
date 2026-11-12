@@ -1,3 +1,7 @@
+# Comfylib 0.4.2
+
+Makes browser checks a required publication gate and forwards the exact requested source reference. Validates native deployment archives against their declared file layouts while retaining complete source archive checks. Adds workflow, archive and publication regression tests.
+
 # Comfylib 0.4.1
 
 Fixes native metrics browser tooling for applications with bare module names, and makes container contracts follow immutable shared workflow references. Adds regression coverage for all five module names and the delegated workflow source.

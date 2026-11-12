@@ -1,0 +1,39 @@
+name: Browser contracts
+on:
+  workflow_call:
+permissions:
+  contents: read
+env:
+  GOWORK: "off"
+defaults:
+  run:
+    shell: bash --noprofile --norc {0}
+jobs:
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version: "1.26.11"
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "24"
+      - name: Resolve immutable shared tools
+        run: |
+          go mod download || exit 1
+          go mod verify || exit 1
+          python3 scripts/comfy.py check || exit 1
+      - name: Install required browser fixtures
+        run: |
+          npm ci --prefix scripts/browser || exit 1
+          npm exec --prefix scripts/browser -- playwright install --with-deps chromium || exit 1
+          browser=$(node --input-type=module -e 'const {chromium}=await import(process.cwd()+"/scripts/browser/node_modules/playwright/index.mjs");console.log(chromium.executablePath())') || exit 1
+          printf 'CHROMIUM=%s\n' "$browser" >> "$GITHUB_ENV" || exit 1
+      - name: Application browser flows and native owner metrics
+        env:
+          CI: "true"
+        run: |
+          make test-browser || exit 1
+          python3 scripts/comfy.py metrics-browser || exit 1

@@ -1,3 +1,7 @@
+# Comfylib 0.4.0
+
+Adds the admin and rate-limit packages, native metrics browser contracts, shared immutable workflows, release preparation and artifact validation, and source-bound suite preflight. The core remains standard-library-only. The optional OIDC module stays at 0.1.0.
+
 # Comfylib releases
 
 ## 0.3.0

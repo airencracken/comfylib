@@ -67,6 +67,21 @@ class ConsumerTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 check_consumer.verify(root)
 
+    def test_shared_workflow_pins_inputs_and_copied_implementations(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root=fixture(Path(directory));folder=root/'.github/workflows';folder.mkdir(parents=True)
+            for name in ('containers','browser'):
+                text='jobs:\n  shared:\n    uses: airencracken/comfylib/.github/workflows/'+name+'.yml@'+'a'*40+'\n'
+                if name=='containers':text+='    with:\n'+''.join('      '+arg+': ${{ inputs.'+arg+' }}\n' for arg in ('source_ref','release_tag','publish'))
+                (folder/(name+'.yml')).write_text(text)
+            check_consumer.verify_workflows(root,'a'*40)
+            path=folder/'containers.yml';original=path.read_text()
+            for broken in (original.replace('a'*40,'master'),original.replace('inputs.source_ref','inputs.other'),original+'    steps:\n      - run: copied\n'):
+                path.write_text(broken)
+                with self.assertRaises(ValueError):check_consumer.verify_workflows(root)
+            path.write_text(original)
+            with self.assertRaises(ValueError):check_consumer.verify_workflows(root,'b'*40)
+
     def test_runner_rejects_unknown_command_before_invoking_any_process(self):
         with patch.object(sys, 'argv', ['app.py', '../../escape']), patch.object(subprocess, 'call') as called, contextlib.redirect_stderr(io.StringIO()):
             with self.assertRaises(SystemExit):

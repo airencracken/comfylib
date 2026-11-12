@@ -1,0 +1,31 @@
+package admin // import "github.com/airencracken/comfylib/admin"
+
+func Render(view View) (template.HTML, error)
+
+type Item struct{ Name, Status, Detail string }
+
+type Metric struct {
+	Label  string
+	Value  int64
+	Detail string
+	Bytes  bool
+}
+
+func Collect(ctx context.Context, db *sql.DB, queries []Query) ([]Metric, error)
+
+type Query struct {
+	Label, SQL, Detail string
+	Args               []any
+	Bytes              bool
+}
+
+type View struct {
+	Metrics []Metric
+	Items   []Item
+	Backup  autobackup.Status
+	Version string
+}
+
+func Runtime(version string, backup autobackup.Status) View
+
+func WithSuite(view View, prefix string) View

@@ -1,0 +1,45 @@
+{
+  "schema": 1,
+  "projects": {
+    "folkweave": {
+      "layout": "deploy",
+      "licenses": [
+        "internal/folkweave/static/alpine-csp.min.js.LICENSE",
+        "internal/folkweave/static/htmx.min.js.LICENSE"
+      ],
+      "debian": true,
+      "backup_service": false
+    },
+    "imvault": {
+      "layout": "contrib",
+      "licenses": [
+        "internal/web/static/js/alpine.LICENSE",
+        "internal/web/static/js/htmx.LICENSE"
+      ],
+      "debian": true,
+      "backup_service": true
+    },
+    "songstead": {
+      "layout": "contrib",
+      "licenses": [
+        "internal/web/static/htmx.LICENSE"
+      ],
+      "debian": false,
+      "backup_service": false
+    },
+    "tidings": {
+      "layout": "deploy",
+      "licenses": [],
+      "debian": true,
+      "backup_service": false
+    },
+    "witmoot": {
+      "layout": "contrib",
+      "licenses": [
+        "internal/forum/static/htmx.LICENSE"
+      ],
+      "debian": true,
+      "backup_service": false
+    }
+  }
+}

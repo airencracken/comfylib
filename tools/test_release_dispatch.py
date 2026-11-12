@@ -44,6 +44,10 @@ class DispatchTests(unittest.TestCase):
         self.assertNotEqual(self.check('v1.2.3'),0)
     def test_release_and_container_jobs_use_the_requested_tag_and_its_revision(self):
         text=WORKFLOW.read_text();containers=(ROOT/'.github/workflows/containers.yml').read_text()
+        if 'uses: airencracken/comfylib/.github/workflows/containers.yml@' in containers:
+            from check_consumer import verify_workflows
+            verify_workflows(ROOT)
+            containers=(Path(__file__).resolve().parents[1]/'.github/workflows/containers.yml').read_text()
         self.assertIn('RELEASE_TAG_INPUT: ${{ inputs.release_tag }}',text)
         self.assertIn('ref: ${{ inputs.release_tag || github.ref }}',text)
         self.assertIn('source_ref: ${{ inputs.release_tag || github.ref }}',text)

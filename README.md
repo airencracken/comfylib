@@ -2,15 +2,17 @@
 
 Shared Go packages for the Comfyware apps, [Imvault](https://github.com/airencracken/imvault)
 and [Witmoot](https://github.com/airencracken/witmoot), plus
-[Songstead](https://github.com/airencracken/songstead).
+[Songstead](https://github.com/airencracken/songstead),
+[Folkweave](https://github.com/airencracken/folkweave), and
+[Tidings](https://github.com/airencracken/tidings).
 
-It holds the security-sensitive plumbing both apps need and should get right
+It holds the security-sensitive plumbing the apps need and should get right
 once: Bubblewrap confinement, systemd and OpenRC configuration lookup, SMTP
 sending, key files, tokens, client addresses behind trusted proxies, and
 reverse-proxy configuration. Application policy, storage schemas, templates and
 palettes stay in each app. Shared form layout assets and browser assertions keep common screens aligned.
 
-comfylib uses only the Go standard library, so it adds no further modules to
+The core module uses only the Go standard library, so it adds no further modules to
 an application's dependency tree. It is versioned as v0 while its API settles; each
 app pins an exact version.
 
@@ -21,6 +23,8 @@ Use a current Go security patch when building: Go 1.26.11 or later on the
 
 | Package | What it does |
 | --- | --- |
+| [`admin`](admin) | Presents owner-only aggregate metrics and operational summaries; apps own queries and access checks. |
+| [`ratelimit`](ratelimit) | Bounded fixed-window and token-bucket budgets with deterministic clocks. |
 | [`autobackup`](autobackup) | Schedules verified private snapshots, prefers zstd with gzip fallback, and bounds archive retention and copy size. |
 | [`brandimage`](brandimage) | Bounds and normalizes uploaded PNG, JPEG and GIF branding images. |
 | [`password`](password) | Reads confirmed passwords through an app-supplied hidden terminal reader. |
@@ -53,7 +57,7 @@ target briefly. CI runs all of them.
 
 `tools/mutate.py` applies each mutation in a table to a throwaway copy of the
 tree and requires the named tests to fail. The apps keep their own tables and
-a synced copy of the script.
+a tiny launcher that runs the engine directly from the pinned module.
 
 ## Developing alongside an app
 
@@ -154,3 +158,31 @@ The optional [`comfylib/oidc`](oidc/README.md) companion module supplies the OID
 protocol adapter and has its own dependency manifest and release tags. Importing
 the core module does not pull in its dependencies. Shared application maintenance
 tools run directly from the pinned core module; see [suite maintenance](docs/suite.md).
+
+## Shared foundation 0.4.0
+
+The `admin` package renders aggregate metrics and owner-only operational status.
+Applications provide SQL and authorize their own routes. The collector uses one
+bounded database snapshot and returns no partial report on failure. Summaries
+show configuration sources and restart behavior without including secret values.
+
+`ratelimit` supplies both bounded token buckets and expiry-ordered fixed windows.
+Each app chooses its attempts, interval, capacity and eviction policy. Successful
+sign-ins can refund attempts without extending the window.
+
+The shared browser runtime provides isolated ports, readiness, process cleanup,
+required-browser checks, and owner/member/guest contracts. Native metrics pages
+are checked in both themes, at four widths, with and without JavaScript.
+
+Application workflows pin `.github/workflows/containers.yml` and `browser.yml` to
+an immutable commit. Release preflight verifies that this commit is the origin
+of the published module pin. License preparation, native/source/package artifact
+checks, and the command-profile Debian lifecycle run from `tools/releases`.
+Application-specific package recovery and sandbox checks remain with their apps.
+
+Run `python3 scripts/comfy.py release-plan --require-clean --cold-cache` in an app
+before creating its release tag. `--output .release/plan.json` records input
+hashes and the source commit; `--verify-plan` refuses changed source or metadata.
+The suite catalog is maintained in the overlay's `release-catalog.json`; use
+`--catalog ../comfyware/release-catalog.json --suite-root ..` to validate app
+versions, published module pins, website mirrors and overlay recipe targets.

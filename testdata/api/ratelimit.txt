@@ -1,0 +1,36 @@
+package ratelimit // import "github.com/airencracken/comfylib/ratelimit"
+
+type Limiter struct {
+	// contains filtered or unexported fields
+}
+
+func New(perHour float64, burst int) *Limiter
+
+func NewBucket(perHour float64, burst, capacity int, clock func() time.Time) *Limiter
+
+func (l *Limiter) Allow(key string) (ok bool, retryAfter time.Duration)
+
+func (l *Limiter) Buckets() int
+
+func (l *Limiter) Enabled() bool
+
+type Window struct {
+	// contains filtered or unexported fields
+}
+
+func NewWindow(config WindowConfig) *Window
+
+func (w *Window) Allow(key string) (bool, time.Duration)
+
+func (w *Window) Keys() int
+
+func (w *Window) Refund(key string)
+
+type WindowConfig struct {
+	Attempts int
+	Interval time.Duration
+	Capacity int
+
+	RejectNew bool
+	Clock     func() time.Time
+}

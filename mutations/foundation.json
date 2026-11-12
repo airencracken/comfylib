@@ -1,0 +1,82 @@
+[
+  {
+    "name": "fixed-window capacity preserves existing clients",
+    "file": "ratelimit/window.go",
+    "before": "if element == nil {",
+    "after": "if element == nil || len(w.entries) >= w.config.Capacity {",
+    "package": "./ratelimit",
+    "run": "^TestWindowCapacityPreservesExistingBudgetAndExactExpiry$"
+  },
+  {
+    "name": "fixed-window inclusive expiry",
+    "file": "ratelimit/window.go",
+    "before": "!element.Value.(*windowEntry).until.After(now)",
+    "after": "element.Value.(*windowEntry).until.Before(now)",
+    "package": "./ratelimit",
+    "run": "^TestWindowCapacityPreservesExistingBudgetAndExactExpiry$"
+  },
+  {
+    "name": "fixed-window atomic budget",
+    "file": "ratelimit/window.go",
+    "before": "entry.count++",
+    "after": "entry.count += 0",
+    "package": "./ratelimit",
+    "run": "^TestWindowConcurrentAtomicityAndRandomCapacity$"
+  },
+  {
+    "name": "aggregate metrics are all-or-nothing",
+    "file": "admin/admin.go",
+    "before": "return nil, fmt.Errorf(\"metric %s: %w\", query.Label, err)",
+    "after": "return metrics, fmt.Errorf(\"metric %s: %w\", query.Label, err)",
+    "package": "./admin",
+    "run": "^TestCollectSnapshotAtomicityFailureAndCancellation$"
+  },
+  {
+    "name": "admin values are escaped before insertion",
+    "file": "admin/admin.go",
+    "before": "template.HTML(out.String())",
+    "after": "template.HTML(\"<script>\" + out.String())",
+    "package": "./admin",
+    "run": "^TestSummaryEscapesValuesAndShowsOperationalStates$"
+  },
+  {
+    "name": "the rate limiter is capped",
+    "file": "ratelimit/bucket.go",
+    "before": "\tfor len(l.buckets) >= l.maxKeys {",
+    "after": "\tfor false {",
+    "package": "./ratelimit",
+    "run": "^TestAFloodOfNewKeysCannotFreeAnActiveOne$"
+  },
+  {
+    "name": "the default limiter has a cap",
+    "file": "ratelimit/bucket.go",
+    "before": "\t\tmaxKeys: capacity,",
+    "after": "\t\tmaxKeys: 1 << 30,",
+    "package": "./ratelimit",
+    "run": "^TestTheDefaultLimiterIsCapped$"
+  },
+  {
+    "name": "the least recently used key is evicted",
+    "file": "ratelimit/bucket.go",
+    "before": "\t\tl.removeLocked(l.order.Back())",
+    "after": "\t\tl.removeLocked(l.order.Front())",
+    "package": "./ratelimit",
+    "run": "^TestTheLeastRecentlyUsedKeyIsTheOneForgotten$"
+  },
+  {
+    "name": "a used key becomes the most recent",
+    "file": "ratelimit/bucket.go",
+    "before": "\t\tl.order.MoveToFront(element)\n",
+    "after": "",
+    "package": "./ratelimit",
+    "run": "^TestAFloodOfNewKeysCannotFreeAnActiveOne$"
+  },
+  {
+    "name": "window eviction admits new clients",
+    "file": "ratelimit/window.go",
+    "before": "w.remove(w.order.Front())",
+    "after": "return false, time.Minute",
+    "package": "./ratelimit",
+    "run": "^TestFloodedLimiterStillAdmitsNewClients$"
+  }
+]

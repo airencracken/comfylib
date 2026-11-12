@@ -62,6 +62,8 @@ test-suite: ## Check shared controls and release-independent suite tooling
 	node --test tools/test_suite.cjs
 	python3 tools/test_suite_tools.py
 	python3 tools/test_app_tools.py
+	python3 tools/test_release_tools.py
+	node --test --test-reporter=tap ui/uitest/runtime.test.mjs
 
 .PHONY: test-oidc
 test-oidc: ## Check the separately versioned optional OIDC module and identity mutations

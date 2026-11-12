@@ -55,3 +55,25 @@ html[data-density="compact"] .browse-controls { margin-bottom: .75rem; }
 .topbar nav > a, .site-header nav > a { min-height: 44px; display: inline-flex; align-items: center; }
 
 .comfy-auth button { min-height: 44px; padding: .6rem 1rem; border: 1px solid var(--comfy-line); font: inherit; cursor: pointer; }
+
+/* Shared owner administration; applications retain their palette and policy. */
+.comfy-admin-section { margin-block: 1.5rem; padding: clamp(1rem, 3vw, 1.75rem); border: 1px solid var(--comfy-line); border-radius: var(--comfy-radius); background: var(--comfy-panel); color: var(--comfy-ink); min-width: 0; }
+.comfy-admin-section h2 { margin-top: 0; }
+.comfy-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr)); gap: 1rem; margin-block: 1rem; }
+.comfy-metrics > div { padding: 1rem; border: 1px solid var(--comfy-line); border-radius: var(--comfy-radius); min-width: 0; }
+.comfy-metrics dt { font-size: .875rem; }
+.comfy-metrics dd { font-size: 1.75rem; font-weight: 650; margin: .25rem 0; overflow-wrap: anywhere; }
+.comfy-metrics p, .comfy-operations p, .comfy-admin-help { font-size: .875rem; line-height: 1.6; overflow-wrap: anywhere; }
+.comfy-operations > div { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 1rem; padding-block: .75rem; border-bottom: 1px solid var(--comfy-line); }
+.comfy-operations dt { font-weight: 600; }
+.comfy-operations dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.comfy-notice { padding: .75rem 1rem; border: 1px solid var(--comfy-line); border-inline-start: 4px solid var(--comfy-accent); border-radius: .375rem; overflow-wrap: anywhere; }
+.comfy-notice-error { border-inline-start-color: var(--danger, #b43b38); }
+.comfy-admin-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; }
+.comfy-confirm { padding: 1rem; border: 1px solid var(--comfy-line); border-radius: var(--comfy-radius); }
+.comfy-confirm > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; font-weight: 600; }
+.comfy-confirm[open] > summary { margin-bottom: .75rem; }
+@media(max-width: 600px) { .comfy-operations > div { grid-template-columns: minmax(0, 1fr); gap: .25rem; } }
+
+.comfy-metrics p { font-weight: 400; margin: .5rem 0 0; color: var(--muted, var(--comfy-ink)); }
+@media(min-width: 1000px) { .comfy-metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); } }

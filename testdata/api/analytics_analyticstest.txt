@@ -1,0 +1,3 @@
+package analyticstest // import "github.com/airencracken/comfylib/analytics/analyticstest"
+
+func Run(t *testing.T, db *sql.DB)

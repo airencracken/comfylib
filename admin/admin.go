@@ -15,6 +15,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/airencracken/comfylib/analytics"
 	"github.com/airencracken/comfylib/autobackup"
 	"github.com/airencracken/comfylib/suite"
 )
@@ -64,10 +65,12 @@ type Item struct{ Name, Status, Detail string }
 
 // View contains data already authorized by the application for its current owner.
 type View struct {
-	Metrics []Metric
-	Items   []Item
-	Backup  autobackup.Status
-	Version string
+	Metrics  []Metric
+	Items    []Item
+	Backup   autobackup.Status
+	Version  string
+	BackURL  string
+	Activity *analytics.Summary
 }
 
 // Runtime supplies common backup and configuration explanations. Applications
@@ -77,6 +80,15 @@ func Runtime(version string, backup autobackup.Status) View {
 		{Name: "Service configuration", Status: "Restart required", Detail: "Addresses, trusted proxies, backup scheduling and community sign-in settings apply when the service starts."},
 		{Name: "Settings saved in this app", Status: "Apply immediately", Detail: "Saved settings take effect immediately unless the setting says otherwise."},
 	}}
+}
+
+// WithOperations adds the common operational sections without losing collected
+// activity, domain metrics or the application's administration link.
+func WithOperations(view View, version string, backup autobackup.Status, prefix string) View {
+	runtime := Runtime(version, backup)
+	view.Version, view.Backup = runtime.Version, runtime.Backup
+	view.Items = append(view.Items, runtime.Items...)
+	return WithSuite(view, prefix)
 }
 
 // WithSuite adds configuration presence without copying URLs, credentials, or
@@ -117,15 +129,27 @@ func metricValue(metric Metric) string {
 }
 
 var summary = template.Must(template.New("admin").Funcs(template.FuncMap{"metricValue": metricValue, "utc": func(t time.Time) string { return t.UTC().Format("2 Jan 2006, 15:04 UTC") }}).Parse(`
-<section class="comfy-admin-section" aria-labelledby="comfy-operations-title"><h2 id="comfy-operations-title">Instance overview</h2>
+<div class="comfy-admin-dashboard" data-comfy-dashboard="1">
+<header class="comfy-admin-heading"><div><h1>Instance metrics</h1><p>Usage and activity, available only to administrators.</p></div><a href="{{if .BackURL}}{{.BackURL}}{{else}}/{{end}}">Back to administration</a></header>
+<section class="comfy-admin-section" aria-labelledby="comfy-overview-title"><h2 id="comfy-overview-title">Instance overview</h2>
 {{if .Metrics}}<dl class="comfy-metrics">{{range .Metrics}}<div><dt>{{.Label}}</dt><dd>{{metricValue .}}{{if .Detail}}<p>{{.Detail}}</p>{{end}}</dd></div>{{end}}</dl>{{end}}
+</section>
+{{with .Activity}}<section class="comfy-admin-section" aria-labelledby="comfy-activity-title"><h2 id="comfy-activity-title">Activity</h2>
+<p>Past 7 UTC days, including today. Recording began {{utc .Started}}.</p>
+<dl class="comfy-metrics"><div><dt>Successful sign-ins</dt><dd>{{.Logins}}</dd></div><div><dt>Active accounts</dt><dd>{{.ActiveMembers}}</dd></div><div><dt>Content views</dt><dd>{{.Views}}</dd></div></dl>
+<p class="comfy-admin-help">A view is an authorized content open, counted once per account, item and UTC day. Thumbnails, background assets, failed requests and signed-out visits do not count. Activity is retained for 90 days. IP addresses and browser identifiers are not recorded. Earlier activity cannot be reconstructed.</p>
+<div class="comfy-metrics-table-wrap"><table class="comfy-metrics-table"><caption>Daily activity</caption><thead><tr><th scope="col">UTC date</th><th scope="col">Sign-ins</th><th scope="col">Views</th></tr></thead><tbody>{{range .Days}}<tr><th scope="row">{{.Day.Format "2 Jan 2006"}}</th><td>{{.Logins}}</td><td>{{.Views}}</td></tr>{{end}}</tbody></table></div>
+<div class="comfy-metrics-table-wrap"><table class="comfy-metrics-table"><caption>Recent sign-ins by account</caption><thead><tr><th scope="col">Account</th><th scope="col">Sign-ins</th><th scope="col">Last sign-in (UTC)</th></tr></thead><tbody>{{range .LoginsByAccount}}<tr><th scope="row">{{.Name}}</th><td>{{.Count}}</td><td>{{utc .Last}}</td></tr>{{else}}<tr><td colspan="3">No recorded sign-ins in this period.</td></tr>{{end}}</tbody></table></div>
+<div class="comfy-metrics-table-wrap"><table class="comfy-metrics-table"><caption>Most viewed content</caption><thead><tr><th scope="col">Content</th><th scope="col">Views</th></tr></thead><tbody>{{range .Popular}}<tr><th scope="row">{{.Description}}</th><td>{{.Views}}</td></tr>{{else}}<tr><td colspan="2">No recorded content views in this period.</td></tr>{{end}}</tbody></table></div>
+</section>{{end}}
+<section class="comfy-admin-section" aria-labelledby="comfy-operations-title"><h2 id="comfy-operations-title">Operations</h2>
 {{if .Version}}<p>Running version: <span>{{.Version}}</span></p>{{end}}
 <dl class="comfy-operations">{{range .Items}}<div><dt>{{.Name}}</dt><dd>{{.Status}}{{if .Detail}}<p>{{.Detail}}</p>{{end}}</dd></div>{{end}}
 <div><dt>Automatic backups</dt><dd>{{if .Backup.Enabled}}{{if .Backup.Running}}Running{{else}}Enabled{{end}}{{else}}Disabled{{end}}
 {{if not .Backup.LastSuccess.IsZero}}<p>Last verified backup: {{utc .Backup.LastSuccess}}</p>{{else if .Backup.Enabled}}<p>The first verified backup is pending.</p>{{end}}
 {{if .Backup.LastError}}<p class="comfy-notice comfy-notice-error" role="alert">Last backup problem: {{.Backup.LastError}}</p>{{end}}
 {{if and .Backup.Enabled (not .Backup.NextAttempt.IsZero)}}<p>Next attempt: {{utc .Backup.NextAttempt}}</p>{{end}}</dd></div></dl>
-<p class="comfy-admin-help">These totals describe this instance. Recent activity covers the last 7 days. Operational details are visible only to owners and administrators.</p></section>`))
+<p class="comfy-admin-help">These totals describe this instance. Recent activity covers the past 7 UTC days, including today. Only administrators can access these details.</p></section></div>`))
 
 // Render returns escaped HTML for insertion into an application's own template.
 // Only call it after the application's owner or administrator check succeeds.

@@ -20,12 +20,16 @@ type Query struct {
 }
 
 type View struct {
-	Metrics []Metric
-	Items   []Item
-	Backup  autobackup.Status
-	Version string
+	Metrics  []Metric
+	Items    []Item
+	Backup   autobackup.Status
+	Version  string
+	BackURL  string
+	Activity *analytics.Summary
 }
 
 func Runtime(version string, backup autobackup.Status) View
+
+func WithOperations(view View, version string, backup autobackup.Status, prefix string) View
 
 func WithSuite(view View, prefix string) View

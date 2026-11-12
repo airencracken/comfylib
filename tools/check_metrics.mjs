@@ -58,7 +58,23 @@ try {
       await page.goto(origin + '/admin/metrics');
       assert.equal(await page.getByRole('heading', { name: 'Instance metrics', exact: true }).count(), 1);
       assert.ok(await page.getByRole('heading', { name: 'Instance overview', exact: true }).isVisible());
-      assert.ok(await page.locator('.comfy-metrics dd').count() >= 5);
+      assert.ok(await page.locator('.comfy-metrics dd').count() >= 8);
+      assert.ok(await page.getByRole('heading', { name: 'Activity', exact: true }).isVisible());
+      assert.ok(await page.getByRole('table', { name: 'Recent sign-ins by account', exact: true }).isVisible());
+      const styles = await page.evaluate(() => {
+        const css = selector => getComputedStyle(document.querySelector(selector));
+        return { root: css('.comfy-admin-dashboard').fontSize, title: css('.comfy-admin-heading h1').fontSize,
+          label: css('.comfy-metrics dt').fontSize, value: css('.comfy-metrics dd').fontSize,
+          gap: css('.comfy-metrics').gap, radius: css('.comfy-metrics > div').borderRadius,
+          panel: css('.comfy-admin-section').backgroundColor, padding: css('.comfy-admin-section').padding };
+      });
+      const dashboardWidth = await page.locator('.comfy-admin-dashboard').evaluate(element => ({ actual: element.getBoundingClientRect().width, expected: Math.min(document.documentElement.clientWidth - 32, 1120) }));
+      assert.ok(Math.abs(dashboardWidth.actual - dashboardWidth.expected) < 1, `${app}: shared dashboard width ${width}`);
+      assert.equal(await page.locator('main .fetch-status').count(), 0, 'application-specific status panels do not alter the shared dashboard');
+      assert.equal(await page.locator('main').evaluate(element => getComputedStyle(element).backgroundColor), theme === 'dark' ? 'rgb(21, 28, 39)' : 'rgb(243, 245, 248)', 'shared dashboard canvas');
+      assert.deepEqual(styles, { root: '16px', title: '30px', label: '14px', value: '28px', gap: '16px', radius: '8px',
+        panel: theme === 'dark' ? 'rgb(32, 41, 55)' : 'rgb(255, 255, 255)', padding: width <= 480 ? '16px' : '24px' },
+        `${app}: common dashboard appearance ${theme}/${width}/${javascript}`);
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${app}: metrics overflow ${theme}/${width}/${javascript}`);
       assert.equal((await context.request.get(origin + '/admin/metrics')).headers()['cache-control'], 'no-store');
       if (process.env.COMFYWARE_METRICS_SCREENSHOTS && javascript && [390,1280].includes(width)) {

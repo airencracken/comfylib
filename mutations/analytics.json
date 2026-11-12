@@ -1,0 +1,114 @@
+[
+  {
+    "name": "analytics rejects unauthorized content kinds",
+    "file": "analytics/analytics.go",
+    "before": "!validKind(kind) || !identifier(member)",
+    "after": "!identifier(member)",
+    "package": "./analytics",
+    "run": "^TestValidationBindingsLabelsAndRetention$"
+  },
+  {
+    "name": "analytics is GET only",
+    "file": "analytics/http.go",
+    "before": "r.Method != http.MethodGet || out.status != http.StatusOK",
+    "after": "out.status != http.StatusOK",
+    "package": "./analytics",
+    "run": "^TestTrackRequiresSuccessfulGetAndAuthorizedEvent$"
+  },
+  {
+    "name": "analytics excludes failed responses",
+    "file": "analytics/http.go",
+    "before": "r.Method != http.MethodGet || out.status != http.StatusOK",
+    "after": "r.Method != http.MethodGet",
+    "package": "./analytics",
+    "run": "^TestTrackRequiresSuccessfulGetAndAuthorizedEvent$"
+  },
+  {
+    "name": "analytics canonicalizes duplicate numeric routes",
+    "file": "analytics/analytics.go",
+    "before": "return MemberID(id)",
+    "after": "return raw",
+    "package": "./analytics",
+    "run": "^TestNumericContentIDCanonicalization$"
+  },
+  {
+    "name": "analytics views cannot be incremented by reloads",
+    "file": "analytics/analytics.go",
+    "before": "VALUES(?,?,?,?,1,?) ON CONFLICT(day,kind,member,item) DO NOTHING",
+    "after": "VALUES(?,?,?,?,1,?) ON CONFLICT(day,kind,member,item) DO UPDATE SET count=count+1",
+    "package": "./analytics",
+    "run": "^TestSQLiteCountQueriesDeduplicateAndExpire$"
+  },
+  {
+    "name": "analytics distinct accounts see independent views",
+    "file": "analytics/analytics.go",
+    "before": "PRIMARY KEY(day,kind,member,item)",
+    "after": "PRIMARY KEY(day,kind,item)",
+    "package": "./analytics",
+    "run": "^TestSQLiteCountQueriesDeduplicateAndExpire$"
+  },
+  {
+    "name": "analytics views reset per UTC day",
+    "file": "analytics/analytics.go",
+    "before": "PRIMARY KEY(day,kind,member,item)",
+    "after": "PRIMARY KEY(kind,member,item)",
+    "package": "./analytics",
+    "run": "^TestSQLiteCountQueriesDeduplicateAndExpire$"
+  },
+  {
+    "name": "analytics retains exactly ninety UTC days",
+    "file": "analytics/analytics.go",
+    "before": "day(at)-RetentionDays+1",
+    "after": "day(at)-RetentionDays",
+    "package": "./analytics",
+    "run": "^TestValidationBindingsLabelsAndRetention$"
+  },
+  {
+    "name": "analytics login counts every successful sign-in",
+    "file": "analytics/analytics.go",
+    "before": "count=count+1,last_at=max",
+    "after": "count=count,last_at=max",
+    "package": "./analytics",
+    "run": "^TestSQLiteCountQueriesDeduplicateAndExpire$"
+  },
+  {
+    "name": "analytics last login resists clock regression",
+    "file": "analytics/analytics.go",
+    "before": "last_at=max(last_at,excluded.last_at)",
+    "after": "last_at=excluded.last_at",
+    "package": "./analytics",
+    "run": "^TestSQLiteCountQueriesDeduplicateAndExpire$"
+  },
+  {
+    "name": "analytics read snapshot is read-only",
+    "file": "analytics/analytics.go",
+    "before": "ReadOnly: true",
+    "after": "ReadOnly: false",
+    "package": "./analytics",
+    "run": "^TestCollectReadonlySnapshotFailureAndCancellation$"
+  },
+  {
+    "name": "analytics returns no partial activity on failure",
+    "file": "analytics/analytics.go",
+    "before": "if err != nil {\n\t\treturn Summary{}, err\n\t}\n\treturn result, nil",
+    "after": "if err != nil {\n\t\treturn result, err\n\t}\n\treturn result, nil",
+    "package": "./analytics",
+    "run": "^TestCollectReadonlySnapshotFailureAndCancellation$"
+  },
+  {
+    "name": "admin operations preserve collected activity",
+    "file": "admin/admin.go",
+    "before": "runtime := Runtime(version, backup)",
+    "after": "view.Activity=nil\n runtime := Runtime(version, backup)",
+    "package": "./admin",
+    "run": "^TestDashboardActivityEscapingAndCommonSections$"
+  },
+  {
+    "name": "analytics calendar window matches domain totals",
+    "file": "analytics/analytics.go",
+    "before": "return at.UTC().Truncate(24 * time.Hour).Add(-6 * 24 * time.Hour)",
+    "after": "return at.UTC().Truncate(24 * time.Hour).Add(-7 * 24 * time.Hour)",
+    "package": "./analytics",
+    "run": "^TestWindowStartUsesTheSameUtcCalendarBoundary$"
+  }
+]

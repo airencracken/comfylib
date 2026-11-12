@@ -1,0 +1,78 @@
+package analytics // import "github.com/airencracken/comfylib/analytics"
+
+const RetentionDays = 90
+
+func ForgetMember(ctx context.Context, exec Executor, member string) error
+
+func Initialize(ctx context.Context, db *sql.DB, now time.Time) error
+
+func Label(kind Kind) string
+
+func Maintenance(db *sql.DB, next http.Handler) http.Handler
+
+func MemberID(id int64) string
+
+func NumericID(raw string) string
+
+func Prune(ctx context.Context, exec Executor, at time.Time) error
+
+func RecordLogin(ctx context.Context, exec Executor, member string, at time.Time) error
+
+func RecordView(ctx context.Context, exec Executor, kind Kind, member, item string, at time.Time) error
+
+func RecordViews(ctx context.Context, db *sql.DB, events []Event, at time.Time) error
+
+func Track(db *sql.DB, next http.HandlerFunc, resolve func(*http.Request) []Event) http.HandlerFunc
+
+func WindowStart(at time.Time) time.Time
+
+type Account struct{ ID, Name string }
+
+type Content struct {
+	Kind  Kind
+	ID    string
+	Views int64
+}
+
+func (c Content) Description() string
+
+type Daily struct {
+	Day           time.Time
+	Logins, Views int64
+}
+
+type Event struct {
+	Kind         Kind
+	Member, Item string
+}
+
+type Executor interface {
+	ExecContext(context.Context, string, ...any) (sql.Result, error)
+}
+
+type Kind string
+
+const (
+	Video          Kind = "video"
+	Post           Kind = "post"
+	Image          Kind = "image"
+	Recommendation Kind = "recommendation"
+	Story          Kind = "story"
+	Topic          Kind = "topic"
+)
+
+type Login struct {
+	Name  string
+	Count int64
+	Last  time.Time
+}
+
+type Summary struct {
+	Started                      time.Time
+	Logins, ActiveMembers, Views int64
+	Days                         []Daily
+	LoginsByAccount              []Login
+	Popular                      []Content
+}
+
+func Collect(ctx context.Context, db *sql.DB, accountsQuery string, now time.Time) (Summary, error)

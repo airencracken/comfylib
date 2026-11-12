@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/airencracken/comfylib/analytics"
 	"github.com/airencracken/comfylib/autobackup"
 )
 
@@ -68,5 +69,28 @@ func TestSuiteSummaryNeverExposesConfiguredValues(t *testing.T) {
 	}
 	if !strings.Contains(string(text), "Configured") {
 		t.Fatal("configured state missing")
+	}
+}
+
+func TestDashboardActivityEscapingAndCommonSections(t *testing.T) {
+	activity := analytics.Summary{Started: time.Unix(1700000000, 0), Logins: 2, Views: 3, ActiveMembers: 1, LoginsByAccount: []analytics.Login{{Name: "<script>bad()</script>", Count: 2, Last: time.Unix(1700000000, 0)}}, Popular: []analytics.Content{{Kind: analytics.Post, ID: "<img src=x onerror=bad()>", Views: 3}}}
+	view := WithOperations(View{Metrics: []Metric{{Label: "Members", Value: 2}}, Activity: &activity, BackURL: "/settings"}, "1.2.3", autobackup.Status{}, "TEST_")
+	html, err := Render(view)
+	if err != nil {
+		t.Fatal(err)
+	}
+	text := string(html)
+	for _, want := range []string{"comfy-admin-dashboard", "data-comfy-dashboard=", "Instance metrics", "Activity", "Daily activity", "Recent sign-ins by account", "Most viewed content", "Operations", "once per account, item and UTC day", "90 days", "Earlier activity cannot be reconstructed.", "href=\"/settings\"", "&lt;script&gt;"} {
+		if !strings.Contains(text, want) {
+			t.Fatal("dashboard contract missing", want)
+		}
+	}
+	for _, bad := range []string{"<script>", "<img src=x", "onclick=", "<style"} {
+		if strings.Contains(text, bad) {
+			t.Fatal("unsafe dashboard markup", bad)
+		}
+	}
+	if view.Activity != &activity || len(view.Metrics) != 1 {
+		t.Fatal("operations lost activity")
 	}
 }

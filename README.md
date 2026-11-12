@@ -9,8 +9,8 @@ and [Witmoot](https://github.com/airencracken/witmoot), plus
 It holds the security-sensitive plumbing the apps need and should get right
 once: Bubblewrap confinement, systemd and OpenRC configuration lookup, SMTP
 sending, key files, tokens, client addresses behind trusted proxies, and
-reverse-proxy configuration. Application policy, storage schemas, templates and
-palettes stay in each app. Shared form layout assets and browser assertions keep common screens aligned.
+reverse-proxy configuration. Application permissions, domain storage and native screens stay in each app.
+Shared forms and admin dashboards use common layout assets and browser contracts.
 
 The core module uses only the Go standard library, so it adds no further modules to
 an application's dependency tree. It is versioned as v0 while its API settles; each
@@ -23,6 +23,7 @@ Use a current Go security patch when building: Go 1.26.11 or later on the
 
 | Package | What it does |
 | --- | --- |
+| [`analytics`](analytics) | Shared SQLite activity storage, successful sign-ins, deduplicated authorized content opens, retention and reporting. |
 | [`admin`](admin) | Presents owner-only aggregate metrics and operational summaries; apps own queries and access checks. |
 | [`ratelimit`](ratelimit) | Bounded fixed-window and token-bucket budgets with deterministic clocks. |
 | [`autobackup`](autobackup) | Schedules verified private snapshots, prefers zstd with gzip fallback, and bounds archive retention and copy size. |
@@ -158,6 +159,24 @@ The optional [`comfylib/oidc`](oidc/README.md) companion module supplies the OID
 protocol adapter and has its own dependency manifest and release tags. Importing
 the core module does not pull in its dependencies. Shared application maintenance
 tools run directly from the pinned core module; see [suite maintenance](docs/suite.md).
+
+## Consistent administration and activity 0.5.0
+
+The shared admin dashboard now owns its heading, layout, type scale, cards,
+tables and neutral light/dark palette. Applications retain their surrounding
+navigation and enforce active admin/owner permissions before collecting a report.
+The native browser contract asserts exact styles and widths in every app.
+
+`analytics` owns the additive, separately versioned SQLite schema and its indexes,
+atomic sign-in recording, concurrent view deduplication, page batches, expiry,
+account-deletion cleanup and bounded read snapshots. It imports only the Go
+standard library; applications supply their existing SQLite driver. Runtime
+collection stores internal IDs, never IP addresses or browser identifiers.
+See [activity definitions and integration](docs/analytics.md).
+
+The test suite exercises the emitted SQL with Python 3's standard-library SQLite
+and with the applications' real SQLite driver. No database driver is added to the
+core module's dependency manifest.
 
 ## Shared foundation 0.4.0
 

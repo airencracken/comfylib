@@ -70,7 +70,8 @@ try {
       await page.reload(); assert.equal(await input.inputValue(), 'America/Los_Angeles', 'device detection does not save automatically');
     } else { assert.ok(await device.isHidden()); }
     await input.fill('Local'); await save.click();
-    assert.ok(await form.getByRole('alert').isVisible(), `${app}: invalid local-host timezone rejected`);
+    const rejected = await form.getByRole('alert').waitFor({ state: 'visible', timeout: 10000 }).then(() => true, () => false);
+    assert.ok(rejected, `${app}: invalid local-host timezone rejected`);
     assert.equal(await input.inputValue(), 'Local', 'invalid draft remains editable');
     await input.fill('America/Los_Angeles'); await save.click();
     const parallel = await session('metricsowner', javascript), parallelPage = await parallel.newPage();

@@ -2,6 +2,14 @@ package admin // import "github.com/airencracken/comfylib/admin"
 
 func Render(view View) (template.HTML, error)
 
+func RenderAccountSupport(timezone string, account AccountSupport) (template.HTML, error)
+
+type AccountSupport struct {
+	LastSignIn time.Time
+	Limited    bool
+	RetryAfter time.Duration
+}
+
 type Item struct{ Name, Status, Detail string }
 
 type Metric struct {

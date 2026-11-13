@@ -81,6 +81,29 @@ func (w *Window) Allow(key string) (bool, time.Duration) {
 	return true, 0
 }
 
+// Peek reports whether key is currently refused and for how long, without
+// spending an attempt. Use it to show one account's state to an administrator.
+func (w *Window) Peek(key string) (limited bool, retryAfter time.Duration) {
+	if w == nil || w.config.Attempts <= 0 || w.config.Interval <= 0 {
+		return false, 0
+	}
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	now := w.config.Clock()
+	if now.Before(w.last) {
+		now = w.last
+	}
+	element, ok := w.entries[key]
+	if !ok {
+		return false, 0
+	}
+	entry := element.Value.(*windowEntry)
+	if !entry.until.After(now) || entry.count < w.config.Attempts {
+		return false, 0
+	}
+	return true, entry.until.Sub(now)
+}
+
 // Refund returns one spent attempt without extending its original expiry.
 func (w *Window) Refund(key string) {
 	if w == nil {

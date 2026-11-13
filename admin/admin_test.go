@@ -72,25 +72,81 @@ func TestSuiteSummaryNeverExposesConfiguredValues(t *testing.T) {
 	}
 }
 
-func TestDashboardActivityEscapingAndCommonSections(t *testing.T) {
-	activity := analytics.Summary{Started: time.Unix(1700000000, 0), Logins: 2, Views: 3, ActiveMembers: 1, LoginsByAccount: []analytics.Login{{Name: "<script>bad()</script>", Count: 2, Last: time.Unix(1700000000, 0)}}, Popular: []analytics.Content{{Kind: analytics.Post, ID: "<img src=x onerror=bad()>", Views: 3}}}
+func TestDashboardShowsHealthAndSecurityWithoutPeople(t *testing.T) {
+	var latency analytics.Histogram
+	for i := 0; i < 17; i++ {
+		latency.Observe(20 * time.Millisecond)
+	}
+	for i := 0; i < 3; i++ {
+		latency.Observe(time.Minute)
+	}
+	traffic := analytics.Traffic{Requests: 20, Status2xx: 18, Status5xx: 2, Bytes: 4096, Latency: latency}
+	activity := analytics.Summary{
+		Started:  time.Unix(1700000000, 0),
+		Traffic:  traffic,
+		Security: analytics.Security{FailedSignIns: 4, RateLimited: 2, RejectedTokens: 1},
+		Days:     []analytics.Daily{{Day: time.Unix(1700000000, 0), Traffic: traffic, Security: analytics.Security{FailedSignIns: 4}}},
+		Slowest:  []analytics.Route{{Pattern: "GET /<script>bad()</script>", Traffic: traffic}},
+		Failing:  []analytics.Route{{Pattern: "POST /login", Traffic: traffic}},
+	}
 	view := WithOperations(View{Metrics: []Metric{{Label: "Members", Value: 2}}, Activity: &activity, BackURL: "/settings"}, "1.2.3", autobackup.Status{}, "TEST_")
 	html, err := Render(view)
 	if err != nil {
 		t.Fatal(err)
 	}
 	text := string(html)
-	for _, want := range []string{"comfy-admin-dashboard", "data-comfy-dashboard=", "Instance metrics", "Activity", "Daily activity", "Recent sign-ins by account", "Most viewed content", "Operations", "once per account, item and UTC day", "90 days", "Earlier activity cannot be reconstructed.", "href=\"/settings\"", "&lt;script&gt;"} {
+	for _, want := range []string{"comfy-admin-dashboard", "Instance metrics", "Site health", "Daily traffic", "Slowest routes", "Routes with errors", "Security",
+		"Failed sign-ins", "Rate-limited attempts", "Rejected invitation and reset links", "Daily security events", "10.0%", "Up to 25 ms", "Over 10 s", "4.0 KiB",
+		"90 days", "does not record who made a request", "No usernames, accounts or IP addresses", "Operations", `href="/settings"`, "&lt;script&gt;"} {
 		if !strings.Contains(text, want) {
 			t.Fatal("dashboard contract missing", want)
 		}
 	}
-	for _, bad := range []string{"<script>", "<img src=x", "onclick=", "<style"} {
-		if strings.Contains(text, bad) {
-			t.Fatal("unsafe dashboard markup", bad)
+	for _, gone := range []string{"<script>", "Recent sign-ins by account", "Most viewed content", "Content views", "Active accounts", "Successful sign-ins", "<style"} {
+		if strings.Contains(text, gone) {
+			t.Fatal("dashboard shows", gone)
 		}
 	}
 	if view.Activity != &activity || len(view.Metrics) != 1 {
 		t.Fatal("operations lost activity")
+	}
+	empty, err := Render(View{Activity: &analytics.Summary{}})
+	if err != nil || !strings.Contains(string(empty), "No requests yet.") || !strings.Contains(string(empty), "No errors in this period.") {
+		t.Fatal("empty health tables", err)
+	}
+}
+
+func TestDurationAndLatencyLabels(t *testing.T) {
+	for d, want := range map[time.Duration]string{5 * time.Millisecond: "5 ms", time.Second: "1 s", 2500 * time.Millisecond: "2.5 s", 10 * time.Second: "10 s"} {
+		if got := duration(d); got != want {
+			t.Fatal(d, got, want)
+		}
+	}
+	if latency(analytics.Histogram{}, .5) != "No requests" || percent(0) != "0.0%" {
+		t.Fatal("empty labels")
+	}
+}
+
+func TestAccountSupportShowsOneAccount(t *testing.T) {
+	html, err := RenderAccountSupport("America/Los_Angeles", AccountSupport{LastSignIn: time.Date(2026, 11, 12, 20, 0, 0, 0, time.UTC), Limited: true, RetryAfter: 61 * time.Second})
+	if err != nil {
+		t.Fatal(err)
+	}
+	text := string(html)
+	for _, want := range []string{"Last sign-in", "PST", "Sign-in is paused for about 2 minutes."} {
+		if !strings.Contains(text, want) {
+			t.Fatal("missing", want, text)
+		}
+	}
+	html, err = RenderAccountSupport("UTC", AccountSupport{})
+	if err != nil || !strings.Contains(string(html), "Never") || !strings.Contains(string(html), "Not limited") {
+		t.Fatal("new account", html, err)
+	}
+	if wait(time.Second) != "about a minute" || wait(0) != "about a minute" {
+		t.Fatal("short waits")
+	}
+	// An unknown saved timezone falls back like the dashboard does.
+	if html, err := RenderAccountSupport("Not/AZone", AccountSupport{LastSignIn: time.Unix(1700000000, 0)}); err != nil || !strings.Contains(string(html), "Last sign-in") {
+		t.Fatal("unknown timezone", html, err)
 	}
 }

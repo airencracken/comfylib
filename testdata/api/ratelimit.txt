@@ -14,6 +14,8 @@ func (l *Limiter) Buckets() int
 
 func (l *Limiter) Enabled() bool
 
+func (l *Limiter) Peek(key string) (limited bool, retryAfter time.Duration)
+
 type Window struct {
 	// contains filtered or unexported fields
 }
@@ -23,6 +25,8 @@ func NewWindow(config WindowConfig) *Window
 func (w *Window) Allow(key string) (bool, time.Duration)
 
 func (w *Window) Keys() int
+
+func (w *Window) Peek(key string) (limited bool, retryAfter time.Duration)
 
 func (w *Window) Refund(key string)
 

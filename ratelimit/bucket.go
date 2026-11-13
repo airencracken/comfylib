@@ -124,6 +124,30 @@ func (l *Limiter) Allow(key string) (ok bool, retryAfter time.Duration) {
 	return false, time.Duration(missing / l.rate * float64(time.Second))
 }
 
+// Peek reports whether the next Allow for key would be refused and how long
+// to wait, without spending a token or changing which keys are kept.
+func (l *Limiter) Peek(key string) (limited bool, retryAfter time.Duration) {
+	if !l.Enabled() {
+		return false, 0
+	}
+	now := l.now()
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	element, ok := l.buckets[key]
+	if !ok {
+		return false, 0
+	}
+	b := element.Value.(*bucket)
+	tokens := b.tokens
+	if elapsed := now.Sub(b.last).Seconds(); elapsed > 0 {
+		tokens = math.Min(l.burst, tokens+elapsed*l.rate)
+	}
+	if tokens >= 1 {
+		return false, 0
+	}
+	return true, time.Duration((1 - tokens) / l.rate * float64(time.Second))
+}
+
 // bucketLocked returns key's bucket, marked as the most recently used. A new
 // key starts with a full budget, so a first request is never rejected, and
 // makes room for itself by forgetting the least recently used keys. Callers

@@ -1,67 +1,61 @@
-# Native admin activity metrics
+# Site health and security metrics
 
-Only active application administrators may read the dashboard. Some apps call
-that role owner. Moderators, ordinary members and guests do not receive the
-report. Apps retain their own authentication, role checks and content permissions;
-Comfylib exposes no HTTP reporting endpoint of its own.
+The `analytics` package counts how the site is doing, the way a web server log
+would. It never records who did something or what they looked at.
 
-## Counting rules
+## What is stored
 
-The report covers today and the preceding six UTC calendar days. The displayed
-recording date comes from initialization of the analytics namespace. Upgrading
-does not invent earlier sign-ins or content views.
+Per UTC day and ServeMux route pattern (for example `GET /posts/{id}`):
+requests, responses by status class (2xx, 3xx, 4xx, 5xx), a latency histogram
+and bytes written. Per UTC day: failed sign-ins, rate-limited attempts and
+rejected invitation or reset links.
 
-- A successful sign-in is recorded in the transaction that commits its session.
-  Both local and verified community sign-in use this path. Pending or failed
-  credentials, incomplete second factors and session rotations do not count.
-- A view is a successful authenticated content open. A unique database constraint
-  counts each account, content kind, item and UTC day once. Refreshes, concurrent
-  requests and alternate numeric route spellings cannot inflate that count.
-- Lists, feeds, thumbnails, background assets, API calls, HEAD requests, failed
-  responses and signed-out visits do not produce view events.
-- Witmoot counts the nonremoved posts rendered on the requested topic page.
-  Explicit full-image opens count separately from the embedded image fetches.
-  Imvault distinguishes images and video clips. Songstead counts recommendation
-  detail pages; Folkweave counts post details and original photo opens; Tidings
-  counts authorized story details.
+It stores no account or content IDs, usernames, IP addresses, user agents,
+referrers, paths or query strings. Rows are deleted after 90 days.
 
-Recent sign-ins resolve current account names at report time; names are never
-copied into the event table. Recent accounts and popular items are limited to
-20 rows each. Content is identified by kind and internal ID; private titles and
-bodies are not copied into activity storage. Daily totals remain aggregates.
+## Adopting it
 
-## Storage and lifecycle
+1. Call `analytics.Initialize(ctx, db, time.Now())` when the database opens for
+   writing. It creates the tables and drops the per-account table that earlier
+   versions kept (`RemoveDetail` does only that step, for use inside your own
+   migration).
+2. Create one `analytics.NewMonitor(db)` and wrap your `*http.ServeMux` with
+   `monitor.Middleware(mux)`. Wrap the mux itself: the route label comes from
+   `Request.Pattern`, which the mux sets. Requests no pattern matched are
+   counted as `unmatched`. Call `monitor.Flush(ctx)` on shutdown.
+3. Wrap the outer handler with `analytics.Maintenance(db, handler)` to prune
+   expired rows once a day.
+4. Call `analytics.RecordFailedSignIn` when a sign-in is rejected,
+   `analytics.RecordRateLimited` when a rate limit refuses an attempt, and
+   `analytics.RecordRejectedToken` when an invitation or reset token is
+   invalid, expired or used.
+5. Pass `analytics.Collect(ctx, db, "", time.Now())` to the dashboard as
+   `admin.View.Activity`.
 
-`Initialize` atomically creates the `comfy_analytics_meta` and
-`comfy_analytics_activity` namespace with its own version. These additive tables
-do not change application tables or the app's migration version. Normal writable
-opens initialize it; read-only inspection/backup opens do not.
+Delete from app code: calls to `RecordLogin`, `RecordView`, `RecordViews`,
+`Track` and `ForgetMember`, the accounts query passed to `Collect`, and any
+view resolvers or content-ID canonicalization written for them. These remain as
+deprecated no-ops for one release.
 
-Retention covers 90 UTC days. Expired rows are pruned at startup and on the first
-served request of a new UTC day, independently of visiting the admin page. Idle
-or stopped applications prune on their next startup/request. Application backups
-include these SQLite tables and keep their existing archive-retention policy.
-Restoring a pre-analytics database starts a fresh namespace.
+## Reading the numbers
 
-Application account-deletion transactions call `ForgetMember` so retained activity
-is removed with the account. Suspending an existing account prevents new sign-ins
-and report access without rewriting legitimate past aggregate activity.
+Latency percentiles are reported as the upper bound of a histogram bucket
+(5 ms up to 10 s, then "over 10 s"), so the true value is at or below the
+figure shown. The error rate counts 5xx responses; status codes above 599 count
+as server errors. A handler that panics is counted as a 500.
 
-## Integration and failure behavior
+The Monitor keeps counts in memory and writes them at most once a minute, after
+a request. Counts not yet written are lost if the process stops without
+`Flush`.
 
-Call `RecordLogin` with the session transaction after all authentication factors
-and account-state checks. Call `Track` inside the application's authentication
-middleware and only around real detail/open handlers. Its event resolver supplies
-canonical, authorized IDs after a successful response. Topic pages use
-`RecordViews` to commit all displayed posts in one write transaction.
+## Account support
 
-Domain queries and account visibility remain app-owned constants. The shared
-collector reads account names and activity in one read-only, five-second snapshot;
-any failed query produces no partial report. Application dashboards fail as a
-whole if their domain or activity section cannot be collected.
+`admin.RenderAccountSupport` shows one account's last sign-in and whether a rate
+limit is refusing it. Fill `admin.AccountSupport` from your session records and
+`ratelimit.Window.Peek` (or `Limiter.Peek`) for that account only. Do not build
+lists or rankings of accounts from it.
 
-Content-view recording has a short timeout and logs collection failures without
-changing a successful content response. Sign-in activity commits atomically with
-its session. The renderer escapes labels, names and content identifiers, works
-without scripts, and uses one shared stylesheet. Browser contracts cover exact
-appearance, both themes, four widths, role boundaries and forged role parameters.
+## Testing with your driver
+
+`analyticstest.Run(t, db)` checks the storage against your SQLite driver. Give
+it a dedicated empty database.

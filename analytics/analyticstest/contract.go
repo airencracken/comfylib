@@ -1,47 +1,48 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Package analyticstest verifies shared storage against an application's real
-// SQLite driver. The core module does not import or require a database driver.
+
+// Package analyticstest checks the analytics storage against an application's
+// own SQLite driver. The core module does not import a driver.
 package analyticstest
 
 import (
-	"context"
 	"database/sql"
-	"fmt"
-	"github.com/airencracken/comfylib/analytics"
+	"net/http"
+	"net/http/httptest"
 	"reflect"
 	"strings"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/airencracken/comfylib/analytics"
 )
 
 var now = time.Date(2026, 11, 12, 15, 0, 0, 0, time.UTC)
 
-// Run exercises schema, deduplication, properties, atomicity, expiry and failure
-// behavior. db must be a dedicated empty SQLite database owned by this test.
+// Run checks migration, request metrics, security counts, concurrency,
+// retention and failure handling. db must be a dedicated, empty SQLite
+// database owned by the test.
 func Run(t *testing.T, db *sql.DB) {
 	t.Helper()
-	ctx := t.Context()
 	db.SetMaxOpenConns(1)
-	if err := analytics.Initialize(ctx, db, now); err != nil {
+	migration(t, db)
+	if err := analytics.Initialize(t.Context(), db, now.Add(time.Hour)); err != nil {
 		t.Fatal(err)
 	}
-	if err := analytics.Initialize(ctx, db, now.Add(time.Hour)); err != nil {
-		t.Fatal(err)
-	}
-	concurrentViews(t, db)
-	snapshot(t, db)
-	atomicity(t, db)
+	traffic(t, db)
+	security(t, db)
 	retention(t, db)
 	adversarial(t, db)
 	failure(t, db)
 }
-func exec(t *testing.T, db *sql.DB, q string, args ...any) {
+
+func run(t *testing.T, db *sql.DB, q string, args ...any) {
 	t.Helper()
 	if _, err := db.ExecContext(t.Context(), q, args...); err != nil {
 		t.Fatal(err)
 	}
 }
+
 func total(t *testing.T, db *sql.DB, q string, args ...any) int64 {
 	t.Helper()
 	var n int64
@@ -50,133 +51,137 @@ func total(t *testing.T, db *sql.DB, q string, args ...any) int64 {
 	}
 	return n
 }
-func concurrentViews(t *testing.T, db *sql.DB) {
+
+// migration checks that Initialize drops the per-account table kept by
+// versions before 0.7.0.
+func migration(t *testing.T, db *sql.DB) {
+	run(t, db, "CREATE TABLE comfy_analytics_activity(day INTEGER, kind TEXT, member TEXT, item TEXT, count INTEGER, last_at INTEGER)")
+	run(t, db, "INSERT INTO comfy_analytics_activity VALUES(1,'login','7','',1,1)")
+	if err := analytics.Initialize(t.Context(), db, now); err != nil {
+		t.Fatal(err)
+	}
+	if total(t, db, "SELECT count(*) FROM sqlite_master WHERE name='comfy_analytics_activity'") != 0 {
+		t.Fatal("per-account activity table kept")
+	}
+}
+
+func traffic(t *testing.T, db *sql.DB) {
+	monitor := analytics.NewMonitor(db)
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /items/{id}", func(w http.ResponseWriter, r *http.Request) {
+		if r.PathValue("id") == "broken" {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		_, _ = w.Write([]byte("item"))
+	})
+	handler := monitor.Middleware(mux)
 	var group sync.WaitGroup
-	for i := 0; i < 50; i++ {
+	for worker := 0; worker < 8; worker++ {
 		group.Go(func() {
-			if err := analytics.RecordView(t.Context(), db, analytics.Post, "1", "10", now); err != nil {
-				t.Error(err)
+			for i := 0; i < 25; i++ {
+				target := "/items/1?private=query"
+				if i%5 == 0 {
+					target = "/items/broken"
+				}
+				handler.ServeHTTP(httptest.NewRecorder(), httptest.NewRequest(http.MethodGet, target, nil))
+				if i%7 == 0 {
+					if err := monitor.Flush(t.Context()); err != nil {
+						t.Error(err)
+					}
+				}
 			}
 		})
 	}
 	group.Wait()
-	if n := total(t, db, "SELECT sum(count) FROM comfy_analytics_activity"); n != 1 {
-		t.Fatal("concurrent opens inflated views", n)
-	}
-	unique := map[string]bool{}
-	for i := 0; i < 200; i++ {
-		member, item := fmt.Sprint(i%7), fmt.Sprint((i*13)%11)
-		unique[member+":"+item] = true
-		if err := analytics.RecordView(t.Context(), db, analytics.Image, member, item, now); err != nil {
-			t.Fatal(err)
-		}
-	}
-	if n := total(t, db, "SELECT sum(count) FROM comfy_analytics_activity WHERE kind='image'"); n != int64(len(unique)) {
-		t.Fatal("deduplication property", n, len(unique))
-	}
-	exec(t, db, "DELETE FROM comfy_analytics_activity WHERE kind='image'")
-}
-func snapshot(t *testing.T, db *sql.DB) {
-	for i := 0; i < 2; i++ {
-		if err := analytics.RecordLogin(t.Context(), db, "1", now.Add(-time.Hour)); err != nil {
-			t.Fatal(err)
-		}
-	}
-	if err := analytics.RecordView(t.Context(), db, analytics.Post, "2", "10", now); err != nil {
+	if err := monitor.Flush(t.Context()); err != nil {
 		t.Fatal(err)
 	}
-	if err := analytics.RecordView(t.Context(), db, analytics.Post, "1", "11", now.Add(24*time.Hour)); err != nil {
-		t.Fatal(err)
-	}
-	result, err := analytics.Collect(t.Context(), db, "SELECT '1','<script>name</script>' UNION ALL SELECT '2','second'", now)
+	result, err := analytics.Collect(t.Context(), db, "", time.Now())
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual([]int64{result.Logins, result.Views, result.ActiveMembers, int64(len(result.Days)), int64(len(result.Popular)), int64(len(result.LoginsByAccount))}, []int64{2, 2, 2, 7, 1, 1}) {
-		t.Fatal(result)
+	if result.Requests != 200 || result.Status5xx != 40 || result.Bytes != 640 || len(result.Failing) != 1 || result.Failing[0].Pattern != "GET /items/{id}" {
+		t.Fatalf("request metrics %+v", result.Traffic)
 	}
-	if result.Popular[0].Views != 2 || result.LoginsByAccount[0].Count != 2 || !result.Started.Equal(now) {
-		t.Fatal("snapshot", result, err)
-	}
-	if !result.Days[0].Day.Equal(now.UTC().Truncate(24 * time.Hour).Add(-6 * 24 * time.Hour)) {
-		t.Fatal("UTC reporting boundary")
-	}
-	result, err = analytics.Collect(t.Context(), db, "SELECT '2','second'", now)
-	if err != nil || len(result.LoginsByAccount) != 0 {
-		t.Fatal("deleted account name exposed", result, err)
+	if total(t, db, "SELECT count(*) FROM comfy_analytics_routes WHERE route LIKE '%private%' OR route LIKE '%broken%'") != 0 {
+		t.Fatal("request detail stored")
 	}
 }
-func atomicity(t *testing.T, db *sql.DB) {
-	if err := analytics.RecordViews(t.Context(), db, []analytics.Event{{Kind: analytics.Post, Member: "batch", Item: "first"}, {Kind: "invalid", Member: "batch", Item: "second"}}, now); err == nil {
-		t.Fatal("invalid batch accepted")
-	}
-	if total(t, db, "SELECT count(*) FROM comfy_analytics_activity WHERE member='batch'") != 0 {
-		t.Fatal("partial page view counts committed")
-	}
 
-	exec(t, db, "CREATE TABLE session_fixture(id INTEGER PRIMARY KEY)")
+func security(t *testing.T, db *sql.DB) {
+	for _, record := range []func() error{
+		func() error { return analytics.RecordFailedSignIn(t.Context(), db, now) },
+		func() error { return analytics.RecordFailedSignIn(t.Context(), db, now) },
+		func() error { return analytics.RecordRateLimited(t.Context(), db, now) },
+		func() error { return analytics.RecordRejectedToken(t.Context(), db, now) },
+	} {
+		if err := record(); err != nil {
+			t.Fatal(err)
+		}
+	}
 	tx, err := db.BeginTx(t.Context(), nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err = tx.ExecContext(t.Context(), "INSERT INTO session_fixture VALUES(1)"); err != nil {
-		t.Fatal(err)
-	}
-	if err = analytics.RecordLogin(t.Context(), tx, "aborted", now); err != nil {
+	if err = analytics.RecordFailedSignIn(t.Context(), tx, now); err != nil {
 		t.Fatal(err)
 	}
 	if err = tx.Rollback(); err != nil {
 		t.Fatal(err)
 	}
-	if total(t, db, "SELECT count(*) FROM session_fixture") != 0 || total(t, db, "SELECT count(*) FROM comfy_analytics_activity WHERE member='aborted'") != 0 {
-		t.Fatal("aborted login was recorded")
+	result, err := analytics.Collect(t.Context(), db, "", now)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.Security != (analytics.Security{FailedSignIns: 2, RateLimited: 1, RejectedTokens: 1}) || len(result.Days) != 7 {
+		t.Fatalf("security counts %+v", result.Security)
 	}
 }
+
 func retention(t *testing.T, db *sql.DB) {
 	for _, age := range []int{89, 90} {
-		if err := analytics.RecordView(t.Context(), db, analytics.Post, "expiry", fmt.Sprint(age), now.Add(-time.Duration(age)*24*time.Hour)); err != nil {
+		if err := analytics.RecordFailedSignIn(t.Context(), db, now.Add(-time.Duration(age)*24*time.Hour)); err != nil {
 			t.Fatal(err)
 		}
 	}
 	if err := analytics.Prune(t.Context(), db, now); err != nil {
 		t.Fatal(err)
 	}
-	if total(t, db, "SELECT count(*) FROM comfy_analytics_activity WHERE member='expiry'") != 1 || total(t, db, "SELECT count(*) FROM comfy_analytics_activity WHERE member='expiry' AND item='89'") != 1 {
+	oldest := now.Add(-89*24*time.Hour).Unix() / 86400
+	if total(t, db, "SELECT count(*) FROM comfy_analytics_security WHERE day<?", oldest) != 0 || total(t, db, "SELECT count(*) FROM comfy_analytics_security WHERE day=?", oldest) != 1 {
 		t.Fatal("retention boundary")
 	}
 	var a, b, c int
 	var detail string
-	if err := db.QueryRowContext(t.Context(), "EXPLAIN QUERY PLAN DELETE FROM comfy_analytics_activity WHERE day<?", 0).Scan(&a, &b, &c, &detail); err != nil || !strings.Contains(detail, "INDEX") {
-		t.Fatal("expiry requires indexed lookup", detail, err)
+	if err := db.QueryRowContext(t.Context(), "EXPLAIN QUERY PLAN DELETE FROM comfy_analytics_routes WHERE day<?", 0).Scan(&a, &b, &c, &detail); err != nil || !strings.Contains(detail, "INDEX") {
+		t.Fatal("expiry requires an indexed lookup", detail, err)
 	}
 }
-func adversarial(t *testing.T, db *sql.DB) {
-	if err := analytics.RecordLogin(t.Context(), db, "forgotten", now); err != nil {
-		t.Fatal(err)
-	}
-	if err := analytics.ForgetMember(t.Context(), db, "forgotten"); err != nil {
-		t.Fatal(err)
-	}
-	if total(t, db, "SELECT count(*) FROM comfy_analytics_activity WHERE member='forgotten'") != 0 {
-		t.Fatal("deleted member activity retained")
-	}
 
-	for _, q := range []string{"INSERT INTO comfy_analytics_activity VALUES(1,'unknown','1','1',1,1)", "INSERT INTO comfy_analytics_activity VALUES(1,'post','1','1',0,1)"} {
+func adversarial(t *testing.T, db *sql.DB) {
+	zeros := strings.TrimSuffix(strings.Repeat("0,", 12), ",")
+	for _, q := range []string{
+		"INSERT INTO comfy_analytics_routes VALUES(1,'',1,0,0,0,0,0," + zeros + ")",
+		"INSERT INTO comfy_analytics_routes VALUES(1,'" + strings.Repeat("x", 129) + "',1,0,0,0,0,0," + zeros + ")",
+		"INSERT INTO comfy_analytics_routes VALUES(1,'x',0,0,0,0,0,0," + zeros + ")",
+		"INSERT INTO comfy_analytics_routes VALUES(1,'x',1,0,0,0,0,-1," + zeros + ")",
+		"INSERT INTO comfy_analytics_security(day,failed_sign_ins) VALUES(1,-1)",
+	} {
 		if _, err := db.ExecContext(t.Context(), q); err == nil {
-			t.Fatal("invalid schema row accepted")
+			t.Fatal("invalid row accepted", q)
 		}
 	}
-	ctx, cancel := context.WithCancel(t.Context())
-	cancel()
-	if analytics.RecordView(ctx, db, analytics.Post, "1", "canceled", now) == nil {
-		t.Fatal("cancellation ignored")
+	if analytics.RecordRejectedToken(t.Context(), db, time.Unix(-1, 0)) == nil {
+		t.Fatal("negative time accepted")
 	}
 }
+
 func failure(t *testing.T, db *sql.DB) {
-	exec(t, db, "ALTER TABLE comfy_analytics_activity RENAME TO broken_activity")
-	result, err := analytics.Collect(t.Context(), db, "SELECT '1','name'", now)
+	run(t, db, "ALTER TABLE comfy_analytics_routes RENAME TO broken_routes")
+	result, err := analytics.Collect(t.Context(), db, "", now)
 	if err == nil || !reflect.DeepEqual(result, analytics.Summary{}) {
 		t.Fatal("partial metrics escaped", result, err)
 	}
-	exec(t, db, "ALTER TABLE broken_activity RENAME TO comfy_analytics_activity")
+	run(t, db, "ALTER TABLE broken_routes RENAME TO comfy_analytics_routes")
 }

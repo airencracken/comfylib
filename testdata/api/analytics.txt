@@ -1,12 +1,26 @@
 package analytics // import "github.com/airencracken/comfylib/analytics"
 
+const (
+	FlushInterval = time.Minute
+
+	Unmatched = "unmatched"
+
+	Other = "other"
+)
+
 const RetentionDays = 90
+
+const RouteLimit = 5
+
+const Slower = time.Duration(math.MaxInt64)
 
 func ForgetMember(ctx context.Context, exec Executor, member string) error
 
 func Initialize(ctx context.Context, db *sql.DB, now time.Time) error
 
 func Label(kind Kind) string
+
+func LatencyBuckets() []time.Duration
 
 func Maintenance(db *sql.DB, next http.Handler) http.Handler
 
@@ -16,11 +30,19 @@ func NumericID(raw string) string
 
 func Prune(ctx context.Context, exec Executor, at time.Time) error
 
+func RecordFailedSignIn(ctx context.Context, exec Executor, at time.Time) error
+
 func RecordLogin(ctx context.Context, exec Executor, member string, at time.Time) error
+
+func RecordRateLimited(ctx context.Context, exec Executor, at time.Time) error
+
+func RecordRejectedToken(ctx context.Context, exec Executor, at time.Time) error
 
 func RecordView(ctx context.Context, exec Executor, kind Kind, member, item string, at time.Time) error
 
 func RecordViews(ctx context.Context, db *sql.DB, events []Event, at time.Time) error
+
+func RemoveDetail(ctx context.Context, exec Executor) error
 
 func Track(db *sql.DB, next http.HandlerFunc, resolve func(*http.Request) []Event) http.HandlerFunc
 
@@ -37,8 +59,11 @@ type Content struct {
 func (c Content) Description() string
 
 type Daily struct {
-	Day           time.Time
+	Day time.Time
+
 	Logins, Views int64
+	Traffic
+	Security
 }
 
 type Event struct {
@@ -49,6 +74,14 @@ type Event struct {
 type Executor interface {
 	ExecContext(context.Context, string, ...any) (sql.Result, error)
 }
+
+type Histogram [len(latencyBounds) + 1]int64
+
+func (h Histogram) Count() int64
+
+func (h *Histogram) Observe(elapsed time.Duration)
+
+func (h Histogram) Percentile(p float64) (upper time.Duration, ok bool)
 
 type Kind string
 
@@ -67,12 +100,47 @@ type Login struct {
 	Last  time.Time
 }
 
+type Monitor struct {
+	// contains filtered or unexported fields
+}
+
+func NewMonitor(db *sql.DB) *Monitor
+
+func (m *Monitor) Flush(ctx context.Context) error
+
+func (m *Monitor) Middleware(next http.Handler) http.Handler
+
+type Route struct {
+	Pattern string
+	Traffic
+}
+
+type Security struct {
+	FailedSignIns, RateLimited, RejectedTokens int64
+}
+
 type Summary struct {
-	Started                      time.Time
+	Started time.Time
+
 	Logins, ActiveMembers, Views int64
-	Days                         []Daily
-	LoginsByAccount              []Login
-	Popular                      []Content
+	Traffic
+	Security
+	Days []Daily
+
+	Slowest, Failing []Route
+
+	LoginsByAccount []Login
+
+	Popular []Content
 }
 
 func Collect(ctx context.Context, db *sql.DB, accountsQuery string, now time.Time) (Summary, error)
+
+type Traffic struct {
+	Requests                                   int64
+	Status2xx, Status3xx, Status4xx, Status5xx int64
+	Bytes                                      int64
+	Latency                                    Histogram
+}
+
+func (t Traffic) ErrorRate() float64

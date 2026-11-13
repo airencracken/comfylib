@@ -120,39 +120,72 @@ func metricValue(metric Metric) string {
 	if !metric.Bytes {
 		return fmt.Sprint(metric.Value)
 	}
+	return byteSize(metric.Value)
+}
+
+func byteSize(n int64) string {
 	for _, unit := range []struct {
 		size int64
 		name string
 	}{{1 << 40, "TiB"}, {1 << 30, "GiB"}, {1 << 20, "MiB"}, {1 << 10, "KiB"}} {
-		if metric.Value >= unit.size {
-			return fmt.Sprintf("%.1f %s", float64(metric.Value)/float64(unit.size), unit.name)
+		if n >= unit.size {
+			return fmt.Sprintf("%.1f %s", float64(n)/float64(unit.size), unit.name)
 		}
 	}
-	return fmt.Sprintf("%d bytes", metric.Value)
+	return fmt.Sprintf("%d bytes", n)
 }
 
-var summaryTemplate = template.Must(template.New("admin").Funcs(template.FuncMap{"metricValue": metricValue, "utc": displaytime.New("UTC").Stamp}).Parse(`
+// latency describes a histogram percentile as an upper bound.
+func latency(h analytics.Histogram, p float64) string {
+	upper, ok := h.Percentile(p)
+	switch {
+	case !ok:
+		return "No requests"
+	case upper == analytics.Slower:
+		buckets := analytics.LatencyBuckets()
+		return "Over " + duration(buckets[len(buckets)-1])
+	}
+	return "Up to " + duration(upper)
+}
+
+func duration(d time.Duration) string {
+	if d < time.Second {
+		return fmt.Sprintf("%d ms", d.Milliseconds())
+	}
+	return strings.TrimSuffix(strings.TrimRight(fmt.Sprintf("%.1f", d.Seconds()), "0"), ".") + " s"
+}
+
+func percent(rate float64) string { return fmt.Sprintf("%.1f%%", rate*100) }
+
+var funcs = template.FuncMap{"metricValue": metricValue, "byteSize": byteSize, "latency": latency, "percent": percent, "utc": displaytime.New("UTC").Stamp}
+
+var summaryTemplate = template.Must(template.New("admin").Funcs(funcs).Parse(`
 <div class="comfy-admin-dashboard" data-comfy-dashboard="1">
-<header class="comfy-admin-heading"><div><h1>Instance metrics</h1><p>Usage and activity, available only to administrators.</p></div><a href="{{if .BackURL}}{{.BackURL}}{{else}}/{{end}}">Back to administration</a></header>
+<header class="comfy-admin-heading"><div><h1>Instance metrics</h1><p>How this instance is doing. Only administrators can see this page.</p></div><a href="{{if .BackURL}}{{.BackURL}}{{else}}/{{end}}">Back to administration</a></header>
 <section class="comfy-admin-section" aria-labelledby="comfy-overview-title"><h2 id="comfy-overview-title">Instance overview</h2>
 {{if .Metrics}}<dl class="comfy-metrics">{{range .Metrics}}<div><dt>{{.Label}}</dt><dd>{{metricValue .}}{{if .Detail}}<p>{{.Detail}}</p>{{end}}</dd></div>{{end}}</dl>{{end}}
 </section>
-{{with .Activity}}<section class="comfy-admin-section" aria-labelledby="comfy-activity-title"><h2 id="comfy-activity-title">Activity</h2>
-<p>Past 7 UTC days, including today. Recording began {{utc .Started}}.</p>
-<dl class="comfy-metrics"><div><dt>Successful sign-ins</dt><dd>{{.Logins}}</dd></div><div><dt>Active accounts</dt><dd>{{.ActiveMembers}}</dd></div><div><dt>Content views</dt><dd>{{.Views}}</dd></div></dl>
-<p class="comfy-admin-help">A view is an authorized content open, counted once per account, item and UTC day. Thumbnails, background assets, failed requests and signed-out visits do not count. Activity is retained for 90 days. IP addresses and browser identifiers are not recorded. Earlier activity cannot be reconstructed.</p>
-<div class="comfy-metrics-table-wrap"><table class="comfy-metrics-table"><caption>Daily activity</caption><thead><tr><th scope="col">UTC date</th><th scope="col">Sign-ins</th><th scope="col">Views</th></tr></thead><tbody>{{range .Days}}<tr><th scope="row">{{.Day.Format "2 Jan 2006"}}</th><td>{{.Logins}}</td><td>{{.Views}}</td></tr>{{end}}</tbody></table></div>
-<div class="comfy-metrics-table-wrap"><table class="comfy-metrics-table"><caption>Recent sign-ins by account</caption><thead><tr><th scope="col">Account</th><th scope="col">Sign-ins</th><th scope="col">Last sign-in</th></tr></thead><tbody>{{range .LoginsByAccount}}<tr><th scope="row">{{.Name}}</th><td>{{.Count}}</td><td>{{utc .Last}}</td></tr>{{else}}<tr><td colspan="3">No recorded sign-ins in this period.</td></tr>{{end}}</tbody></table></div>
-<div class="comfy-metrics-table-wrap"><table class="comfy-metrics-table"><caption>Most viewed content</caption><thead><tr><th scope="col">Content</th><th scope="col">Views</th></tr></thead><tbody>{{range .Popular}}<tr><th scope="row">{{.Description}}</th><td>{{.Views}}</td></tr>{{else}}<tr><td colspan="2">No recorded content views in this period.</td></tr>{{end}}</tbody></table></div>
+{{with .Activity}}<section class="comfy-admin-section" aria-labelledby="comfy-health-title"><h2 id="comfy-health-title">Site health</h2>
+<p class="comfy-activity-window">Past 7 UTC days, including today. Recording began {{utc .Started}}.</p>
+<dl class="comfy-metrics"><div><dt>Requests</dt><dd>{{.Requests}}</dd></div><div><dt>Server error rate</dt><dd>{{percent .ErrorRate}}</dd></div><div><dt>Median response time</dt><dd>{{latency .Latency 0.5}}</dd></div><div><dt>95th percentile response time</dt><dd>{{latency .Latency 0.95}}</dd></div><div><dt>Data served</dt><dd>{{byteSize .Bytes}}</dd></div></dl>
+<p class="comfy-admin-help">This counts requests, response times and data served for each day and route, and keeps them for 90 days. It does not record who made a request, which page or item it was for, IP addresses or browser details.</p>
+<div class="comfy-metrics-table-wrap"><table class="comfy-metrics-table"><caption>Daily traffic</caption><thead><tr><th scope="col">UTC date</th><th scope="col">Requests</th><th scope="col">Server errors</th><th scope="col">95th percentile</th><th scope="col">Data served</th></tr></thead><tbody>{{range .Days}}<tr><th scope="row">{{.Day.Format "2 Jan 2006"}}</th><td>{{.Requests}}</td><td>{{.Status5xx}}</td><td>{{latency .Latency 0.95}}</td><td>{{byteSize .Bytes}}</td></tr>{{end}}</tbody></table></div>
+<div class="comfy-metrics-table-wrap"><table class="comfy-metrics-table"><caption>Slowest routes</caption><thead><tr><th scope="col">Route</th><th scope="col">Requests</th><th scope="col">Median</th><th scope="col">95th percentile</th></tr></thead><tbody>{{range .Slowest}}<tr><th scope="row"><code>{{.Pattern}}</code></th><td>{{.Requests}}</td><td>{{latency .Latency 0.5}}</td><td>{{latency .Latency 0.95}}</td></tr>{{else}}<tr><td colspan="4">No requests yet.</td></tr>{{end}}</tbody></table></div>
+<div class="comfy-metrics-table-wrap"><table class="comfy-metrics-table"><caption>Routes with errors</caption><thead><tr><th scope="col">Route</th><th scope="col">Requests</th><th scope="col">Client errors</th><th scope="col">Server errors</th></tr></thead><tbody>{{range .Failing}}<tr><th scope="row"><code>{{.Pattern}}</code></th><td>{{.Requests}}</td><td>{{.Status4xx}}</td><td>{{.Status5xx}}</td></tr>{{else}}<tr><td colspan="4">No errors in this period.</td></tr>{{end}}</tbody></table></div>
+</section>
+<section class="comfy-admin-section" aria-labelledby="comfy-security-title"><h2 id="comfy-security-title">Security</h2>
+<dl class="comfy-metrics"><div><dt>Failed sign-ins</dt><dd>{{.FailedSignIns}}</dd></div><div><dt>Rate-limited attempts</dt><dd>{{.RateLimited}}</dd></div><div><dt>Rejected invitation and reset links</dt><dd>{{.RejectedTokens}}</dd></div></dl>
+<p class="comfy-admin-help">Daily totals only. No usernames, accounts or IP addresses are stored.</p>
+<div class="comfy-metrics-table-wrap"><table class="comfy-metrics-table"><caption>Daily security events</caption><thead><tr><th scope="col">UTC date</th><th scope="col">Failed sign-ins</th><th scope="col">Rate-limited</th><th scope="col">Rejected links</th></tr></thead><tbody>{{range .Days}}<tr><th scope="row">{{.Day.Format "2 Jan 2006"}}</th><td>{{.FailedSignIns}}</td><td>{{.RateLimited}}</td><td>{{.RejectedTokens}}</td></tr>{{end}}</tbody></table></div>
 </section>{{end}}
 <section class="comfy-admin-section" aria-labelledby="comfy-operations-title"><h2 id="comfy-operations-title">Operations</h2>
 {{if .Version}}<p>Running version: <span>{{.Version}}</span></p>{{end}}
 <dl class="comfy-operations">{{range .Items}}<div><dt>{{.Name}}</dt><dd>{{.Status}}{{if .Detail}}<p>{{.Detail}}</p>{{end}}</dd></div>{{end}}
 <div><dt>Automatic backups</dt><dd>{{if .Backup.Enabled}}{{if .Backup.Running}}Running{{else}}Enabled{{end}}{{else}}Disabled{{end}}
-{{if not .Backup.LastSuccess.IsZero}}<p>Last verified backup: {{utc .Backup.LastSuccess}}</p>{{else if .Backup.Enabled}}<p>The first verified backup is pending.</p>{{end}}
+{{if not .Backup.LastSuccess.IsZero}}<p>Last verified backup: {{utc .Backup.LastSuccess}}</p>{{else if .Backup.Enabled}}<p>The first backup hasn't run yet.</p>{{end}}
 {{if .Backup.LastError}}<p class="comfy-notice comfy-notice-error" role="alert">Last backup problem: {{.Backup.LastError}}</p>{{end}}
 {{if and .Backup.Enabled (not .Backup.NextAttempt.IsZero)}}<p>Next attempt: {{utc .Backup.NextAttempt}}</p>{{end}}</dd></div></dl>
-<p class="comfy-admin-help">These totals describe this instance. Recent activity covers the past 7 UTC days, including today. Only administrators can access these details.</p></section></div>`))
+</section></div>`))
 
 var summary, summaryErr = displaytime.NewTemplates(summaryTemplate, func(f displaytime.Formatter) template.FuncMap { return template.FuncMap{"utc": f.Stamp} })
 

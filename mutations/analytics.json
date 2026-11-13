@@ -1,107 +1,11 @@
 [
   {
-    "name": "analytics rejects unauthorized content kinds",
-    "file": "analytics/analytics.go",
-    "before": "!validKind(kind) || !identifier(member)",
-    "after": "!identifier(member)",
-    "package": "./analytics",
-    "run": "^TestValidationBindingsLabelsAndRetention$"
-  },
-  {
-    "name": "analytics is GET only",
-    "file": "analytics/http.go",
-    "before": "r.Method != http.MethodGet || out.status != http.StatusOK",
-    "after": "out.status != http.StatusOK",
-    "package": "./analytics",
-    "run": "^TestTrackRequiresSuccessfulGetAndAuthorizedEvent$"
-  },
-  {
-    "name": "analytics excludes failed responses",
-    "file": "analytics/http.go",
-    "before": "r.Method != http.MethodGet || out.status != http.StatusOK",
-    "after": "r.Method != http.MethodGet",
-    "package": "./analytics",
-    "run": "^TestTrackRequiresSuccessfulGetAndAuthorizedEvent$"
-  },
-  {
-    "name": "analytics canonicalizes duplicate numeric routes",
-    "file": "analytics/analytics.go",
-    "before": "return MemberID(id)",
-    "after": "return raw",
-    "package": "./analytics",
-    "run": "^TestNumericContentIDCanonicalization$"
-  },
-  {
-    "name": "analytics views cannot be incremented by reloads",
-    "file": "analytics/analytics.go",
-    "before": "VALUES(?,?,?,?,1,?) ON CONFLICT(day,kind,member,item) DO NOTHING",
-    "after": "VALUES(?,?,?,?,1,?) ON CONFLICT(day,kind,member,item) DO UPDATE SET count=count+1",
-    "package": "./analytics",
-    "run": "^TestSQLiteCountQueriesDeduplicateAndExpire$"
-  },
-  {
-    "name": "analytics distinct accounts see independent views",
-    "file": "analytics/analytics.go",
-    "before": "PRIMARY KEY(day,kind,member,item)",
-    "after": "PRIMARY KEY(day,kind,item)",
-    "package": "./analytics",
-    "run": "^TestSQLiteCountQueriesDeduplicateAndExpire$"
-  },
-  {
-    "name": "analytics views reset per UTC day",
-    "file": "analytics/analytics.go",
-    "before": "PRIMARY KEY(day,kind,member,item)",
-    "after": "PRIMARY KEY(kind,member,item)",
-    "package": "./analytics",
-    "run": "^TestSQLiteCountQueriesDeduplicateAndExpire$"
-  },
-  {
-    "name": "analytics retains exactly ninety UTC days",
-    "file": "analytics/analytics.go",
-    "before": "day(at)-RetentionDays+1",
-    "after": "day(at)-RetentionDays",
-    "package": "./analytics",
-    "run": "^TestValidationBindingsLabelsAndRetention$"
-  },
-  {
-    "name": "analytics login counts every successful sign-in",
-    "file": "analytics/analytics.go",
-    "before": "count=count+1,last_at=max",
-    "after": "count=count,last_at=max",
-    "package": "./analytics",
-    "run": "^TestSQLiteCountQueriesDeduplicateAndExpire$"
-  },
-  {
-    "name": "analytics last login resists clock regression",
-    "file": "analytics/analytics.go",
-    "before": "last_at=max(last_at,excluded.last_at)",
-    "after": "last_at=excluded.last_at",
-    "package": "./analytics",
-    "run": "^TestSQLiteCountQueriesDeduplicateAndExpire$"
-  },
-  {
-    "name": "analytics read snapshot is read-only",
-    "file": "analytics/analytics.go",
-    "before": "ReadOnly: true",
-    "after": "ReadOnly: false",
-    "package": "./analytics",
-    "run": "^TestCollectReadonlySnapshotFailureAndCancellation$"
-  },
-  {
-    "name": "analytics returns no partial activity on failure",
-    "file": "analytics/analytics.go",
-    "before": "if err != nil {\n\t\treturn Summary{}, err\n\t}\n\treturn result, nil",
-    "after": "if err != nil {\n\t\treturn result, err\n\t}\n\treturn result, nil",
-    "package": "./analytics",
-    "run": "^TestCollectReadonlySnapshotFailureAndCancellation$"
-  },
-  {
     "name": "admin operations preserve collected activity",
     "file": "admin/admin.go",
     "before": "runtime := Runtime(version, backup)",
     "after": "view.Activity=nil\n runtime := Runtime(version, backup)",
     "package": "./admin",
-    "run": "^TestDashboardActivityEscapingAndCommonSections$"
+    "run": "^TestDashboardShowsHealthAndSecurityWithoutPeople$"
   },
   {
     "name": "analytics calendar window matches domain totals",
@@ -110,5 +14,133 @@
     "after": "return at.UTC().Truncate(24 * time.Hour).Add(-7 * 24 * time.Hour)",
     "package": "./analytics",
     "run": "^TestWindowStartUsesTheSameUtcCalendarBoundary$"
+  },
+  {
+    "name": "analytics route labels reject control and non-ASCII bytes",
+    "file": "analytics/http.go",
+    "before": "pattern[i] < 0x20 || pattern[i] > 0x7e",
+    "after": "false",
+    "package": "./analytics",
+    "run": "^TestRouteLabelsNeverCarryPathsOrQueries$"
+  },
+  {
+    "name": "analytics route labels are bounded in length",
+    "file": "analytics/http.go",
+    "before": "len(pattern) > maxRouteLength",
+    "after": "false",
+    "package": "./analytics",
+    "run": "^TestRouteLabelsNeverCarryPathsOrQueries$"
+  },
+  {
+    "name": "analytics bounds distinct routes between flushes",
+    "file": "analytics/http.go",
+    "before": "if len(m.pending) >= maxRoutes {",
+    "after": "if false {",
+    "package": "./analytics",
+    "run": "^TestMonitorBoundsDistinctRoutes$"
+  },
+  {
+    "name": "analytics counts a panicking handler as a server error",
+    "file": "analytics/http.go",
+    "before": "status = http.StatusInternalServerError",
+    "after": "status = out.status",
+    "package": "./analytics",
+    "run": "^TestMonitorCountsPatternsStatusesBytesAndPanics$"
+  },
+  {
+    "name": "analytics keeps counts when a flush fails",
+    "file": "analytics/http.go",
+    "before": "m.pending[key].add(*t)",
+    "after": "m.pending[key].add(Traffic{Latency: t.Latency})",
+    "package": "./analytics",
+    "run": "^TestMonitorFlushesOncePerIntervalAndKeepsCountsOnFailure$"
+  },
+  {
+    "name": "analytics percentile uses the nearest rank",
+    "file": "analytics/analytics.go",
+    "before": "math.Ceil(p * float64(n))",
+    "after": "math.Floor(p * float64(n))",
+    "package": "./analytics",
+    "run": "^TestHistogramPercentileBracketsTheTrueValue$"
+  },
+  {
+    "name": "analytics latency buckets include their upper bound",
+    "file": "analytics/analytics.go",
+    "before": "if elapsed <= bound {",
+    "after": "if elapsed < bound {",
+    "package": "./analytics",
+    "run": "^TestHistogramPercentileBracketsTheTrueValue$"
+  },
+  {
+    "name": "analytics classifies successful responses",
+    "file": "analytics/analytics.go",
+    "before": "case status < 300:",
+    "after": "case status < 200:",
+    "package": "./analytics",
+    "run": "^TestTrafficStatusClassesAndErrorRate$"
+  },
+  {
+    "name": "analytics retains exactly ninety UTC days",
+    "file": "analytics/analytics.go",
+    "before": "cutoff := day(at) - RetentionDays + 1",
+    "after": "cutoff := day(at) - RetentionDays",
+    "package": "./analytics",
+    "run": "^TestSQLiteStorageMigrationAndRetention$"
+  },
+  {
+    "name": "analytics migration drops per-account activity",
+    "file": "analytics/analytics.go",
+    "before": "\"DROP TABLE IF EXISTS comfy_analytics_activity\"",
+    "after": "\"SELECT 1\"",
+    "package": "./analytics",
+    "run": "^TestSQLiteStorageMigrationAndRetention$"
+  },
+  {
+    "name": "analytics read snapshot is read-only",
+    "file": "analytics/analytics.go",
+    "before": "ReadOnly: true",
+    "after": "ReadOnly: false",
+    "package": "./analytics",
+    "run": "^TestCollectTotalsRanksAndFailsWhole$"
+  },
+  {
+    "name": "analytics returns no partial report on failure",
+    "file": "analytics/analytics.go",
+    "before": "if err != nil {\n\t\treturn Summary{}, err\n\t}\n\treturn result, nil",
+    "after": "if err != nil {\n\t\treturn result, err\n\t}\n\treturn result, nil",
+    "package": "./analytics",
+    "run": "^TestCollectTotalsRanksAndFailsWhole$"
+  },
+  {
+    "name": "analytics lists only routes with errors as failing",
+    "file": "analytics/analytics.go",
+    "before": "r.Status4xx+r.Status5xx == 0",
+    "after": "false",
+    "package": "./analytics",
+    "run": "^TestRankRoutesBoundsLists$"
+  },
+  {
+    "name": "analytics deprecated view recording stores nothing",
+    "file": "analytics/deprecated.go",
+    "before": "func RecordView(ctx context.Context, exec Executor, kind Kind, member, item string, at time.Time) error {\n\treturn nil",
+    "after": "func RecordView(ctx context.Context, exec Executor, kind Kind, member, item string, at time.Time) error {\n\t_, err := exec.ExecContext(ctx, member+item)\n\treturn err",
+    "package": "./analytics",
+    "run": "^TestDeprecatedRecordingStoresNothing$"
+  },
+  {
+    "name": "admin dashboard omits per-account and per-item tables",
+    "file": "admin/admin.go",
+    "before": "<caption>Slowest routes</caption>",
+    "after": "<caption>Most viewed content</caption>",
+    "package": "./admin",
+    "run": "^TestDashboardShowsHealthAndSecurityWithoutPeople$"
+  },
+  {
+    "name": "ratelimit window peek does not spend attempts",
+    "file": "ratelimit/window.go",
+    "before": "if !entry.until.After(now) || entry.count < w.config.Attempts {\n\t\treturn false, 0\n\t}",
+    "after": "entry.count++\n\tif !entry.until.After(now) || entry.count < w.config.Attempts {\n\t\treturn false, 0\n\t}",
+    "package": "./ratelimit",
+    "run": "^TestWindowPeekMatchesAllowWithoutSpending$"
   }
 ]

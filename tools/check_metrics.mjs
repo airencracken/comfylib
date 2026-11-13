@@ -81,7 +81,7 @@ try {
     assert.equal(await independentPage.getByLabel('Display timezone', { exact: true }).inputValue(), 'UTC', `${app}: another account remains isolated`);
     await independent.close();
     await page.goto(origin + '/admin/metrics');
-    assert.match(await page.getByRole('table', { name: 'Recent sign-ins by account', exact: true }).innerText(), /P[DS]T/, `${app}: dashboard instants honor local time`);
+    assert.match(await page.locator('.comfy-activity-window').innerText(), /P[DS]T/, `${app}: dashboard instants honor local time`);
     assert.ok(await page.getByRole('columnheader', { name: 'UTC date', exact: true }).isVisible(), 'reporting days stay UTC');
     await page.goto(origin + accountPath); await input.fill('UTC'); await save.click();
 
@@ -91,8 +91,10 @@ try {
       assert.equal(await page.getByRole('heading', { name: 'Instance metrics', exact: true }).count(), 1);
       assert.ok(await page.getByRole('heading', { name: 'Instance overview', exact: true }).isVisible());
       assert.ok(await page.locator('.comfy-metrics dd').count() >= 8);
-      assert.ok(await page.getByRole('heading', { name: 'Activity', exact: true }).isVisible());
-      assert.ok(await page.getByRole('table', { name: 'Recent sign-ins by account', exact: true }).isVisible());
+      assert.ok(await page.getByRole('heading', { name: 'Site health', exact: true }).isVisible());
+      assert.ok(await page.getByRole('table', { name: 'Daily traffic', exact: true }).isVisible());
+      assert.ok(await page.getByRole('heading', { name: 'Security', exact: true }).isVisible());
+      for (const gone of ['Recent sign-ins by account', 'Most viewed content']) assert.equal(await page.getByRole('table', { name: gone, exact: true }).count(), 0, `${app}: no per-account or per-item tables`);
       const styles = await page.evaluate(() => {
         const css = selector => getComputedStyle(document.querySelector(selector));
         return { root: css('.comfy-admin-dashboard').fontSize, title: css('.comfy-admin-heading h1').fontSize,

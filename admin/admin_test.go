@@ -19,12 +19,12 @@ func TestSummaryEscapesValuesAndShowsOperationalStates(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, want := range []string{"Instance overview", "2.0 KiB", "Last verified backup", "Restart required", "Apply immediately", "Community sign-in", "&lt;script&gt;", "role=\"alert\""} {
+	for _, want := range []string{"Instance overview", "2.0 KiB", "Last verified backup", "Restart required", "Apply immediately", "Community sign-in", "&lt;script&gt;", "role=\"alert\"", autobackup.FailureSummary} {
 		if !strings.Contains(string(html), want) {
 			t.Fatal("missing", want)
 		}
 	}
-	for _, bad := range []string{"<script>", "<img src=x", "Directory", "password=", "client_secret="} {
+	for _, bad := range []string{"<script>", "<img src=x", "img src", "onerror", "Directory", "password=", "client_secret="} {
 		if strings.Contains(string(html), bad) {
 			t.Fatal("unsafe operational output", bad)
 		}

@@ -32,6 +32,18 @@ type Status struct {
 	NextAttempt  time.Time
 }
 
+// FailureSummary is the owner-facing text for a failed backup.
+const FailureSummary = "The last backup failed. Check the server log."
+
+// Summary returns FailureSummary when the last attempt failed, or "". Show it
+// to owners; LastError holds the raw error, which the runner also logs.
+func (s Status) Summary() string {
+	if s.LastError == "" {
+		return ""
+	}
+	return FailureSummary
+}
+
 // ArchiveCap formats the retained archive limit for an owner page.
 func (s Status) ArchiveCap() string { return formatBytes(s.MaxBytes) }
 

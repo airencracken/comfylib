@@ -183,7 +183,7 @@ var summaryTemplate = template.Must(template.New("admin").Funcs(funcs).Parse(`
 <dl class="comfy-operations">{{range .Items}}<div><dt>{{.Name}}</dt><dd>{{.Status}}{{if .Detail}}<p>{{.Detail}}</p>{{end}}</dd></div>{{end}}
 <div><dt>Automatic backups</dt><dd>{{if .Backup.Enabled}}{{if .Backup.Running}}Running{{else}}Enabled{{end}}{{else}}Disabled{{end}}
 {{if not .Backup.LastSuccess.IsZero}}<p>Last verified backup: {{utc .Backup.LastSuccess}}</p>{{else if .Backup.Enabled}}<p>The first backup hasn't run yet.</p>{{end}}
-{{if .Backup.LastError}}<p class="comfy-notice comfy-notice-error" role="alert">Last backup problem: {{.Backup.LastError}}</p>{{end}}
+{{with .Backup.Summary}}<p class="comfy-notice comfy-notice-error" role="alert">{{.}}</p>{{end}}
 {{if and .Backup.Enabled (not .Backup.NextAttempt.IsZero)}}<p>Next attempt: {{utc .Backup.NextAttempt}}</p>{{end}}</dd></div></dl>
 </section></div>`))
 

@@ -457,3 +457,14 @@ func TestInterruptedStagesCleanedWithoutDeletingManualData(t *testing.T) {
 		}
 	}
 }
+
+func TestStatusSummaryHidesTheRawError(t *testing.T) {
+	if (Status{}).Summary() != "" {
+		t.Fatal("summary without a failure")
+	}
+	for _, raw := range []string{"open /var/lib/app/backups/.stage: permission denied", "<script>", strings.Repeat("x", 5000)} {
+		if got := (Status{LastError: raw}).Summary(); got != FailureSummary || strings.Contains(got, raw) {
+			t.Fatal(got)
+		}
+	}
+}

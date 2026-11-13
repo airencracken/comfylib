@@ -78,5 +78,13 @@
     "after": "return false, time.Minute",
     "package": "./ratelimit",
     "run": "^TestFloodedLimiterStillAdmitsNewClients$"
+  },
+  {
+    "name": "admin shows a backup summary, not the raw error",
+    "file": "admin/admin.go",
+    "before": "{{with .Backup.Summary}}",
+    "after": "{{with .Backup.LastError}}",
+    "package": "./admin",
+    "run": "^TestSummaryEscapesValuesAndShowsOperationalStates$"
   }
 ]

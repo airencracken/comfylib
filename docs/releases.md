@@ -15,6 +15,9 @@
   percentile response time, data served, slowest routes, routes with errors)
   and Security. It no longer shows sign-ins by account, most viewed content,
   content views or active accounts.
+- The dashboard shows "The last backup failed. Check the server log." instead
+  of the raw backup error (`autobackup.Status.Summary`). The runner still logs
+  the error.
 - `admin.RenderAccountSupport` shows one account's last sign-in and rate-limit
   state. `ratelimit.Window.Peek` and `ratelimit.Limiter.Peek` read that state
   without spending an attempt.

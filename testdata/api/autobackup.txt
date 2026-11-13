@@ -1,5 +1,7 @@
 package autobackup // import "github.com/airencracken/comfylib/autobackup"
 
+const FailureSummary = "The last backup failed. Check the server log."
+
 func CheckDatabase(ctx context.Context, db *sql.DB, limit int64) error
 
 func CopyPrivate(ctx context.Context, source, destination string, limit int64) (err error)
@@ -48,3 +50,5 @@ type Status struct {
 func (s Status) ArchiveCap() string
 
 func (s Status) CopyCap() string
+
+func (s Status) Summary() string

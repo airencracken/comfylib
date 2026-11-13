@@ -71,6 +71,11 @@ html[data-density="compact"] .browse-controls { margin-bottom: .75rem; }
 .browse-toolbar .comfy-density { margin-left: auto; }
 .label-picker a.button[aria-current="true"], .view-switch a.button[aria-current="true"] { background: transparent; color: var(--comfy-accent); border-color: var(--comfy-accent); box-shadow: inset 0 -2px var(--comfy-accent); }
 
+.theme-picker { display: flex; align-items: center; gap: .5rem; margin: 0; color: var(--comfy-muted); font-size: var(--comfy-text-sm); font-weight: 400; }
+.theme-picker select { width: auto; min-height: 44px; padding: .375rem .625rem; border: 1px solid var(--comfy-control-border); border-radius: var(--comfy-radius-small); background: var(--comfy-raised); color: var(--comfy-text); font: inherit; }
+.theme-picker[hidden] { display: none; }
+.comfy-menu-panel .theme-picker { justify-content: space-between; padding: 0 .65rem; }
+
 .comfy-auth { max-width: 36rem; margin: 3rem auto; padding: 1rem; font: var(--comfy-text-base)/1.6 var(--comfy-font); color: var(--comfy-text); background: var(--comfy-surface); }
 .comfy-auth h1 { font: var(--comfy-heading-weight) var(--comfy-text-xl)/1.25 var(--comfy-heading-font); }
 

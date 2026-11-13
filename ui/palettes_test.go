@@ -152,11 +152,15 @@ func TestPaletteAttrsAndPicker(t *testing.T) {
 			t.Fatalf("PaletteAttrs(%q) = %s", bad, got)
 		}
 	}
-	picker := string(ui.PalettePicker())
-	for _, want := range []string{`class="theme-picker comfy-palette-picker" hidden`, `data-palette-select`, `<option value="">Site default</option>`, `<option value="sage">Sage</option>`, `<option value="slate">Slate</option>`} {
+	picker := string(ui.ThemePicker(true))
+	for _, want := range []string{`<label class="theme-picker" hidden>Theme`, `data-theme-select`, `<option value="system">System</option>`, `<option value="dark">Dark</option>`, `data-palette-select`, `<option value="">Site default</option>`, `<option value="sage">Sage</option>`, `<option value="slate">Slate</option>`} {
 		if !strings.Contains(picker, want) {
 			t.Fatal("picker missing", want, picker)
 		}
+	}
+	themeOnly := string(ui.ThemePicker(false))
+	if !strings.Contains(themeOnly, "data-theme-select") || strings.Contains(themeOnly, "palette") {
+		t.Fatal("theme-only picker", themeOnly)
 	}
 }
 

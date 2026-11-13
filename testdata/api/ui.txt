@@ -6,7 +6,7 @@ func Assets() fs.FS
 
 func PaletteAttrs(siteDefault Palette) template.HTMLAttr
 
-func PalettePicker() template.HTML
+func ThemePicker(withPalettes bool) template.HTML
 
 type Palette string
 

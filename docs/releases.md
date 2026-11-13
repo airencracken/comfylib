@@ -28,8 +28,10 @@
   sizes and corners come from tokens; the metrics dashboard no longer has its
   own palette.
 - `palettes.css` adds `sage` and `slate`, each with light and dark values.
-  `ui.ParsePalette`, `ui.SiteDefault`, `ui.PaletteAttrs` and `ui.PalettePicker`
-  let an owner set a site palette and members choose their own.
+  `ui.ParsePalette`, `ui.SiteDefault` and `ui.PaletteAttrs` let an owner set a
+  site palette.
+- `theme.js` and `ui.ThemePicker` replace each app's theme script and picker:
+  System, Light or Dark plus a palette, applied before drawing.
 - `suite.js` adds a Copy link button to inputs marked `data-comfy-copy`.
 - The setup page stylesheet is readable and uses the tokens.
 

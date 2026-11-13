@@ -54,7 +54,7 @@ func SiteDefault(setting string, appDefault Palette) Palette {
 }
 
 // PaletteAttrs returns the attributes for the <html> element: the site
-// palette, so pages render in it without JavaScript, and the list suite.js
+// palette, so pages render in it without JavaScript, and the list theme.js
 // accepts as a member's choice. An unknown siteDefault renders no palette.
 func PaletteAttrs(siteDefault Palette) template.HTMLAttr {
 	names := make([]string, len(palettes))
@@ -68,13 +68,19 @@ func PaletteAttrs(siteDefault Palette) template.HTMLAttr {
 	return template.HTMLAttr(attrs) // #nosec G203 -- only fixed palette names are written.
 }
 
-var pickerTemplate = template.Must(template.New("picker").Parse(`<label class="theme-picker comfy-palette-picker" hidden>Colors <select data-palette-select aria-label="Color palette"><option value="">Site default</option>{{range .}}<option value="{{.}}">{{.Label}}</option>{{end}}</select></label>`))
+var pickerTemplate = template.Must(template.New("picker").Parse(`<label class="theme-picker" hidden>Theme <select data-theme-select aria-label="Color theme"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></label>` +
+	`{{if .}}<label class="theme-picker" hidden>Colors <select data-palette-select aria-label="Color palette"><option value="">Site default</option>{{range .}}<option value="{{.}}">{{.Label}}</option>{{end}}</select></label>{{end}}`))
 
-// PalettePicker returns a palette menu for a member. It stays hidden until
-// suite.js runs, and the choice is kept in the browser.
-func PalettePicker() template.HTML {
+// ThemePicker returns the shared theme menu: System, Light or Dark, and with
+// palettes also Site default and each palette. It stays hidden until theme.js
+// runs; choices are kept in the browser.
+func ThemePicker(withPalettes bool) template.HTML {
+	var list []Palette
+	if withPalettes {
+		list = palettes
+	}
 	var out strings.Builder
-	if err := pickerTemplate.Execute(&out, palettes); err != nil {
+	if err := pickerTemplate.Execute(&out, list); err != nil {
 		return ""
 	}
 	return template.HTML(out.String()) // #nosec G203 -- escaped by html/template above.

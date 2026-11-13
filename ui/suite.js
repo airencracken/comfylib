@@ -1,6 +1,4 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
-/* Load this file in <head> without defer, so a saved palette applies before
-   the page is drawn. */
 (() => {
   'use strict';
   const root = document.documentElement;
@@ -19,24 +17,6 @@
     document.querySelectorAll('[data-density-controls]').forEach(control => { control.hidden = false; });
     document.querySelectorAll('[data-density-choice]').forEach(button => {
       button.setAttribute('aria-pressed', String(button.dataset.densityChoice === root.dataset.density));
-    });
-  };
-
-  // Palettes: the server renders the site default; a member's choice is kept
-  // in this browser. Only names listed in data-palettes are accepted.
-  const paletteKey = 'comfyware:' + app + ':palette';
-  const palettes = (root.dataset.palettes || '').split(' ').filter(Boolean);
-  const validPalette = value => typeof value === 'string' && palettes.includes(value);
-  const siteDefault = validPalette(root.dataset.paletteDefault) ? root.dataset.paletteDefault : '';
-  let palette = '';
-  const applyPalette = value => {
-    palette = validPalette(value) ? value : '';
-    const used = palette || siteDefault;
-    if (used) root.dataset.palette = used; else delete root.dataset.palette;
-    document.querySelectorAll('[data-palette-select]').forEach(select => {
-      select.value = palette;
-      const picker = select.closest('.comfy-palette-picker');
-      if (picker && palettes.length) picker.hidden = false;
     });
   };
 
@@ -68,9 +48,8 @@
     });
   };
 
-  const refresh = () => { applyDensity(root.dataset.density); applyPalette(palette); enhanceCopy(); };
+  const refresh = () => { applyDensity(root.dataset.density); enhanceCopy(); };
   applyDensity(storage.get(densityKey));
-  applyPalette(storage.get(paletteKey));
 
   document.addEventListener('click', event => {
     const button = event.target.closest('[data-density-choice]');
@@ -83,10 +62,6 @@
     });
   });
   document.addEventListener('change', event => {
-    if (event.target.matches && event.target.matches('[data-palette-select]')) {
-      applyPalette(event.target.value);
-      storage.set(paletteKey, palette);
-    }
     if (event.target.closest('.theme-picker')) document.querySelectorAll('.comfy-menu[open]').forEach(menu => { menu.open = false; });
   });
   document.addEventListener('keydown', event => {
@@ -100,6 +75,5 @@
   document.addEventListener('htmx:afterSwap', refresh);
   window.addEventListener('storage', event => {
     if (event.key === densityKey) applyDensity(event.newValue);
-    if (event.key === paletteKey || event.key === null) applyPalette(event.key === null ? null : event.newValue);
   });
 })();

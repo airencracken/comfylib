@@ -44,7 +44,7 @@ Build with Go 1.26.11 or later on 1.26, or Go 1.27.4 or later on 1.27.
 
 Serve `ui.Assets()` at `/static/comfyware/`. Load `accounts.css`,
 `components.css` and, for palettes, `palettes.css` after the app stylesheet.
-Load `suite.js` in `<head>` without `defer`. [Theming](docs/theming.md) lists
+Load `theme.js` and `suite.js` in `<head>` without `defer`. [Theming](docs/theming.md) lists
 the tokens and palettes.
 
 ## Checks

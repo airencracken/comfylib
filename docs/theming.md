@@ -66,19 +66,25 @@ borders.
 To add a palette, add one block to `ui/palettes.css` and its name to the list
 in `ui/palettes.go`. The tests check contrast and that both lists match.
 
-### Adopting palettes
+## Theme and palette picker
 
-1. Load `palettes.css` after your stylesheet, and `suite.js` in `<head>`
-   without `defer`.
-2. Declare your app's default and read the owner's setting:
+`theme.js` applies a member's theme (System, Light or Dark, as `data-theme`) and
+palette before the page is drawn. Choices are kept in the browser under
+`comfyware:<app>:theme` and `comfyware:<app>:palette`, and still apply to the
+current page when storage is blocked. Names the server did not list are
+ignored. To keep your app's existing saved themes, set the old key with
+`data-theme-key`, for example `data-theme-key="witmoot-theme"`.
+
+1. Load `theme.js` in `<head>` without `defer`, and `palettes.css` after your
+   stylesheet. Remove your own theme script.
+2. Declare your app's default palette and read the owner's setting:
    `site := ui.SiteDefault(settings.Palette, ui.Slate)`. Validate the setting
    with `ui.ParsePalette` before saving it.
 3. Render `<html data-comfy-app="imvault" {{.PaletteAttrs}}>` with
    `ui.PaletteAttrs(site)`. Pages use the site palette without JavaScript.
-4. Put `{{.PalettePicker}}` (from `ui.PalettePicker()`) next to your theme
-   picker. Members choose Site default, Sage or Slate. The choice is kept in
-   the browser under `comfyware:<app>:palette`; `suite.js` applies it before
-   the page is drawn and ignores names the server did not list.
+4. Replace your theme picker markup with `ui.ThemePicker(true)`
+   (`ui.ThemePicker(false)` for the theme menu alone). The shared
+   `.theme-picker` styles are in `components.css`.
 5. Point your own variables at the tokens so your pages follow the palette too.
 
 ## Copy buttons

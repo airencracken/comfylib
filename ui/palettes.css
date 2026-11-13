@@ -1,0 +1,37 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+/* Named palettes. Each block sets every color token for light and dark; the
+   data-theme attribute or the system setting picks which. To add a palette,
+   add one block here and its name in palettes.go. */
+:root[data-palette] { color-scheme: light dark; }
+:root[data-palette][data-theme="light"] { color-scheme: light; }
+:root[data-palette][data-theme="dark"] { color-scheme: dark; }
+
+/* Sage: paper, ink and green, from Witmoot and comfyware.org. */
+:root[data-palette="sage"] {
+  --comfy-surface: light-dark(#f5f3ea, #171f1a);
+  --comfy-raised: light-dark(#fffef9, #202b24);
+  --comfy-border: light-dark(#dddcd1, #364339);
+  --comfy-control-border: light-dark(#76866f, #7d8f7a);
+  --comfy-text: light-dark(#293e36, #e2e8dc);
+  --comfy-muted: light-dark(#626e65, #a7b4a5);
+  --comfy-accent: light-dark(#355c48, #aec99c);
+  --comfy-accent-text: light-dark(#fffef9, #1b2d21);
+  --comfy-danger: light-dark(#965639, #dbaa85);
+  --comfy-heading-font: Georgia, "Times New Roman", serif;
+  --comfy-heading-weight: 400;
+}
+
+/* Slate: cool slate with a blue accent, near-black and blue in dark, from Imvault. */
+:root[data-palette="slate"] {
+  --comfy-surface: light-dark(#f3f5f9, #101216);
+  --comfy-raised: light-dark(#ffffff, #171a21);
+  --comfy-border: light-dark(#ccd4e0, #2a2f3a);
+  --comfy-control-border: light-dark(#7c8799, #69728a);
+  --comfy-text: light-dark(#202b3d, #e6e9ef);
+  --comfy-muted: light-dark(#596579, #8b93a3);
+  --comfy-accent: light-dark(#245eb6, #6ea8fe);
+  --comfy-accent-text: light-dark(#ffffff, #101216);
+  --comfy-danger: light-dark(#a82c3b, #f2707a);
+  --comfy-heading-font: var(--comfy-font);
+  --comfy-heading-weight: 650;
+}

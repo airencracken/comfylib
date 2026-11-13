@@ -9,7 +9,7 @@ import (
 	"io/fs"
 )
 
-//go:embed accounts.css components.css suite.js timezone.js
+//go:embed accounts.css components.css palettes.css suite.js timezone.js
 var assets embed.FS
 
 // Assets returns read-only shared styles and browser behavior.

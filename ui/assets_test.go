@@ -13,11 +13,11 @@ import (
 
 func TestAssetsContractAndIsolation(t *testing.T) {
 	assets := ui.Assets()
-	if err := fstest.TestFS(assets, "accounts.css", "components.css", "suite.js", "timezone.js"); err != nil {
+	if err := fstest.TestFS(assets, "accounts.css", "components.css", "palettes.css", "suite.js", "timezone.js"); err != nil {
 		t.Fatal(err)
 	}
 	entries, err := fs.ReadDir(assets, ".")
-	if err != nil || len(entries) != 4 || entries[0].Name() != "accounts.css" {
+	if err != nil || len(entries) != 5 || entries[0].Name() != "accounts.css" {
 		t.Fatal("unexpected public assets", entries, err)
 	}
 	data, err := fs.ReadFile(assets, "accounts.css")

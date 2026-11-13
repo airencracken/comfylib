@@ -78,5 +78,53 @@
     "after": "p, ok := defaultDiscussions.pending[token]",
     "package": "./suite",
     "run": "^TestDiscussionStoresAreIndependent$"
+  },
+  {
+    "name": "palette names must match exactly",
+    "file": "ui/palettes.go",
+    "before": "if string(p) == name {",
+    "after": "if strings.EqualFold(string(p), strings.TrimSpace(name)) {",
+    "package": "./ui",
+    "run": "^TestParsePaletteRejectsUnknownNames$"
+  },
+  {
+    "name": "palette attributes never echo unknown names",
+    "file": "ui/palettes.go",
+    "before": "if _, err := ParsePalette(string(siteDefault)); err == nil {",
+    "after": "if siteDefault != \"\" {",
+    "package": "./ui",
+    "run": "^TestPaletteAttrsAndPicker$"
+  },
+  {
+    "name": "unknown saved palette falls back to the app default",
+    "file": "ui/palettes.go",
+    "before": "if p, err := ParsePalette(setting); err == nil {\n\t\treturn p\n\t}",
+    "after": "if setting != \"\" {\n\t\treturn Palette(setting)\n\t}",
+    "package": "./ui",
+    "run": "^TestSiteDefaultFallsBackToTheAppDefault$"
+  },
+  {
+    "name": "token defaults stay layered below app values",
+    "file": "ui/components.css",
+    "before": "@layer comfy-tokens {",
+    "after": "@media all {",
+    "package": "./ui",
+    "run": "^TestSharedStylesReadOnlyTokens$"
+  },
+  {
+    "name": "sage palette keeps readable muted text",
+    "file": "ui/palettes.css",
+    "before": "--comfy-muted: light-dark(#626e65, #a7b4a5);",
+    "after": "--comfy-muted: light-dark(#8a958c, #a7b4a5);",
+    "package": "./ui",
+    "run": "^TestPalettesMeetWCAGAAInLightAndDark$"
+  },
+  {
+    "name": "slate palette keeps visible control borders",
+    "file": "ui/palettes.css",
+    "before": "--comfy-control-border: light-dark(#7c8799, #69728a);",
+    "after": "--comfy-control-border: light-dark(#ccd4e0, #69728a);",
+    "package": "./ui",
+    "run": "^TestPalettesMeetWCAGAAInLightAndDark$"
   }
 ]

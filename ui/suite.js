@@ -1,28 +1,64 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
+/* Load this file in <head> without defer, so a saved palette applies before
+   the page is drawn. */
 (() => {
   'use strict';
   const root = document.documentElement;
-  const key = 'comfyware:' + (root.dataset.comfyApp || 'app') + ':density';
-  const valid = value => value === 'compact' || value === 'comfortable';
-  const apply = value => {
-    root.dataset.density = valid(value) ? value : 'comfortable';
+  const app = root.dataset.comfyApp || 'app';
+  const storage = {
+    get(key) { try { return localStorage.getItem(key); } catch { return null; } },
+    set(key, value) {
+      try { if (value) localStorage.setItem(key, value); else localStorage.removeItem(key); } catch { /* The choice still applies to this page. */ }
+    },
+  };
+
+  const densityKey = 'comfyware:' + app + ':density';
+  const validDensity = value => value === 'compact' || value === 'comfortable';
+  const applyDensity = value => {
+    root.dataset.density = validDensity(value) ? value : 'comfortable';
     document.querySelectorAll('[data-density-controls]').forEach(control => { control.hidden = false; });
     document.querySelectorAll('[data-density-choice]').forEach(button => {
       button.setAttribute('aria-pressed', String(button.dataset.densityChoice === root.dataset.density));
     });
   };
-  try { apply(localStorage.getItem(key)); } catch { apply('comfortable'); }
+
+  // Palettes: the server renders the site default; a member's choice is kept
+  // in this browser. Only names listed in data-palettes are accepted.
+  const paletteKey = 'comfyware:' + app + ':palette';
+  const palettes = (root.dataset.palettes || '').split(' ').filter(Boolean);
+  const validPalette = value => typeof value === 'string' && palettes.includes(value);
+  const siteDefault = validPalette(root.dataset.paletteDefault) ? root.dataset.paletteDefault : '';
+  let palette = '';
+  const applyPalette = value => {
+    palette = validPalette(value) ? value : '';
+    const used = palette || siteDefault;
+    if (used) root.dataset.palette = used; else delete root.dataset.palette;
+    document.querySelectorAll('[data-palette-select]').forEach(select => {
+      select.value = palette;
+      const picker = select.closest('.comfy-palette-picker');
+      if (picker && palettes.length) picker.hidden = false;
+    });
+  };
+
+  const refresh = () => { applyDensity(root.dataset.density); applyPalette(palette); };
+  applyDensity(storage.get(densityKey));
+  applyPalette(storage.get(paletteKey));
+
   document.addEventListener('click', event => {
     const button = event.target.closest('[data-density-choice]');
-    if (button && valid(button.dataset.densityChoice)) {
-      apply(button.dataset.densityChoice);
-      try { localStorage.setItem(key, root.dataset.density); } catch { /* A preference remains usable without storage. */ }
+    if (button && validDensity(button.dataset.densityChoice)) {
+      applyDensity(button.dataset.densityChoice);
+      storage.set(densityKey, root.dataset.density);
     }
     document.querySelectorAll('.comfy-menu[open]').forEach(menu => {
       if (!menu.contains(event.target) || event.target.closest('a')) menu.open = false;
     });
   });
   document.addEventListener('change', event => {
+    if (event.target.matches && event.target.matches('[data-palette-select]')) {
+      applyPalette(event.target.value);
+      storage.set(paletteKey, palette);
+    }
     if (event.target.closest('.theme-picker')) document.querySelectorAll('.comfy-menu[open]').forEach(menu => { menu.open = false; });
   });
   document.addEventListener('keydown', event => {
@@ -32,7 +68,10 @@
       menu.querySelector('summary').focus();
     });
   });
-  document.addEventListener('DOMContentLoaded', () => apply(root.dataset.density));
-  document.addEventListener('htmx:afterSwap', () => apply(root.dataset.density));
-  window.addEventListener('storage', event => { if (event.key === key) apply(event.newValue); });
+  document.addEventListener('DOMContentLoaded', refresh);
+  document.addEventListener('htmx:afterSwap', refresh);
+  window.addEventListener('storage', event => {
+    if (event.key === densityKey) applyDensity(event.newValue);
+    if (event.key === paletteKey || event.key === null) applyPalette(event.key === null ? null : event.newValue);
+  });
 })();

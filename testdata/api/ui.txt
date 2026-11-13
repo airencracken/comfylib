@@ -1,3 +1,24 @@
 package ui // import "github.com/airencracken/comfylib/ui"
 
+var ErrUnknownPalette = errors.New("unknown palette")
+
 func Assets() fs.FS
+
+func PaletteAttrs(siteDefault Palette) template.HTMLAttr
+
+func PalettePicker() template.HTML
+
+type Palette string
+
+const (
+	Sage  Palette = "sage"
+	Slate Palette = "slate"
+)
+
+func Palettes() []Palette
+
+func ParsePalette(name string) (Palette, error)
+
+func SiteDefault(setting string, appDefault Palette) Palette
+
+func (p Palette) Label() string

@@ -14,6 +14,8 @@ func PrepareDiscussion(handoff, source, binding string) (string, error)
 
 func RenderDiscussion(w http.ResponseWriter, action, source, thread, state, csrfKey, csrf, css string)
 
+func RenderDiscussionPage(w http.ResponseWriter, page DiscussionPage) error
+
 func TemplateFuncs(prefix string) (template.FuncMap, error)
 
 type App struct {
@@ -41,6 +43,26 @@ type AuthHooks struct {
 	CSRF    func(*http.Request) (string, string)
 	SignIn  func(http.ResponseWriter, *http.Request, int64) (string, error)
 }
+
+type DiscussionPage struct {
+	Action     string
+	Source     string
+	Thread     string
+	State      string
+	CSRFField  string
+	CSRFToken  string
+	Stylesheet string
+}
+
+type DiscussionStore struct {
+	// contains filtered or unexported fields
+}
+
+func (s *DiscussionStore) Check(token, sourcePath, binding, thread, forum string) bool
+
+func (s *DiscussionStore) Finish(token string)
+
+func (s *DiscussionStore) Prepare(handoff, source, binding string) (string, error)
 
 type Identity struct{ Issuer, Subject string }
 

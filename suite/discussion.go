@@ -19,14 +19,34 @@ type pendingDiscussion struct {
 	expires time.Time
 }
 
-var discussionReturns = struct {
-	sync.Mutex
-	pending map[string]pendingDiscussion
-}{pending: map[string]pendingDiscussion{}}
+// Limits on pending discussion returns held by one DiscussionStore.
+const (
+	discussionLifetime   = 20 * time.Minute
+	discussionCapacity   = 1024
+	discussionPerBinding = 16
+)
 
-// PrepareDiscussion adds a short-lived return address to a reviewed handoff.
-// The source session remains necessary to save the resulting thread.
-func PrepareDiscussion(handoff, source, binding string) (string, error) {
+// DiscussionStore holds the pending return addresses of discussion handoffs.
+// The zero value is ready to use and is safe for concurrent use. Keep one
+// store per process; pending returns live only in memory.
+type DiscussionStore struct {
+	mu      sync.Mutex
+	pending map[string]pendingDiscussion
+	now     func() time.Time
+}
+
+func (s *DiscussionStore) clock() time.Time {
+	if s.now != nil {
+		return s.now()
+	}
+	return time.Now()
+}
+
+// Prepare adds a return address, valid for 20 minutes, to a reviewed handoff
+// URL. source is the absolute URL of the item being discussed. binding ties
+// the return to the signed-in session; an empty binding returns handoff
+// unchanged. A store holds at most 1024 pending returns, and 16 per binding.
+func (s *DiscussionStore) Prepare(handoff, source, binding string) (string, error) {
 	if binding == "" {
 		return handoff, nil
 	}
@@ -34,23 +54,26 @@ func PrepareDiscussion(handoff, source, binding string) (string, error) {
 	if e != nil {
 		return "", e
 	}
-	s, e := url.Parse(source)
+	src, e := url.Parse(source)
 	if e != nil || !validAppURL(source) {
 		return "", errors.New("invalid discussion source")
 	}
-	discussionReturns.Lock()
-	defer discussionReturns.Unlock()
-	now := time.Now()
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.pending == nil {
+		s.pending = map[string]pendingDiscussion{}
+	}
+	now := s.clock()
 	count := 0
 	hash := sha256.Sum256([]byte(binding))
-	for k, p := range discussionReturns.pending {
+	for k, p := range s.pending {
 		if now.After(p.expires) {
-			delete(discussionReturns.pending, k)
+			delete(s.pending, k)
 		} else if p.binding == hash {
 			count++
 		}
 	}
-	if len(discussionReturns.pending) >= 1024 || count >= 16 {
+	if len(s.pending) >= discussionCapacity || count >= discussionPerBinding {
 		return "", errors.New("too many pending discussions")
 	}
 	var random [32]byte
@@ -58,27 +81,59 @@ func PrepareDiscussion(handoff, source, binding string) (string, error) {
 		return "", e
 	}
 	token := hex.EncodeToString(random[:])
-	discussionReturns.pending[token] = pendingDiscussion{hash, s.Path, now.Add(20 * time.Minute)}
-	s.Path = strings.TrimRight(s.Path, "/") + "/discussion-return"
-	q := s.Query()
+	s.pending[token] = pendingDiscussion{hash, src.Path, now.Add(discussionLifetime)}
+	src.Path = strings.TrimRight(src.Path, "/") + "/discussion-return"
+	q := src.Query()
 	q.Set("state", token)
-	s.RawQuery = q.Encode()
+	src.RawQuery = q.Encode()
 	q = u.Query()
-	q.Set("return_to", s.String())
+	q.Set("return_to", src.String())
 	u.RawQuery = q.Encode()
 	return u.String(), nil
 }
 
-// CheckDiscussion requires the originating session, entity and configured forum.
-// Saving still uses the application's authenticated, CSRF-protected POST route.
-func CheckDiscussion(token, sourcePath, binding, thread, forum string) bool {
-	discussionReturns.Lock()
-	defer discussionReturns.Unlock()
-	p, ok := discussionReturns.pending[token]
-	if !ok || time.Now().After(p.expires) || p.source != sourcePath || binding == "" || p.binding != sha256.Sum256([]byte(binding)) {
+// Check reports whether token is a pending return for sourcePath and the same
+// session binding, and whether thread is a topic URL on forum. It does not
+// consume the token; call Finish after the app saves the link.
+func (s *DiscussionStore) Check(token, sourcePath, binding, thread, forum string) bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	p, ok := s.pending[token]
+	if !ok || s.clock().After(p.expires) || p.source != sourcePath || binding == "" || p.binding != sha256.Sum256([]byte(binding)) {
 		return false
 	}
 	return validDiscussionThread(thread, forum)
+}
+
+// Finish removes a pending return so it cannot be used again.
+func (s *DiscussionStore) Finish(token string) {
+	s.mu.Lock()
+	delete(s.pending, token)
+	s.mu.Unlock()
+}
+
+// defaultDiscussions backs the package-level discussion functions.
+var defaultDiscussions DiscussionStore
+
+// PrepareDiscussion calls Prepare on the package's default store.
+//
+// Deprecated: Use a DiscussionStore.
+func PrepareDiscussion(handoff, source, binding string) (string, error) {
+	return defaultDiscussions.Prepare(handoff, source, binding)
+}
+
+// CheckDiscussion calls Check on the package's default store.
+//
+// Deprecated: Use a DiscussionStore.
+func CheckDiscussion(token, sourcePath, binding, thread, forum string) bool {
+	return defaultDiscussions.Check(token, sourcePath, binding, thread, forum)
+}
+
+// FinishDiscussion calls Finish on the package's default store.
+//
+// Deprecated: Use a DiscussionStore.
+func FinishDiscussion(token string) {
+	defaultDiscussions.Finish(token)
 }
 
 func validDiscussionThread(thread, forum string) bool {
@@ -98,14 +153,10 @@ func validDiscussionThread(thread, forum string) bool {
 	return e == nil && id > 0
 }
 
-func FinishDiscussion(token string) {
-	discussionReturns.Lock()
-	delete(discussionReturns.pending, token)
-	discussionReturns.Unlock()
-}
-
-// DiscussionReturn validates a browser return destination against explicit app
-// configuration and the source origin. No server request is made to that URL.
+// DiscussionReturn checks a return address from a handoff. It must point to
+// source's discussion-return path, carry one state token, and belong to an
+// Imvault or Songstead entry in apps (the APPS setting). An empty raw value
+// returns "". It never requests the URL.
 func DiscussionReturn(raw, source, apps string) (string, error) {
 	if raw == "" {
 		return "", nil
@@ -130,6 +181,8 @@ func DiscussionReturn(raw, source, apps string) (string, error) {
 	return "", fail
 }
 
+// DiscussionResult adds the thread URL to a validated return destination. It
+// returns "" when destination is empty or not a URL.
 func DiscussionResult(destination, thread string) string {
 	u, e := url.Parse(destination)
 	if e != nil || destination == "" {
@@ -141,8 +194,8 @@ func DiscussionResult(destination, thread string) string {
 	return u.String()
 }
 
-// ConfiguredDiscussionReturn validates a submitted return field again after
-// posting, so changing hidden fields cannot introduce an arbitrary redirect.
+// ConfiguredDiscussionReturn checks a submitted return field again after the
+// post is saved, using the source the field itself names.
 func ConfiguredDiscussionReturn(raw, apps string) (string, error) {
 	if raw == "" {
 		return "", nil

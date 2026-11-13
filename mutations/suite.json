@@ -62,5 +62,21 @@
     "after": "false",
     "package": "./suite",
     "run": "TestDiscussionRoundTrip"
+  },
+  {
+    "name": "discussion store limits pending returns per session",
+    "file": "suite/discussion.go",
+    "before": "count >= discussionPerBinding",
+    "after": "count > discussionPerBinding*1000",
+    "package": "./suite",
+    "run": "^TestDiscussionStoreExpiryAndLimits$"
+  },
+  {
+    "name": "discussion stores keep separate pending state",
+    "file": "suite/discussion.go",
+    "before": "p, ok := s.pending[token]",
+    "after": "p, ok := defaultDiscussions.pending[token]",
+    "package": "./suite",
+    "run": "^TestDiscussionStoresAreIndependent$"
   }
 ]

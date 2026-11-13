@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Package displaytime supplies account display timezone validation and formatting.
-// Applications own account storage and authorization. Instants remain UTC in
-// storage, exports and machine-readable attributes; calendar reporting uses UTC.
+// Package displaytime validates, stores and applies an account's display
+// timezone. Times stay UTC in storage, exports and machine-readable attributes,
+// and reporting days stay UTC.
 package displaytime
 
 import (

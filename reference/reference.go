@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-// Package reference provides browser-only Comfyware discussion handoffs.
-// A handoff prepares a draft; it never posts or fetches a destination.
+// Package reference validates web addresses and prepares Witmoot discussion
+// drafts for the browser. It never posts or fetches anything.
 package reference
 
 import (

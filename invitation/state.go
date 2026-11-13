@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-// Package invitation describes invitation availability for display. Applications
-// retain their own permissions, persistence and atomic redemption checks.
+// Package invitation reports whether an invitation is open, revoked, expired or
+// used up. Apps keep their own permissions and redemption transaction.
 package invitation
 
 import "time"

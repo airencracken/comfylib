@@ -1,28 +1,33 @@
 # Suite components and maintenance
 
-The stdlib-only `suite` package supplies optional app navigation, bounded OIDC
-flow state, explicit identity bindings and discussion returns. `ui/components.css`
-and `ui/suite.js` provide native menus, optional form sections and per-app density.
-Applications keep their own palettes, templates, sessions and permissions.
+## Packages and assets
 
-The optional, separately versioned `github.com/airencracken/comfylib/oidc`
-module uses CoreOS go-oidc to validate signed issuer, audience, expiry and nonce
-claims, with OAuth2 PKCE. Import it as `sharedoidc` and call `FromEnvironment`.
-The parent module retains its standard-library-only dependency contract. The
-adapter never provisions accounts by email; applications own session and access
-policy through `suite.AuthHooks`. See [the adapter contract](../oidc/README.md).
+`suite` provides app navigation, OpenID Connect flow state, explicit identity
+links and discussion returns. Apps keep their own sessions and permissions
+through `suite.AuthHooks`; sign-in never creates an account or matches by
+email.
 
-Applications import `github.com/airencracken/comfylib/suite` directly. Serve
-`ui.Assets()` at `/static/comfyware/` and load `accounts.css`, `components.css` and
-`suite.js` after the application stylesheet. Browser tests resolve
-`ui/uitest/controls.mjs` from the same pinned module as the application.
+Serve `ui.Assets()` at `/static/comfyware/` and load the styles after your own.
+See [theming](theming.md). Browser tests import `ui/uitest/controls.mjs` from
+the same pinned module.
+
+The OpenID Connect adapter lives in the separate
+[`oidc` module](../oidc/README.md).
+
+## Discussion returns
+
+Create one `suite.DiscussionStore` per process. `Prepare` adds a return address
+to a reviewed Witmoot handoff, `Check` confirms the return belongs to the same
+session, item and forum, and `Finish` removes it after the app saves the link.
+Returns expire after 20 minutes; a store holds at most 1024, and 16 per session.
+`RenderDiscussionPage` shows the confirmation page.
 
 ## Maintenance commands
 
-Each application has one small `scripts/comfy.py` launcher. It resolves the exact
-Comfylib module in `go.mod` with `GOWORK=off` and invokes `tools/app.py`. This works
-from a populated module cache with `GOPROXY=off`, including isolated mutation
-copies. It never falls back to an adjacent checkout or a moving branch.
+Each app has a small `scripts/comfy.py` launcher. It finds the exact comfylib
+version in `go.mod` (with `GOWORK=off`, and with `GOPROXY=off` from a filled
+module cache) and runs `tools/app.py`. It never uses a nearby checkout or a
+branch.
 
 ```sh
 python3 scripts/comfy.py check
@@ -35,50 +40,36 @@ python3 scripts/comfy.py scan-artifacts dist/app_linux_amd64.tar.gz --scanner /p
 python3 scripts/comfy.py container-release build --arch amd64 --revision COMMIT
 ```
 
-Archive staging, registry publication, service configuration and deployment
-contracts now have one implementation. Applications retain their Dockerfiles,
-Compose and native-service examples, plus `scripts/containers/config.json`.
-That strict configuration names the app, previous version, port, temporary space,
-owner command and either the `snapshot` or `commands` lifecycle profile. The two
-profiles preserve their existing backup, upgrade and restore checks. Publication
-still requires both tested architectures and refuses mismatched immutable tags.
+Apps keep their Dockerfiles, Compose and service examples, and
+`scripts/containers/config.json`. That file names the app, previous version,
+port, temporary space, owner command and lifecycle profile (`snapshot` or
+`commands`). Publishing needs both architectures and refuses to replace a tag.
 
-`check` rejects copied suite and OIDC packages, browser assets, maintenance tools,
-container scripts, module replacements, missing explicit pins and incorrect
-launcher wiring. Update the published dependency pins to upgrade the common
-implementation; there are no generated copies or SHA-256 sync manifests.
-`tools/sync_suite.py` and its adapter templates have been retired.
+`check` rejects copied suite packages, assets or tools, `replace` directives,
+missing pins and wrong launcher wiring. To upgrade, change the pinned version.
 
-Run one local audit with machine-readable results and per-command logs:
+## Audits and rollouts
 
 ```sh
 python3 tools/audit_suite.py /checkouts --output /tmp/comfyware-audit --mutations --browsers
 ```
 
-This checks all eight projects, including the website and Gentoo overlay. It runs
-vet, race tests, reachable dependency checks, shared integration checks,
-mutations and browsers. It does not pull, commit, deploy or publish. Update each
-checkout's default branch before starting an audit. All checkouts should be
-isolated worktrees. Reports remain local; commands that need network access must
-be run in an environment with that access.
-
-For a coordinated published dependency update, first inspect the plan:
+This runs vet, race tests, dependency checks, shared integration checks,
+mutations and browsers across all eight projects, and writes a report with
+per-command logs. It never pulls, commits, deploys or publishes. Update each
+checkout first.
 
 ```sh
 python3 tools/rollout_comfylib.py v0.3.0 /checkouts/imvault /checkouts/songstead /checkouts/witmoot /checkouts/folkweave /checkouts/tidings
 ```
 
-Add `--oidc-version v0.1.0` to update the optional protocol adapter as well.
-Add `--apply` to download the explicit version, update clean module manifests and
-run each app's race and shared integration checks. The tool stops on failure,
-retains local changes for review and never commits or publishes. It does not
-introduce workspace replacements or unpublished dependency pins.
+This prints the plan. `--oidc-version v0.1.0` also updates the OIDC module.
+`--apply` updates clean module files and runs each app's checks; it stops on
+the first failure and never commits.
 
-Release workflows scan each actual archive executable with govulncheck in binary
-mode after artifact verification and before publication. The scanner reads only
-regular archive members into a temporary file, refuses unsafe member paths and
-fails if an archive has no recognizable executable. Source vulnerability checks
-still run independently in CI.
+Release workflows scan each archive's executable with govulncheck before
+publishing. The scanner refuses unsafe archive paths and archives without an
+executable.
 
 ## Releasing an app
 

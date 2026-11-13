@@ -1,20 +1,16 @@
-# Optional OIDC adapter
+# OIDC module
 
-`github.com/airencracken/comfylib/oidc` is a separately versioned module. It uses
-CoreOS go-oidc and OAuth2 for discovery, signature verification and PKCE. The
-parent Comfylib module continues to use only the Go standard library.
+`github.com/airencracken/comfylib/oidc` adds OpenID Connect sign-in for
+existing local accounts. It is a separate module with its own tags
+(`oidc/v0.1.0`) and dependencies (CoreOS go-oidc and OAuth2), so the core
+module stays standard-library-only.
 
-Import this module as `sharedoidc` and call `FromEnvironment(prefix, baseURL, db,
-hooks)`. The prefix selects `SHARED_ISSUER`, `SHARED_CLIENT_ID` and
-`SHARED_CLIENT_SECRET`. An entirely empty configuration disables the integration;
-a partial configuration fails startup. Existing local accounts must explicitly
-link their issuer and subject. Email matching and automatic account creation are
-not supported. Applications supply session, CSRF, account status and sign-in hooks.
+Import it as `sharedoidc` and call `FromEnvironment(prefix, baseURL, db, hooks)`.
+The prefix selects `SHARED_ISSUER`, `SHARED_CLIENT_ID` and
+`SHARED_CLIENT_SECRET`. An empty configuration turns it off; a partial one
+fails startup. Members link an issuer and subject to their existing account.
+It never matches by email or creates accounts. Your hooks handle sessions,
+CSRF, account status and sign-in.
 
-The module is released with tags such as `oidc/v0.1.0`; its Go requirement is
-`github.com/airencracken/comfylib/oidc v0.1.0`. Tests cover signed claims, nonce,
-PKCE, discovery caching, explicit linking, replay, session binding, disabled
-accounts and failed database writes. SQLite is used only by integration tests.
-
-Run `go test -race ./...` and `go vet ./...` here. From the parent repository,
-`make test-oidc` also verifies mutations against an isolated copy of both modules.
+Run `go test -race ./...` and `go vet ./...` here, or `make test-oidc` from the
+parent repository.

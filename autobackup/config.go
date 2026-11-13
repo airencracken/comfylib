@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-// Package autobackup schedules private compressed snapshots. Applications own
-// snapshot consistency and verification; this package owns scheduling,
-// compression, bounded copies, publication, and retention.
+// Package autobackup schedules compressed private snapshots. The app makes
+// and verifies each snapshot; this package schedules, compresses, copies,
+// publishes and prunes them.
 package autobackup
 
 import (

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-// Package suite provides optional navigation between independently hosted apps.
+// Package suite provides navigation between Comfyware apps, linked
+// OpenID Connect sign-in and Witmoot discussion returns.
 package suite
 
 import (

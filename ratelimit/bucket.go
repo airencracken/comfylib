@@ -1,18 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-// Package ratelimit provides a small in-memory token bucket, keyed by an
-// arbitrary string such as an account or a client address.
+// Package ratelimit provides in-memory token buckets (Limiter) and fixed
+// windows (Window), keyed by any string such as an account or address.
 //
-// It is deliberately process-local: a single application instance is the target, and
-// the budget is there to stop a runaway script or a careless client, not to
-// enforce a global contract across a fleet. Restarting the server resets the
-// budgets, which is an acceptable trade for having no extra dependency.
-//
-// Memory is bounded too. A Limiter tracks at most a fixed number of keys and,
-// when full, forgets the one used least recently. A client sending from many
-// addresses can therefore push other idle keys out, which gives them a fresh
-// budget, but it cannot make the server hold an unbounded table; and a key in
-// active use, such as one that is being refused, stays at the front.
+// Budgets live in one process and reset on restart. Each limiter holds a
+// bounded number of keys. When a Limiter is full it forgets the least recently
+// used key, so a key that is being refused stays tracked.
 package ratelimit
 
 import (

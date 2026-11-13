@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-// Package keyfile keeps a random key in a file of its own, creating it on
-// first use.
+// Package keyfile keeps a random key in its own file and creates it on first
+// use.
 //
-// A key file is created once and then trusted for the life of an instance:
-// losing it makes everything sealed with it unreadable. So creation must never
-// leave a half-written file behind, two processes starting together must agree
-// on one key, and a file that is present but wrong is an error to report, not
-// something to quietly replace.
+// Creation never leaves a partial file, two processes starting together get
+// the same key, and a file that exists but is invalid is an error, never
+// replaced.
 package keyfile
 
 import (

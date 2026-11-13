@@ -1,14 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-// Package clientip finds the address of the person behind a request, believing
-// forwarding headers only from proxies the operator named.
+// Package clientip finds the client address behind trusted reverse proxies.
 //
-// X-Forwarded-For and X-Forwarded-Proto are claims any client can make. They
-// carry weight only when the connection itself comes from a trusted proxy, and
-// even then only the entries that trusted proxies appended: everything to the
-// left of the first untrusted hop was supplied by that hop and cannot establish
-// identity. An empty trust list therefore means no forwarding header is ever
-// believed, including on requests from loopback.
+// X-Forwarded-For and X-Forwarded-Proto count only when the connection comes
+// from a trusted proxy, and only the entries trusted proxies appended. With an
+// empty trust list no forwarding header is believed, even from loopback.
 package clientip
 
 import (

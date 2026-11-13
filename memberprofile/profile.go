@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-// Package memberprofile validates optional, plain-text member biographies and
-// links. Applications own storage, account identity and profile visibility.
+// Package memberprofile validates optional plain-text names, bios and links.
+// Apps own storage and visibility.
 package memberprofile
 
 import (

@@ -1,12 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-// Package proxyconfig prints a reverse-proxy site configuration for an app,
-// generated from the example files the app ships in its packages.
-//
-// Each app keeps its own examples and passes them in as an fs.FS, usually an
-// embed.FS, because go:embed cannot reach across modules. Every value that is
-// substituted into an example is validated first, so a hostname or path given
-// on the command line can never add a directive to the output.
+// Package proxyconfig prints a reverse-proxy site configuration from the
+// examples an app ships, passed in as an fs.FS. Every substituted value is
+// validated, so input from the command line cannot add a directive.
 package proxyconfig
 
 import (

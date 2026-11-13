@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-// Package svcconfig reads an installed service's settings the way its service
-// manager would pass them, so that a command an operator runs by hand acts on
-// the same instance as the running service. It understands OpenRC conf.d files
-// and systemd units with their drop-ins, Environment= and EnvironmentFile=.
+// Package svcconfig reads a service's settings the way OpenRC conf.d files or
+// systemd units (with drop-ins, Environment= and EnvironmentFile=) pass them,
+// so a command run by hand acts on the same instance as the service.
 //
-// It deliberately evaluates nothing. A value that needs shell expansion or a
-// systemd specifier is refused with a hint to set the variable explicitly,
-// rather than guessed at.
+// Nothing is evaluated. A value that needs shell expansion or a systemd
+// specifier is refused with a hint to set it explicitly.
 package svcconfig
 
 import (

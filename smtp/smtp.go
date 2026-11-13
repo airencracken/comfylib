@@ -1,18 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-// Package smtp sends the small number of transactional messages the apps need,
-// such as password reset links, through an SMTP relay.
+// Package smtp sends transactional mail, such as password reset links,
+// through an SMTP relay.
 //
-// Sending is optional. An instance with no relay keeps a Disabled sender that
-// reports Enabled() == false and refuses every message, so the app can fall
-// back to links an administrator hands over. Nothing in this package logs a
-// message body: a reset link in a log is as good as the password it replaces.
-//
-// A configured relay is held to the protection it was configured with. In the
-// default STARTTLS mode a relay that does not offer STARTTLS, or presents a
-// certificate that does not verify, gets nothing: not the credentials and not
-// the message. Every step, from connecting to the final reply, is bounded by
-// the configured timeout and by the caller's context.
+// With no relay configured, a Disabled sender reports Enabled() == false and
+// refuses every message. Message bodies are never logged. In the default
+// STARTTLS mode, a relay that does not offer STARTTLS or presents an invalid
+// certificate gets neither credentials nor message. Every step is bounded by
+// the configured timeout and the caller's context.
 package smtp
 
 import (

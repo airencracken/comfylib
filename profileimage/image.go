@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-// Package profileimage normalizes account pictures and keeps a still rendition
-// alongside bounded GIF animation. Encoded metadata is never retained.
+// Package profileimage bounds account pictures and makes a still version and,
+// for GIFs, a bounded animated version. Metadata is removed.
 package profileimage
 
 import (

@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-// Package setup supplies the common, host-authorized first-owner browser flow.
-// Applications own account validation and an atomic first-owner transaction.
+// Package setup serves the first-owner setup page, protected by a key only the
+// host can read. The app validates the account and creates the owner in one
+// transaction.
 package setup
 
 import (

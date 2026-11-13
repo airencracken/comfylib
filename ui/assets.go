@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-// Package ui supplies shared, palette-independent Comfyware presentation assets.
-// Applications own their templates, routes and theme variables.
+// Package ui serves the shared Comfyware styles, palettes and browser
+// scripts, and validates palette names. Apps own their templates and routes.
 package ui
 
 import (

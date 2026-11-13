@@ -1,12 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-// Package token mints opaque secrets and hashes them for storage.
+// Package token mints random tokens and stores only their digests.
 //
-// Sessions, reset links, invitations and API keys all follow the same shape: a
-// high-entropy string handed to a person or a client, of which only a digest is
-// kept. Keeping that in one place means there is one implementation to get
-// right, and both apps keep reading the digests they already stored: a token is
-// 64 lowercase hex digits and its digest is the hex SHA-256 of that text.
+// A token is 64 lowercase hex digits; its digest is the hex SHA-256 of that
+// text. Sessions, reset links, invitations and API keys all use this shape.
 package token
 
 import (

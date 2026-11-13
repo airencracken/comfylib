@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-// Package admin presents owner-only aggregate metrics and operational summaries.
-// Applications own authorization, SQL, and configuration policy. This package
-// never collects browser events, reads secrets, or exposes an HTTP endpoint.
+// Package admin renders the owner metrics dashboard and one account's
+// sign-in state. Apps run the queries and check that the reader is an
+// administrator before calling Render.
 package admin
 
 import (

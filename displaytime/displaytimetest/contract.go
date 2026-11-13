@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Package displaytimetest verifies timezone preferences using an application's
-// actual SQLite driver. Run requires an isolated test database.
+// Package displaytimetest checks timezone storage against an app's own SQLite
+// driver. Run needs a dedicated test database.
 package displaytimetest
 
 import (

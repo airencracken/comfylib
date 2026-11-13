@@ -1,12 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-// Package privdrop re-runs an administrative command as the installed
-// service's account when an operator starts it as root, for example with
-// sudo. Run as root, such a command would leave root-owned database journals
-// and files the service can no longer read.
-//
-// The child receives settings already resolved from the service
-// configuration, so it does not need to read files only root can.
+// Package privdrop re-runs an admin command as the service account when it is
+// started as root, for example with sudo, so it never leaves root-owned files
+// the service cannot read. The child gets the settings already read from the
+// service configuration.
 package privdrop
 
 import (

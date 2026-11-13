@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-// Package sandbox constructs explicit Bubblewrap policies. It never falls back
-// to an unrestricted process when confinement was requested.
+// Package sandbox runs a process under an explicit Bubblewrap policy. It never
+// falls back to running unconfined when confinement was requested.
 //
-// A server runs under Service.Policy and Run. Children that only process local
-// files, such as media converters, run under Base with no network and are
-// started through RunChild so that StartReaper, in a server that is PID 1 in
-// its namespace, never takes a child os/exec is still waiting for.
+// Run a server with Service.Policy and Run. Run local file tools, such as media
+// converters, with Base (no network) through RunChild, so StartReaper in a PID 1
+// server never reaps a child os/exec is still waiting for.
 package sandbox
 
 import (

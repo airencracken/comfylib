@@ -1,50 +1,44 @@
-# Common Comfyware setup
+# First-owner setup
 
-Applications share two ways to create an owner:
+Every app offers two ways to create the first owner:
 
 ```sh
 APP create-owner --username NAME
 APP setup
 ```
 
-The first command uses hidden, confirmed terminal input by default. Explicit
-`--password-prompt`, `--password-stdin`, and `--password-file PATH` select the
-same sources in every app. Conflicting sources, multiline or oversized input,
-and password files accessible to other users are rejected before account writes.
-New passwords need at least 12 characters and at most 72 UTF-8 bytes. Applications
-retain their existing username rules and preserve all existing accounts.
+## The command line
 
-The second command prints the private key and address for the first-owner
-browser page. Start the service and visit `/setup`, enter the key, and choose
-your username and confirmed password. The page works without JavaScript and
-adapts to narrow screens and system light/dark preferences. Browser setup uses
-HTTPS, with HTTP allowed on a loopback host for local use. Keys are never placed
-in links, browser responses, or server startup logs.
+`create-owner` asks for a hidden, confirmed password by default.
+`--password-prompt`, `--password-stdin` and `--password-file PATH` pick the
+source. It rejects conflicting sources, multiline or oversized input, and
+password files other users can read. Passwords need at least 12 characters
+and at most 72 UTF-8 bytes.
 
-Installed commands use `svcconfig` and `privdrop` to find the same data directory
-and account as the service. An operator may invoke them with sudo; portable
-installations run them as their own unprivileged account. The setup key is
-created atomically in a private regular `.setup.key` file under the data
-directory. Repeated setup commands show the same key while setup is pending.
+Installed commands use `svcconfig` and `privdrop` to act on the same data
+directory and account as the service, so they work under sudo.
 
-`Config.Ready` must report whether any owner exists, including suspended owners.
-`Config.Create` must check that condition and insert the first owner in one
-application-owned transaction, returning `setup.ErrComplete` if another process
-has already initialized the instance. It must never promote or overwrite an
-existing username. The shared handler checks CSRF, origin, transport, body size,
-and the host key before invoking that callback. Owner creation through the CLI
-also closes browser setup. The key is removed after browser completion; an
-existing owner keeps setup closed even if file cleanup fails.
+## The setup page
 
-Use `Handler.Wrap` around the application's production HTTP handler. Health
-checks pass through while pending; other routes remain behind setup until an
-owner exists. Start automatic backups after `Handler.Wait` returns successfully,
-so a deliberately uninitialized service does not create misleading backup errors.
-Applications own account validation, database transactions, authentication,
-application settings, service files, and legacy command aliases.
+`APP setup` prints a private key and the page address. Start the service, open
+`/setup`, enter the key and choose a username and password. The page needs
+HTTPS, except on a loopback host, and works without JavaScript. The key is
+stored in `.setup.key` in the data directory and never appears in links,
+responses or logs. Running `setup` again shows the same key until an owner
+exists, and the file is deleted once one does.
 
-The additive API is recorded under `testdata/api`. `tools/check_setup.mjs`
-exercises the browser contract against real app binaries, including private host
-authorization, first-owner sign-in, replay refusal, no-JavaScript forms, and the
-shared account layout assertions at mobile and desktop widths in both themes.
-`tools/check_password_cli.py` verifies hidden terminal input and restoration.
+## Integrating
+
+- `Config.Ready` reports whether any owner exists, suspended owners included.
+- `Config.Create` checks that and inserts the owner in one transaction. It
+  returns `setup.ErrComplete` if another process got there first, and never
+  promotes or overwrites an existing username.
+- The handler checks CSRF, origin, transport, body size and the key before
+  calling `Create`. Creating an owner from the command line also closes the
+  page.
+- Wrap your production handler with `Handler.Wrap`. Health checks pass through;
+  other routes wait for setup. Start automatic backups after `Handler.Wait`
+  returns.
+
+`tools/check_setup.mjs` runs the page against real app binaries, and
+`tools/check_password_cli.py` checks hidden terminal input.

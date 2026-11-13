@@ -4,7 +4,9 @@ package password
 
 import (
 	"bytes"
+	"errors"
 	"flag"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"strings"
@@ -72,5 +74,52 @@ func TestPasswordSourceFlagsAndAdversarialInput(t *testing.T) {
 	}
 	if err := Validate(strings.Repeat("日", 25)); err == nil {
 		t.Fatal("bcrypt byte limit exceeded")
+	}
+}
+
+func TestValidateMeasuresBytesAndExplainsPlainly(t *testing.T) {
+	for _, tc := range []struct {
+		value string
+		want  error
+	}{
+		{strings.Repeat("a", 11), ErrTooShort},
+		{strings.Repeat("a", 12), nil},
+		{strings.Repeat("a", 72), nil},
+		{strings.Repeat("a", 73), ErrTooLong},
+		{strings.Repeat("é", 36), nil},         // 72 bytes, 36 characters
+		{strings.Repeat("é", 37), ErrTooLong},  // 74 bytes, well under 72 characters
+		{strings.Repeat("日", 11), ErrTooShort}, // 33 bytes but 11 characters
+		{strings.Repeat("\U0001F600", 18), nil},     // 72 bytes of emoji
+		{strings.Repeat("\U0001F600", 19), ErrTooLong},
+		{"valid-start\xff\xfe-more", ErrInvalid},
+		{"", ErrTooShort},
+	} {
+		if err := Validate(tc.value); !errors.Is(err, tc.want) {
+			t.Errorf("Validate(%q) = %v, want %v", tc.value, err, tc.want)
+		}
+	}
+	for _, err := range []RuleError{ErrTooShort, ErrTooLong, ErrInvalid} {
+		if strings.Contains(err.Error(), "72") || strings.Contains(err.Error(), "UTF-8") || !strings.HasSuffix(err.Error(), ".") {
+			t.Errorf("message is not plain: %q", err)
+		}
+	}
+	if !Fits(strings.Repeat("a", MaxBytes)) || Fits(strings.Repeat("é", 37)) {
+		t.Fatal("Fits")
+	}
+}
+
+func TestValidateProperty(t *testing.T) {
+	random := rand.New(rand.NewSource(5))
+	alphabet := []rune("aZ9 éß日\U0001F600!")
+	for i := 0; i < 5000; i++ {
+		runes := make([]rune, random.Intn(60))
+		for j := range runes {
+			runes[j] = alphabet[random.Intn(len(alphabet))]
+		}
+		value := string(runes)
+		ok := len(runes) >= MinCharacters && len(value) <= MaxBytes
+		if (Validate(value) == nil) != ok {
+			t.Fatalf("Validate(%q) disagrees with the rule", value)
+		}
 	}
 }

@@ -45,6 +45,14 @@
   `HX-Refresh` on expired htmx forms and logs internal detail capped at 512
   bytes.
 
+### Plain limits
+
+- `password.Validate` measures bcrypt's real limit (`MaxBytes`, 72 bytes) and
+  returns plain errors: `ErrTooShort` ("Use at least 12 characters."),
+  `ErrTooLong` ("Use a shorter password.") and `ErrInvalid`. `password.Fits`
+  checks the byte limit at sign-in.
+- `ui.Size` formats byte counts in decimal units ("5 MB") for user copy.
+
 ### Maintenance
 
 - `scripts/comfy.py check-docs` (`tools/check_docs.py`) checks that the README

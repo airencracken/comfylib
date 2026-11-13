@@ -86,5 +86,29 @@
     "after": "{{with .Backup.LastError}}",
     "package": "./admin",
     "run": "^TestSummaryEscapesValuesAndShowsOperationalStates$"
+  },
+  {
+    "name": "password limit counts bytes, not characters",
+    "file": "password/source.go",
+    "before": "case len(value) > MaxBytes:",
+    "after": "case utf8.RuneCountInString(value) > MaxBytes:",
+    "package": "./password",
+    "run": "^TestValidateMeasuresBytesAndExplainsPlainly$"
+  },
+  {
+    "name": "password minimum counts characters, not bytes",
+    "file": "password/source.go",
+    "before": "case utf8.RuneCountInString(value) < MinCharacters:",
+    "after": "case len(value) < MinCharacters:",
+    "package": "./password",
+    "run": "^TestValidateMeasuresBytesAndExplainsPlainly$"
+  },
+  {
+    "name": "user sizes use decimal units",
+    "file": "ui/size.go",
+    "before": "value /= 1000",
+    "after": "value /= 1024",
+    "package": "./ui",
+    "run": "^TestSizeUsesPlainDecimalUnits$"
   }
 ]

@@ -280,3 +280,19 @@ func TestSetupStylesUseSharedTokens(t *testing.T) {
 		t.Error("setup still hard-codes the sage heading font")
 	}
 }
+
+func TestSetupExplainsPasswordLimitsPlainly(t *testing.T) {
+	f := newFixture(t)
+	for _, tc := range []struct{ value, want string }{
+		{"short", "Use at least 12 characters."},
+		{strings.Repeat("é", 37), "Use a shorter password."},
+	} {
+		form := f.form()
+		form.Set("password", tc.value)
+		form.Set("confirm", tc.value)
+		w := f.request(http.MethodPost, "/setup", form)
+		if w.Code != http.StatusBadRequest || !strings.Contains(w.Body.String(), tc.want) || strings.Contains(w.Body.String(), "UTF-8") {
+			t.Fatal(tc.value, w.Code, w.Body.String())
+		}
+	}
+}

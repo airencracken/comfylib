@@ -29,13 +29,45 @@ func Flags(flags *flag.FlagSet) *Source {
 	return s
 }
 
-// Validate applies the common policy for newly chosen passwords.
+// Length limits for new passwords. MaxBytes is bcrypt's input limit, so
+// accented letters and emoji, which take several bytes, reach it sooner than
+// 72 characters.
+const (
+	MinCharacters = 12
+	MaxBytes      = 72
+)
+
+// RuleError is a password rule failure. Its text is a plain sentence for the
+// person choosing the password.
+type RuleError string
+
+func (e RuleError) Error() string { return string(e) }
+
+// The rule failures Validate returns.
+const (
+	ErrTooShort RuleError = "Use at least 12 characters."
+	ErrTooLong  RuleError = "Use a shorter password."
+	ErrInvalid  RuleError = "That password has characters that can't be saved. Try typing it again."
+)
+
+// Validate applies the common policy for newly chosen passwords: at least
+// MinCharacters characters and at most MaxBytes bytes of valid UTF-8. The
+// error is ErrTooShort, ErrTooLong or ErrInvalid.
 func Validate(value string) error {
-	if !utf8.ValidString(value) || utf8.RuneCountInString(value) < 12 || len(value) > 72 {
-		return errors.New("choose at least 12 characters, using no more than 72 UTF-8 bytes")
+	switch {
+	case !utf8.ValidString(value):
+		return ErrInvalid
+	case len(value) > MaxBytes:
+		return ErrTooLong
+	case utf8.RuneCountInString(value) < MinCharacters:
+		return ErrTooShort
 	}
 	return nil
 }
+
+// Fits reports whether value is within MaxBytes, for checking a password at
+// sign-in before hashing it.
+func Fits(value string) bool { return len(value) <= MaxBytes }
 
 // Read rejects conflicting sources, oversized and multiline input, and public
 // password files. Terminal echo is hidden before either prompt is displayed.

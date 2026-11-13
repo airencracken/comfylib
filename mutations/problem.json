@@ -1,0 +1,42 @@
+[
+  {
+    "name": "problem pages clamp out-of-range statuses",
+    "file": "problem/problem.go",
+    "before": "if status < 400 || status > 599 {",
+    "after": "if status < 0 {",
+    "package": "./problem",
+    "run": "^TestOutOfRangeStatusesBecomeServerErrors$"
+  },
+  {
+    "name": "problem pages refresh expired htmx forms",
+    "file": "problem/problem.go",
+    "before": "w.Header().Set(\"HX-Refresh\", \"true\")",
+    "after": "w.Header().Set(\"HX-Refresh\", \"false\")",
+    "package": "./problem",
+    "run": "^TestExpiredFormsRefreshUnderHtmx$"
+  },
+  {
+    "name": "problem pages cap logged detail",
+    "file": "problem/problem.go",
+    "before": "if len(text) <= maxDetail {",
+    "after": "if true {",
+    "package": "./problem",
+    "run": "^TestDetailIsLoggedCappedAndNeverSent$"
+  },
+  {
+    "name": "problem pages fall back when the layout fails",
+    "file": "problem/problem.go",
+    "before": "if err := pw.Layout(buffer, r, page); err != nil {",
+    "after": "if err := pw.Layout(buffer, r, page); err != nil && false {",
+    "package": "./problem",
+    "run": "^TestLayoutFailureFallsBackToAMinimalPage$"
+  },
+  {
+    "name": "problem responses use JSON for API paths",
+    "file": "problem/problem.go",
+    "before": "return strings.HasPrefix(r.URL.Path, \"/api/\")",
+    "after": "return false",
+    "package": "./problem",
+    "run": "^TestAPIRequestsGetJSON$"
+  }
+]

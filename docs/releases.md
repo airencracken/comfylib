@@ -35,6 +35,13 @@
 - `suite.js` adds a Copy link button to inputs marked `data-comfy-copy`.
 - The setup page stylesheet is readable and uses the tokens.
 
+### Error pages
+
+- The new `problem` package writes plain-language pages for 400, 403, 404, 413,
+  422, 429 and 500 inside the app's layout, sends JSON to API clients, keeps
+  `HX-Refresh` on expired htmx forms and logs internal detail capped at 512
+  bytes.
+
 ### Suite
 
 - `suite.DiscussionStore` holds pending discussion returns.

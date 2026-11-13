@@ -1,0 +1,23 @@
+package problem // import "github.com/airencracken/comfylib/problem"
+
+const ExpiredMessage = "This page was open for a while. Reload it and try again."
+
+func WantsJSON(r *http.Request) bool
+
+type Page struct {
+	Status  int
+	Title   string
+	Message string
+}
+
+func For(status int) Page
+
+type Writer struct {
+	Layout func(w http.ResponseWriter, r *http.Request, page Page) error
+
+	Logger *slog.Logger
+}
+
+func (pw Writer) Expired(w http.ResponseWriter, r *http.Request)
+
+func (pw Writer) Write(w http.ResponseWriter, r *http.Request, status int, message string, detail error)

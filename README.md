@@ -26,6 +26,7 @@ Build with Go 1.26.11 or later on 1.26, or Go 1.27.4 or later on 1.27.
 | [`oidc`](oidc) | Separate module: OpenID Connect sign-in for existing local accounts. |
 | [`password`](password) | Reads confirmed passwords from a hidden prompt, stdin or a private file. |
 | [`privdrop`](privdrop) | Re-runs admin commands as the service account instead of root. |
+| [`problem`](problem) | Writes plain-language error pages inside the app's layout, or JSON for API requests. |
 | [`profileimage`](profileimage) | Bounds account pictures and makes still and animated versions. |
 | [`proxyconfig`](proxyconfig) | Prints a checked Caddy, nginx or Apache site configuration. |
 | [`proxyconfig/proxytest`](proxyconfig/proxytest) | Runs those configurations in real nginx and Apache servers. |

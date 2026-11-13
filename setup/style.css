@@ -1,1 +1,90 @@
-:root{color-scheme:light dark;--bg:light-dark(#f5f3ea,#171f1a);--paper:light-dark(#fffef9,#202b24);--ink:light-dark(#293e36,#e2e8dc);--muted:light-dark(#626e65,#a7b4a5);--line:light-dark(#bfc6b7,#667760);--green:light-dark(#355c48,#aec99c);font:16px/1.65 system-ui,sans-serif;color:var(--ink);background:var(--bg)}*{box-sizing:border-box}body{margin:0}.account-page{width:min(100% - 32px,480px);margin:40px auto}.brand{color:var(--green);font:700 28px Georgia,serif;text-decoration:none}section{margin-top:24px;padding:28px;background:var(--paper);border:1px solid var(--line);border-radius:10px}h1{font:400 32px/1.2 Georgia,serif}p{overflow-wrap:anywhere}label{display:block;font-weight:600;font-size:14px;margin:20px 0 8px}input{display:block;width:100%;min-width:0;margin-top:8px;padding:12px;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px}button{width:100%;margin-top:24px;padding:12px;font:600 15px system-ui,sans-serif;border:0;border-radius:6px;background:var(--green);color:light-dark(#fffef9,#1b2d21);cursor:pointer}.help{font-size:13px;color:var(--muted)}.error{padding:12px;border:1px solid currentColor;color:light-dark(#8a3e27,#e4ad89);border-radius:6px}code{font-size:.9em;overflow-wrap:anywhere}:focus-visible{outline:3px solid var(--green);outline-offset:4px}@media(max-width:400px){section{padding:20px}.account-page{margin:24px auto}}
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+/* First-run setup page. It uses the shared --comfy-* tokens with neutral
+   defaults that follow the system light or dark setting. */
+:root {
+  color-scheme: light dark;
+  --comfy-surface: Canvas;
+  --comfy-raised: color-mix(in srgb, CanvasText 4%, Canvas);
+  --comfy-border: color-mix(in srgb, CanvasText 20%, Canvas);
+  --comfy-control-border: color-mix(in srgb, CanvasText 55%, Canvas);
+  --comfy-text: CanvasText;
+  --comfy-muted: color-mix(in srgb, CanvasText 72%, Canvas);
+  --comfy-accent: LinkText;
+  --comfy-accent-text: Canvas;
+  --comfy-danger: light-dark(#b3261e, #f2b8b5);
+  --comfy-font: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --comfy-heading-font: var(--comfy-font);
+  --comfy-heading-weight: 650;
+  --comfy-text-sm: .875rem;
+  --comfy-text-base: 1rem;
+  --comfy-text-xl: 1.75rem;
+  --comfy-radius: .625rem;
+  --comfy-radius-small: .375rem;
+  font: var(--comfy-text-base)/1.65 var(--comfy-font);
+  color: var(--comfy-text);
+  background: var(--comfy-surface);
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; }
+
+.account-page { width: min(100% - 32px, 480px); margin: 40px auto; }
+.brand {
+  color: var(--comfy-accent);
+  font: var(--comfy-heading-weight) var(--comfy-text-xl) var(--comfy-heading-font);
+  text-decoration: none;
+}
+section {
+  margin-top: 24px;
+  padding: 28px;
+  background: var(--comfy-raised);
+  border: 1px solid var(--comfy-border);
+  border-radius: var(--comfy-radius);
+}
+h1 { font: var(--comfy-heading-weight) var(--comfy-text-xl)/1.2 var(--comfy-heading-font); }
+p { overflow-wrap: anywhere; }
+
+label {
+  display: block;
+  margin: 20px 0 8px;
+  font-size: var(--comfy-text-sm);
+  font-weight: 600;
+}
+input {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  margin-top: 8px;
+  padding: 12px;
+  font: inherit;
+  color: var(--comfy-text);
+  background: var(--comfy-surface);
+  border: 1px solid var(--comfy-control-border);
+  border-radius: var(--comfy-radius-small);
+}
+button {
+  width: 100%;
+  margin-top: 24px;
+  padding: 12px;
+  font: 600 var(--comfy-text-base) var(--comfy-font);
+  color: var(--comfy-accent-text);
+  background: var(--comfy-accent);
+  border: 0;
+  border-radius: var(--comfy-radius-small);
+  cursor: pointer;
+}
+
+.help { font-size: var(--comfy-text-sm); color: var(--comfy-muted); }
+.error {
+  padding: 12px;
+  color: var(--comfy-danger);
+  border: 1px solid currentColor;
+  border-radius: var(--comfy-radius-small);
+}
+code { font-size: .9em; overflow-wrap: anywhere; }
+:focus-visible { outline: 3px solid var(--comfy-accent); outline-offset: 4px; }
+
+@media (max-width: 400px) {
+  section { padding: 20px; }
+  .account-page { margin: 24px auto; }
+}

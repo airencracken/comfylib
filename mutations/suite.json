@@ -126,5 +126,13 @@
     "after": "--comfy-control-border: light-dark(#ccd4e0, #69728a);",
     "package": "./ui",
     "run": "^TestPalettesMeetWCAGAAInLightAndDark$"
+  },
+  {
+    "name": "setup page reads only tokens",
+    "file": "setup/style.css",
+    "before": "  color: var(--comfy-accent-text);\n  background: var(--comfy-accent);",
+    "after": "  color: #fff;\n  background: var(--green);",
+    "package": "./setup",
+    "run": "^TestSetupStylesUseSharedTokens$"
   }
 ]

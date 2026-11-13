@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"sync"
 	"testing"
@@ -251,5 +252,28 @@ func TestInitializedInstanceNeedsNoSetupFiles(t *testing.T) {
 	}
 	if err = fresh.Enable(t.Context(), &bytes.Buffer{}); !errors.Is(err, ErrComplete) {
 		t.Fatal("existing instance got a setup key", err)
+	}
+}
+
+func TestSetupStylesUseSharedTokens(t *testing.T) {
+	if strings.Count(style, "\n") < 40 {
+		t.Fatal("setup stylesheet is not formatted for reading")
+	}
+	rules := style[strings.Index(style, "* { box-sizing"):]
+	for _, color := range regexp.MustCompile(`#[0-9a-fA-F]{3,8}\b`).FindAllString(rules, -1) {
+		t.Errorf("hard-coded color %s outside the token defaults", color)
+	}
+	for _, match := range regexp.MustCompile(`var\((--[a-z0-9-]+)`).FindAllStringSubmatch(style, -1) {
+		if !strings.HasPrefix(match[1], "--comfy-") {
+			t.Errorf("reads non-token variable %s", match[1])
+		}
+	}
+	for _, token := range []string{"--comfy-surface", "--comfy-raised", "--comfy-text", "--comfy-accent", "--comfy-accent-text", "--comfy-heading-font", "--comfy-radius"} {
+		if !strings.Contains(style, "  "+token+":") {
+			t.Errorf("%s has no neutral default", token)
+		}
+	}
+	if strings.Contains(style, "Georgia") {
+		t.Error("setup still hard-codes the sage heading font")
 	}
 }

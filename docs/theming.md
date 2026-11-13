@@ -55,12 +55,13 @@ variables.
 
 `palettes.css` has two palettes, each with light and dark values. `data-theme`
 (or the system setting) picks light or dark, so every palette works with
-System, Light and Dark. Each meets WCAG AA: 4.5:1 for text and 3:1 for control
+System, Light and Dark. Palettes change colors only. Each app sets its own fonts and heading weights,
+which stay the same when a member or owner changes palettes. Each meets WCAG AA: 4.5:1 for text and 3:1 for control
 borders.
 
 | Palette | Based on |
 | --- | --- |
-| `sage` | Witmoot and comfyware.org: paper, ink and green, serif headings |
+| `sage` | Witmoot and comfyware.org: paper, ink and green |
 | `slate` | Imvault: cool slate with a blue accent |
 
 To add a palette, add one block to `ui/palettes.css` and its name to the list

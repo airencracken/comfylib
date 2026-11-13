@@ -134,5 +134,13 @@
     "after": "  color: #fff;\n  background: var(--green);",
     "package": "./setup",
     "run": "^TestSetupStylesUseSharedTokens$"
+  },
+  {
+    "name": "palettes keep app typography",
+    "file": "ui/palettes.css",
+    "before": "  --comfy-danger: light-dark(#965639, #dbaa85);",
+    "after": "  --comfy-danger: light-dark(#965639, #dbaa85);\n  --comfy-heading-font: serif;",
+    "package": "./ui",
+    "run": "^TestPalettesChangeOnlyColors$"
   }
 ]

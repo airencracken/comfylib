@@ -172,3 +172,14 @@ func TestPalettesFollowTheThemeAttribute(t *testing.T) {
 		}
 	}
 }
+
+func TestPalettesChangeOnlyColors(t *testing.T) {
+	for _, block := range paletteBlock.FindAllStringSubmatch(asset(t, "palettes.css"), -1) {
+		for _, declaration := range strings.Split(block[2], ";") {
+			name, _, ok := strings.Cut(strings.TrimSpace(declaration), ":")
+			if ok && !slices.Contains(colorTokens, name) {
+				t.Errorf("palette %s changes non-color token %s", block[1], name)
+			}
+		}
+	}
+}

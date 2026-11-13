@@ -1,5 +1,12 @@
 # Release notes
 
+## 0.7.2
+
+- Color palettes change colors only. Each app keeps its own fonts and heading
+  weights when a member or owner changes the palette or light/dark theme.
+- Shared browser checks verify that every palette and theme preserves the
+  app's typography.
+
 ## 0.7.1
 
 - Sizes use powers of 2 across Comfyware. `ui.Size` now formats binary units

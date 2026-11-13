@@ -17,8 +17,6 @@
   --comfy-accent: light-dark(#355c48, #aec99c);
   --comfy-accent-text: light-dark(#fffef9, #1b2d21);
   --comfy-danger: light-dark(#965639, #dbaa85);
-  --comfy-heading-font: Georgia, "Times New Roman", serif;
-  --comfy-heading-weight: 400;
 }
 
 /* Slate: cool slate with a blue accent, near-black and blue in dark, from Imvault. */
@@ -32,6 +30,4 @@
   --comfy-accent: light-dark(#245eb6, #6ea8fe);
   --comfy-accent-text: light-dark(#ffffff, #101216);
   --comfy-danger: light-dark(#a82c3b, #f2707a);
-  --comfy-heading-font: var(--comfy-font);
-  --comfy-heading-weight: 650;
 }

@@ -48,4 +48,34 @@ export async function checkSuiteControls(page, { javascript = true, density = fa
       await page.locator('[data-density-choice="comfortable"]').click();
     }
   }
+  await checkPaletteTypography(page);
+}
+
+// Color choices must preserve each app's fonts and heading weights.
+export async function checkPaletteTypography(page) {
+  const result = await page.evaluate(() => {
+    const root = document.documentElement;
+    const original = ['data-palette', 'data-theme'].map(name => [name, root.getAttribute(name)]);
+    const elements = [...document.querySelectorAll('body, h1, h2, h3, input, button')].slice(0, 30);
+    const typography = () => elements.map(element => {
+      const style = getComputedStyle(element);
+      return [style.fontFamily, style.fontWeight, style.fontSize];
+    });
+    const expected = JSON.stringify(typography());
+    try {
+      for (const palette of (root.dataset.palettes || '').split(' ').filter(Boolean)) {
+        for (const theme of ['light', 'dark']) {
+          root.setAttribute('data-palette', palette);
+          root.setAttribute('data-theme', theme);
+          if (JSON.stringify(typography()) !== expected) return { palette, theme };
+        }
+      }
+      return null;
+    } finally {
+      for (const [name, value] of original) {
+        if (value === null) root.removeAttribute(name); else root.setAttribute(name, value);
+      }
+    }
+  });
+  if (result) throw new Error(`Color choices changed typography: ${result.palette} ${result.theme}`);
 }

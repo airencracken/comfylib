@@ -100,6 +100,26 @@ class CheckDocsTests(unittest.TestCase):
         # Introductory sections before the first versioned heading are fine.
         self.assertEqual(check_docs.check(self.app({'docs/release-notes.md': '# Notes\n\n## Before upgrading\n\n## 0.6.0\n'})), [])
 
+    def test_notes_for_the_next_version_must_be_marked_unreleased(self):
+        install = '# Install\n\n## Linux binary\n'
+        layout = {'docs/release-notes.md': None, 'docs/releases.md': install, 'docs/release-notes/0.6.0.md': '# Folkweave 0.6.0\n\nThings.\n'}
+        # A file for the next version marked in its first line, as Imvault does.
+        self.assertEqual(check_docs.check(self.app({**layout, 'docs/release-notes/0.7.0.md': '# Folkweave 0.7.0\n\nUnreleased.\n'})), [])
+        self.assertEqual(check_docs.check(self.app({**layout, 'docs/release-notes/0.7.0.md': '# Folkweave 0.7.0 (unreleased)\n'})), [])
+        unmarked = check_docs.check(self.app({**layout, 'docs/release-notes/0.7.0.md': '# Folkweave 0.7.0\n\nThings.\n'}))
+        self.assertTrue(unmarked and 'not marked unreleased' in unmarked[0])
+        # An unreleased file does not stand in for the missing current one.
+        self.assertTrue(check_docs.check(self.app({'docs/release-notes.md': None, 'docs/releases.md': install, 'docs/release-notes/0.7.0.md': '# 0.7.0\n\nUnreleased.\n', 'docs/release-notes/0.5.0.md': '# 0.5.0\n'})))
+        # The same rules for headings in one notes file.
+        for heading in ('## 0.7.0 (unreleased)', '## Unreleased 0.7.0', '## 0.7.0\n\nUnreleased: still in progress.'):
+            with self.subTest(heading=heading):
+                self.assertEqual(check_docs.check(self.app({'docs/release-notes.md': f'# Notes\n\n{heading}\n\n## 0.6.0\n'})), [])
+        self.assertTrue(check_docs.check(self.app({'docs/release-notes.md': '# Notes\n\n## 0.7.0\n\nThings.\n\n## 0.6.0\n'})))
+        # A marked older section is skipped, so the next released one must match.
+        self.assertTrue(check_docs.check(self.app({'docs/release-notes.md': '# Notes\n\n## 0.6.0 (unreleased)\n\n## 0.5.0\n'})))
+        # The word must open the line, not appear later in it.
+        self.assertTrue(check_docs.check(self.app({'docs/release-notes.md': '# Notes\n\n## 0.7.0\n\nFixes an unreleased bug.\n\n## 0.6.0\n'})))
+
     def test_container_tags_must_match(self):
         for tag in ('latest', 'v0.5.0', '0.6', 'v0.6.0-rc1'):
             with self.subTest(tag=tag):

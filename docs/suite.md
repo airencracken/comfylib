@@ -49,7 +49,9 @@ port, temporary space, owner command and lifecycle profile (`snapshot` or
 `check-docs` checks that the README's "Current release" line, the newest
 release-notes heading and documented container tags match `VERSION`, that the
 README has no release-note sections, and that it ends with License or Support.
-Add it to `make check`.
+Notes for the next version are allowed when marked unreleased: an
+"Unreleased" heading, "unreleased" in the version heading, or a first line
+after the heading that starts with "Unreleased". Add it to `make check`.
 
 `check` rejects copied suite packages, assets or tools, `replace` directives,
 missing pins and wrong launcher wiring. To upgrade, change the pinned version.

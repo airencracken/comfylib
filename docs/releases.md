@@ -89,6 +89,11 @@ All exported Go names still compile. These behave differently:
   `--invitation-*`. Apps that read them must use the new tokens.
 - Without a token mapping or palette, the dashboard uses the app's older
   variables or neutral system colors instead of its fixed blue-grey palette.
+- The dashboard no longer shows the raw backup error.
+- `password.Validate` errors have new text; code that matched the old string
+  should use `errors.Is` with `ErrTooShort`, `ErrTooLong` or `ErrInvalid`.
+- `analyticstest.Run` checks the new tables, and `check_metrics.mjs` no longer
+  accepts the per-account and per-item tables.
 
 ## 0.6.0
 

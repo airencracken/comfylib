@@ -1,32 +1,53 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
-:root {
-  --comfy-space-1: .375rem; --comfy-space-2: .75rem; --comfy-space-3: 1.25rem;
-  --comfy-radius: .625rem;
-  --comfy-ink: var(--ink, var(--text, CanvasText));
-  --comfy-panel: var(--paper, var(--panel, var(--bg-elev, Canvas)));
-  --comfy-line: var(--line, var(--border, GrayText));
-  --comfy-accent: var(--green, var(--accent, LinkText));
+/* Comfyware tokens. Apps and palettes set these on :root; see docs/theming.md.
+   The layer makes any unlayered definition win. Until 0.8.0 the defaults also
+   read older variables (--comfy-ink, --comfy-panel, --comfy-line, --bg,
+   --paper, --ink, --green and others); that fallback is deprecated. */
+@layer comfy-tokens {
+  :root {
+    --comfy-surface: var(--background, var(--bg, Canvas));
+    --comfy-raised: var(--comfy-panel, var(--bg-elev, var(--panel, var(--paper, Canvas))));
+    --comfy-border: var(--comfy-line, var(--border, var(--line, color-mix(in srgb, CanvasText 20%, Canvas))));
+    --comfy-control-border: color-mix(in srgb, var(--comfy-text) 55%, var(--comfy-raised));
+    --comfy-text: var(--comfy-ink, var(--text, var(--ink, CanvasText)));
+    --comfy-muted: var(--muted, color-mix(in srgb, var(--comfy-text) 72%, var(--comfy-raised)));
+    --comfy-accent: var(--accent, var(--green, LinkText));
+    --comfy-accent-text: var(--button-text, var(--button-ink, Canvas));
+    --comfy-danger: var(--danger, var(--rust, light-dark(#b3261e, #f2b8b5)));
+    --comfy-font: system-ui, -apple-system, "Segoe UI", sans-serif;
+    --comfy-heading-font: var(--comfy-font);
+    --comfy-heading-weight: 650;
+    --comfy-text-sm: .875rem;
+    --comfy-text-base: 1rem;
+    --comfy-text-lg: 1.25rem;
+    --comfy-text-xl: 1.75rem;
+    --comfy-radius: var(--radius, .625rem);
+    --comfy-radius-small: .375rem;
+    --comfy-space-1: .375rem;
+    --comfy-space-2: .75rem;
+    --comfy-space-3: 1.25rem;
+  }
 }
-.comfy-menu { position: relative; margin: 0; color: var(--comfy-ink); }
-.comfy-menu > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; gap: .5rem; padding: .4rem .65rem; border: 1px solid var(--comfy-line); border-radius: var(--comfy-radius); font: inherit; font-weight: 600; list-style: none; }
+.comfy-menu { position: relative; margin: 0; color: var(--comfy-text); }
+.comfy-menu > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; gap: .5rem; padding: .4rem .65rem; border: 1px solid var(--comfy-border); border-radius: var(--comfy-radius); font: inherit; font-weight: 600; list-style: none; }
 .comfy-menu > summary::after { content: ''; width: .4rem; height: .4rem; border-right: 1.5px solid; border-bottom: 1.5px solid; transform: rotate(45deg); margin: -.2rem .2rem 0 .5rem; }
 .comfy-menu > summary::-webkit-details-marker { display: none; }
-.comfy-menu[open] > summary { background: var(--soft, var(--bg-elev-2, ButtonFace)); }
-.comfy-menu-panel { position: absolute; z-index: 30; right: 0; top: calc(100% + .5rem); display: flex; flex-direction: column; align-items: stretch; gap: .25rem; min-width: 14rem; max-width: min(22rem, calc(100vw - 2rem)); padding: var(--comfy-space-2); background: var(--comfy-panel); border: 1px solid var(--comfy-line); border-radius: var(--comfy-radius); box-shadow: 0 .5rem 1.5rem #0002; }
+.comfy-menu[open] > summary { background: color-mix(in srgb, var(--comfy-accent) 12%, var(--comfy-raised)); }
+.comfy-menu-panel { position: absolute; z-index: 30; right: 0; top: calc(100% + .5rem); display: flex; flex-direction: column; align-items: stretch; gap: .25rem; min-width: 14rem; max-width: min(22rem, calc(100vw - 2rem)); padding: var(--comfy-space-2); background: var(--comfy-raised); border: 1px solid var(--comfy-border); border-radius: var(--comfy-radius); box-shadow: 0 .5rem 1.5rem #0002; }
 .comfy-menu-panel a, .comfy-menu-panel button { min-height: 44px; padding: .55rem .65rem; text-align: left; white-space: normal; overflow-wrap: anywhere; }
-.comfy-menu-panel a { display: flex; align-items: center; text-decoration: none; border-radius: .375rem; }
-.comfy-menu-panel a:hover { background: var(--soft, var(--bg-elev-2, ButtonFace)); }
+.comfy-menu-panel a { display: flex; align-items: center; text-decoration: none; border-radius: var(--comfy-radius-small); }
+.comfy-menu-panel a:hover { background: color-mix(in srgb, var(--comfy-accent) 12%, var(--comfy-raised)); }
 .comfy-menu-panel form { margin: 0; }
 .comfy-menu-panel label { margin: .5rem 0; font-size: .875rem; }
 .comfy-menu-panel select { width: 100%; min-height: 44px; margin-top: .375rem; }
-.comfy-menu-panel .comfy-menu-label { padding: .5rem .65rem .25rem; margin: 0; color: var(--muted, GrayText); font-size: .8rem; }
-.comfy-menu-panel hr { width: 100%; border: 0; border-top: 1px solid var(--comfy-line); margin: .375rem 0; }
+.comfy-menu-panel .comfy-menu-label { padding: .5rem .65rem .25rem; margin: 0; color: var(--comfy-muted); font-size: .8rem; }
+.comfy-menu-panel hr { width: 100%; border: 0; border-top: 1px solid var(--comfy-border); margin: .375rem 0; }
 .comfy-menu-panel button.link, .comfy-menu-panel button.text-button { width: 100%; }
-.comfy-disclosure { border: 1px solid var(--comfy-line); border-radius: var(--comfy-radius); padding: var(--comfy-space-2); }
+.comfy-disclosure { border: 1px solid var(--comfy-border); border-radius: var(--comfy-radius); padding: var(--comfy-space-2); }
 .comfy-disclosure > summary { cursor: pointer; min-height: 44px; padding: .5rem .25rem; font-weight: 650; }
 .comfy-disclosure[open] > summary { margin-bottom: .5rem; }
 .comfy-density { display: flex; flex-wrap: wrap; align-items: center; gap: .375rem; }
-.comfy-density button { min-height: 44px; padding: .4rem .7rem; background: transparent; color: var(--comfy-ink); border: 1px solid var(--comfy-line); border-radius: .375rem; }
+.comfy-density button { min-height: 44px; padding: .4rem .7rem; background: transparent; color: var(--comfy-text); border: 1px solid var(--comfy-border); border-radius: var(--comfy-radius-small); }
 .comfy-density button[aria-pressed="true"] { border-color: var(--comfy-accent); box-shadow: inset 0 -2px var(--comfy-accent); font-weight: 700; }
 .comfy-menu :focus-visible, .comfy-disclosure :focus-visible, .comfy-density :focus-visible { outline: 3px solid var(--comfy-accent); outline-offset: 3px; }
 html[data-density="compact"] .story-row { padding: 1rem 1.25rem; }
@@ -45,64 +66,65 @@ html[data-density="compact"] .browse-controls { margin-bottom: .75rem; }
 :where(button, .button, .btn, input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]), select, textarea) { border-radius: var(--comfy-radius); }
 :where(a, button, input, select, textarea, summary):focus-visible { outline: 3px solid var(--comfy-accent); outline-offset: 3px; }
 .list-heading:has(.comfy-density) { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem; }
-.view-help { font-size: .875rem; max-width: 65ch; color: var(--muted, GrayText); }
+.view-help { font-size: .875rem; max-width: 65ch; color: var(--comfy-muted); }
 .view-help > summary { cursor: pointer; padding: .375rem 0; }
 .browse-toolbar .comfy-density { margin-left: auto; }
 .label-picker a.button[aria-current="true"], .view-switch a.button[aria-current="true"] { background: transparent; color: var(--comfy-accent); border-color: var(--comfy-accent); box-shadow: inset 0 -2px var(--comfy-accent); }
 
-.comfy-auth { max-width: 36rem; margin: 3rem auto; padding: 1rem; font: 1rem/1.6 system-ui; color: CanvasText; background: Canvas; }
+.comfy-auth { max-width: 36rem; margin: 3rem auto; padding: 1rem; font: var(--comfy-text-base)/1.6 var(--comfy-font); color: var(--comfy-text); background: var(--comfy-surface); }
+.comfy-auth h1 { font: var(--comfy-heading-weight) var(--comfy-text-xl)/1.25 var(--comfy-heading-font); }
 
 .topbar nav > a, .site-header nav > a { min-height: 44px; display: inline-flex; align-items: center; }
 
-.comfy-auth button { min-height: 44px; padding: .6rem 1rem; border: 1px solid var(--comfy-line); font: inherit; cursor: pointer; }
+.comfy-auth button { min-height: 44px; padding: .6rem 1rem; border: 1px solid var(--comfy-border); font: inherit; cursor: pointer; }
 
 /* Shared owner administration; applications retain their palette and policy. */
-.comfy-admin-section { margin-block: 1.5rem; padding: clamp(1rem, 3vw, 1.75rem); border: 1px solid var(--comfy-line); border-radius: var(--comfy-radius); background: var(--comfy-panel); color: var(--comfy-ink); min-width: 0; }
+.comfy-admin-section { margin-block: 1.5rem; padding: clamp(1rem, 3vw, 1.75rem); border: 1px solid var(--comfy-border); border-radius: var(--comfy-radius); background: var(--comfy-raised); color: var(--comfy-text); min-width: 0; }
 .comfy-admin-section h2 { margin-top: 0; }
 .comfy-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr)); gap: 1rem; margin-block: 1rem; }
-.comfy-metrics > div { padding: 1rem; border: 1px solid var(--comfy-line); border-radius: var(--comfy-radius); min-width: 0; }
+.comfy-metrics > div { padding: 1rem; border: 1px solid var(--comfy-border); border-radius: var(--comfy-radius); min-width: 0; }
 .comfy-metrics dt { font-size: .875rem; }
 .comfy-metrics dd { font-size: 1.75rem; font-weight: 650; margin: .25rem 0; overflow-wrap: anywhere; }
 .comfy-metrics p, .comfy-operations p, .comfy-admin-help { font-size: .875rem; line-height: 1.6; overflow-wrap: anywhere; }
-.comfy-operations > div { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 1rem; padding-block: .75rem; border-bottom: 1px solid var(--comfy-line); }
+.comfy-operations > div { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 1rem; padding-block: .75rem; border-bottom: 1px solid var(--comfy-border); }
 .comfy-operations dt { font-weight: 600; }
 .comfy-operations dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
-.comfy-notice { padding: .75rem 1rem; border: 1px solid var(--comfy-line); border-inline-start: 4px solid var(--comfy-accent); border-radius: .375rem; overflow-wrap: anywhere; }
-.comfy-notice-error { border-inline-start-color: var(--danger, #b43b38); }
+.comfy-notice { padding: .75rem 1rem; border: 1px solid var(--comfy-border); border-inline-start: 4px solid var(--comfy-accent); border-radius: var(--comfy-radius-small); overflow-wrap: anywhere; }
+.comfy-notice-error { border-inline-start-color: var(--comfy-danger); }
 .comfy-admin-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; }
-.comfy-confirm { padding: 1rem; border: 1px solid var(--comfy-line); border-radius: var(--comfy-radius); }
+.comfy-confirm { padding: 1rem; border: 1px solid var(--comfy-border); border-radius: var(--comfy-radius); }
 .comfy-confirm > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; font-weight: 600; }
 .comfy-confirm[open] > summary { margin-bottom: .75rem; }
 @media(max-width: 600px) { .comfy-operations > div { grid-template-columns: minmax(0, 1fr); gap: .25rem; } }
 
-.comfy-metrics p { font-weight: 400; margin: .5rem 0 0; color: var(--muted, var(--comfy-ink)); }
+.comfy-metrics p { font-weight: 400; margin: .5rem 0 0; color: var(--comfy-muted); }
 @media(min-width: 1000px) { .comfy-metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 
-/* Admin dashboards use one explicit type scale and neutral palette rather than
-   inheriting each application's headings, definition lists and table styles. */
-.comfy-admin-dashboard { --comfy-ink: light-dark(#243043, #e5eaf1); --comfy-panel: light-dark(#fff, #202937); --comfy-line: light-dark(#d5dce5, #435065); --comfy-admin-muted: light-dark(#586579, #b4c0d1); box-sizing: border-box; max-width: 1120px; margin: 0 auto; font: 400 16px/1.5 system-ui, sans-serif; color: var(--comfy-ink); text-align: left; }
+/* Admin dashboards take their colors, type scale and corners from the tokens. */
+.comfy-admin-dashboard { box-sizing: border-box; max-width: 1120px; margin: 0 auto; font: 400 var(--comfy-text-base)/1.5 var(--comfy-font); color: var(--comfy-text); text-align: left; }
 .comfy-admin-dashboard *, .comfy-admin-dashboard *::before, .comfy-admin-dashboard *::after { box-sizing: border-box; }
 .comfy-admin-dashboard .comfy-admin-heading { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 16px; margin: 0 0 24px; }
-.comfy-admin-dashboard h1 { margin: 0 0 8px; font: 700 30px/1.2 system-ui, sans-serif; letter-spacing: normal; }
-.comfy-admin-dashboard h2 { margin: 0 0 16px; font: 650 20px/1.3 system-ui, sans-serif; letter-spacing: normal; }
+.comfy-admin-dashboard h1 { margin: 0 0 8px; font: var(--comfy-heading-weight) var(--comfy-text-xl)/1.2 var(--comfy-heading-font); letter-spacing: normal; }
+.comfy-admin-dashboard h2 { margin: 0 0 16px; font: var(--comfy-heading-weight) var(--comfy-text-lg)/1.3 var(--comfy-heading-font); letter-spacing: normal; }
 .comfy-admin-dashboard p { margin: 8px 0 16px; font: inherit; overflow-wrap: anywhere; }
-.comfy-admin-dashboard a { color: light-dark(#2459a3, #a9ccff); font-size: 14px; text-decoration: underline; }
-.comfy-admin-dashboard .comfy-admin-section { margin: 0 0 24px; padding: 24px; border-radius: 10px; box-shadow: none; background: var(--comfy-panel); }
+.comfy-admin-dashboard a { color: var(--comfy-accent); font-size: var(--comfy-text-sm); text-decoration: underline; }
+.comfy-admin-dashboard .comfy-admin-section { margin: 0 0 24px; padding: 24px; border-radius: var(--comfy-radius); box-shadow: none; background: var(--comfy-raised); }
 .comfy-admin-dashboard .comfy-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin: 16px 0; padding: 0; }
-.comfy-admin-dashboard .comfy-metrics > div { display: block; padding: 16px; border-radius: 8px; background: transparent; }
-.comfy-admin-dashboard .comfy-metrics dt { font: 400 14px/1.5 system-ui, sans-serif; color: var(--comfy-admin-muted); }
-.comfy-admin-dashboard .comfy-metrics dd { margin: 8px 0 0; font: 650 28px/1.25 system-ui, sans-serif; font-variant-numeric: tabular-nums; }
-.comfy-admin-dashboard .comfy-metrics p, .comfy-admin-dashboard .comfy-admin-help, .comfy-admin-dashboard .comfy-operations p { margin: 8px 0 0; color: var(--comfy-admin-muted); font: 400 14px/1.5 system-ui, sans-serif; }
+.comfy-admin-dashboard .comfy-metrics > div { display: block; padding: 16px; border-radius: var(--comfy-radius-small); background: transparent; }
+.comfy-admin-dashboard .comfy-metrics dt { font: 400 var(--comfy-text-sm)/1.5 var(--comfy-font); color: var(--comfy-muted); }
+.comfy-admin-dashboard .comfy-metrics dd { margin: 8px 0 0; font: var(--comfy-heading-weight) var(--comfy-text-xl)/1.25 var(--comfy-font); font-variant-numeric: tabular-nums; }
+.comfy-admin-dashboard .comfy-metrics p, .comfy-admin-dashboard .comfy-admin-help, .comfy-admin-dashboard .comfy-operations p { margin: 8px 0 0; color: var(--comfy-muted); font: 400 var(--comfy-text-sm)/1.5 var(--comfy-font); }
 .comfy-admin-dashboard .comfy-operations { margin: 16px 0; }
 .comfy-admin-dashboard .comfy-operations > div { gap: 16px; padding: 16px 0; }
-.comfy-admin-dashboard .comfy-operations dt { font: 600 14px/1.5 system-ui, sans-serif; }
-.comfy-admin-dashboard .comfy-operations dd { font: 400 14px/1.5 system-ui, sans-serif; }
+.comfy-admin-dashboard .comfy-operations dt { font: 600 var(--comfy-text-sm)/1.5 var(--comfy-font); }
+.comfy-admin-dashboard .comfy-operations dd { font: 400 var(--comfy-text-sm)/1.5 var(--comfy-font); }
 .comfy-admin-dashboard .comfy-metrics-table-wrap { max-width: 100%; margin-top: 24px; overflow-x: auto; }
-.comfy-admin-dashboard .comfy-metrics-table { width: 100%; margin: 0; border-collapse: collapse; table-layout: fixed; font: 400 14px/1.5 system-ui, sans-serif; }
-.comfy-admin-dashboard caption { margin-bottom: 8px; text-align: left; font-weight: 650; color: var(--comfy-ink); }
-.comfy-admin-dashboard th, .comfy-admin-dashboard td { padding: 12px 8px; text-align: left; vertical-align: top; overflow-wrap: anywhere; border: 0; border-bottom: 1px solid var(--comfy-line); font-variant-numeric: tabular-nums; }
-.comfy-admin-dashboard thead th { font-weight: 650; color: var(--comfy-admin-muted); }
+.comfy-admin-dashboard .comfy-metrics-table { width: 100%; margin: 0; border-collapse: collapse; table-layout: fixed; font: 400 var(--comfy-text-sm)/1.5 var(--comfy-font); }
+.comfy-admin-dashboard caption { margin-bottom: 8px; text-align: left; font-weight: var(--comfy-heading-weight); color: var(--comfy-text); }
+.comfy-admin-dashboard th, .comfy-admin-dashboard td { padding: 12px 8px; text-align: left; vertical-align: top; overflow-wrap: anywhere; border: 0; border-bottom: 1px solid var(--comfy-border); font-variant-numeric: tabular-nums; }
+.comfy-admin-dashboard thead th { font-weight: 650; color: var(--comfy-muted); }
 .comfy-admin-dashboard tbody th { font-weight: 400; }
+.comfy-admin-dashboard code { font-size: .9em; overflow-wrap: anywhere; }
 @media(max-width: 800px) { .comfy-admin-dashboard .comfy-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media(max-width: 480px) { .comfy-admin-dashboard .comfy-metrics { grid-template-columns: minmax(0, 1fr); } .comfy-admin-dashboard .comfy-admin-section { padding: 16px; } }
 
@@ -110,9 +132,9 @@ main:has(> .comfy-admin-dashboard), .comfy-admin-dashboard { color-scheme: light
 :root[data-theme="dark"] main:has(> .comfy-admin-dashboard), :root[data-theme="dark"] .comfy-admin-dashboard { color-scheme: dark; }
 @media(prefers-color-scheme: dark) { :root:not([data-theme="light"]) main:has(> .comfy-admin-dashboard), :root:not([data-theme="light"]) .comfy-admin-dashboard { color-scheme: dark; } }
 
-main:has(> .comfy-admin-dashboard) { box-sizing: border-box; display: block; width: 100%; max-width: 1152px; min-width: 0; margin: 0 auto; padding: 32px 16px; background: light-dark(#f3f5f8, #151c27); }
+main:has(> .comfy-admin-dashboard) { box-sizing: border-box; display: block; width: 100%; max-width: 1152px; min-width: 0; margin: 0 auto; padding: 32px 16px; background: var(--comfy-surface); }
 
-.comfy-admin-dashboard :focus-visible { outline: 3px solid light-dark(#2459a3, #a9ccff); outline-offset: 3px; }
+.comfy-admin-dashboard :focus-visible { outline: 3px solid var(--comfy-accent); outline-offset: 3px; }
 
 .comfy-timezone form { display: grid; gap: .75rem; max-width: 42rem; }
 .comfy-timezone input:not([type="hidden"]) { box-sizing: border-box; width: 100%; min-width: 0; }

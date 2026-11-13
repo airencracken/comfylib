@@ -1,50 +1,75 @@
-/* Shared invitation layout; each app keeps its own palette. */
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+/* Comfyware tokens. Apps and palettes set these on :root; see docs/theming.md.
+   The layer makes any unlayered definition win. Until 0.8.0 the defaults also
+   read older variables (--comfy-ink, --comfy-panel, --comfy-line, --bg,
+   --paper, --ink, --green and others); that fallback is deprecated. */
+@layer comfy-tokens {
+  :root {
+    --comfy-surface: var(--background, var(--bg, Canvas));
+    --comfy-raised: var(--comfy-panel, var(--bg-elev, var(--panel, var(--paper, Canvas))));
+    --comfy-border: var(--comfy-line, var(--border, var(--line, color-mix(in srgb, CanvasText 20%, Canvas))));
+    --comfy-control-border: color-mix(in srgb, var(--comfy-text) 55%, var(--comfy-raised));
+    --comfy-text: var(--comfy-ink, var(--text, var(--ink, CanvasText)));
+    --comfy-muted: var(--muted, color-mix(in srgb, var(--comfy-text) 72%, var(--comfy-raised)));
+    --comfy-accent: var(--accent, var(--green, LinkText));
+    --comfy-accent-text: var(--button-text, var(--button-ink, Canvas));
+    --comfy-danger: var(--danger, var(--rust, light-dark(#b3261e, #f2b8b5)));
+    --comfy-font: system-ui, -apple-system, "Segoe UI", sans-serif;
+    --comfy-heading-font: var(--comfy-font);
+    --comfy-heading-weight: 650;
+    --comfy-text-sm: .875rem;
+    --comfy-text-base: 1rem;
+    --comfy-text-lg: 1.25rem;
+    --comfy-text-xl: 1.75rem;
+    --comfy-radius: var(--radius, .625rem);
+    --comfy-radius-small: .375rem;
+    --comfy-space-1: .375rem;
+    --comfy-space-2: .75rem;
+    --comfy-space-3: 1.25rem;
+  }
+}
+
+/* Invitations */
 .invitation-page {
-  --invitation-panel: var(--bg-elev, var(--panel, var(--paper)));
-  --invitation-border: var(--border, var(--line));
-  --invitation-soft: var(--bg-elev-2, var(--soft));
-  --invitation-accent: var(--accent, var(--green));
   width: 100%; max-width: 1040px; margin-inline: auto;
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  font-size: 15px; line-height: 1.55;
+  font-family: var(--comfy-font); font-size: var(--comfy-text-base); line-height: 1.55;
 }
 .invitation-header { margin-bottom: 24px; }
-.invitation-header h1 { font: 700 26px/1.25 ui-sans-serif, system-ui, sans-serif; letter-spacing: -.02em; margin: 0 0 8px; }
+.invitation-header h1, .account-page h1 { font: var(--comfy-heading-weight) var(--comfy-text-xl)/1.25 var(--comfy-heading-font); margin: 0 0 8px; }
 .invitation-header p { max-width: 72ch; margin: 0 0 16px; }
 .invitation-header nav { flex-wrap: wrap; }
 .invitation-page p a { text-decoration: underline; }
 .invitation-layout { display: grid; grid-template-columns: 360px minmax(0, 1fr); gap: 24px; align-items: start; }
 .invitation-create, .invitation-list, .invitation-result, .invitation-permissions {
-  min-width: 0; padding: 24px; background: var(--invitation-panel);
-  border: 1px solid var(--invitation-border); border-radius: 10px;
+  min-width: 0; padding: 24px; background: var(--comfy-raised); color: var(--comfy-text);
+  border: 1px solid var(--comfy-border); border-radius: var(--comfy-radius);
 }
-.invitation-page h2 { font: 650 17px/1.4 ui-sans-serif, system-ui, sans-serif; margin: 0 0 16px; }
+.invitation-page h2, .account-page h2 { font: var(--comfy-heading-weight) var(--comfy-text-lg)/1.3 var(--comfy-heading-font); margin: 0 0 16px; }
 .invitation-create form { display: grid; gap: 16px; margin: 0; }
 .invitation-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .invitation-field { min-width: 0; }
-.invitation-page label { display: block; font-size: 14px; font-weight: 600; line-height: 1.5; margin: 0 0 6px; }
+.invitation-page label { display: block; font-size: var(--comfy-text-sm); font-weight: 600; line-height: 1.5; margin: 0 0 6px; }
 .invitation-page input:not([type="hidden"]) {
   display: block; width: 100%; min-width: 0; min-height: 44px; margin: 0;
-  padding: 9px 11px; border: 1px solid var(--invitation-border); border-radius: 7px;
-  background: var(--invitation-panel); color: inherit; font: inherit;
+  padding: 9px 11px; border: 1px solid var(--comfy-control-border); border-radius: var(--comfy-radius-small);
+  background: var(--comfy-raised); color: inherit; font: inherit;
 }
-.invitation-field p, .invitation-help { font-size: 13px; font-weight: 400; margin: 6px 0 0; }
+.invitation-field p, .invitation-help { font-size: var(--comfy-text-sm); font-weight: 400; margin: 6px 0 0; }
 .invitation-help { margin-top: 16px; }
-.invitation-page button { width: fit-content; max-width: 100%; min-height: 44px; padding: 8px 14px; border-radius: 7px; font: 600 14px/1.5 ui-sans-serif, system-ui, sans-serif; }
-.invitation-record { padding: 20px 0; border: 0; border-top: 1px solid var(--invitation-border); overflow-wrap: anywhere; }
+.invitation-page button { width: fit-content; max-width: 100%; min-height: 44px; padding: 8px 14px; border-radius: var(--comfy-radius-small); font: 600 var(--comfy-text-sm)/1.5 var(--comfy-font); }
+.invitation-record { padding: 20px 0; border: 0; border-top: 1px solid var(--comfy-border); overflow-wrap: anywhere; }
 .invitation-record:last-of-type { padding-bottom: 0; }
 .invitation-record-head { display: flex; align-items: start; justify-content: space-between; gap: 12px; }
-.invitation-record h3 { min-width: 0; font-size: 16px; font-weight: 600; line-height: 1.4; margin: 0; }
-.invitation-status { flex-shrink: 0; padding: 2px 8px; border: 1px solid var(--invitation-border); border-radius: 20px; background: var(--invitation-soft); color: inherit; font-size: 13px; text-transform: capitalize; }
-.invitation-meta { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 16px; margin: 16px 0; font-size: 14px; }
+.invitation-record h3 { min-width: 0; font-size: var(--comfy-text-base); font-weight: 600; line-height: 1.4; margin: 0; }
+.invitation-status { flex-shrink: 0; padding: 2px 8px; border: 1px solid var(--comfy-border); border-radius: 20px; background: var(--comfy-surface); color: var(--comfy-text); font-size: var(--comfy-text-sm); text-transform: capitalize; }
+.invitation-meta { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 16px; margin: 16px 0; font-size: var(--comfy-text-sm); }
 .invitation-meta > div { min-width: 0; }
-.invitation-meta dt { color: var(--muted); font-size: 13px; }
+.invitation-meta dt { color: var(--comfy-muted); }
 .invitation-meta dd { margin: 2px 0 0; }
-.invitation-meta code { font-size: 13px; }
 .invitation-record form { display: block; margin: 12px 0 0; }
 .invitation-empty { margin: 0; padding-block: 8px; }
-.invitation-result { margin-bottom: 24px; border-color: var(--invitation-accent); }
-.invitation-result p { margin: 0 0 16px; font-size: 14px; }
+.invitation-result { margin-bottom: 24px; border-color: var(--comfy-accent); }
+.invitation-result p { margin: 0 0 16px; font-size: var(--comfy-text-sm); }
 .invitation-result input + label { margin-top: 16px; }
 .invitation-result input + p { margin-top: 8px; }
 .invitation-permissions { margin-top: 24px; }
@@ -57,18 +82,17 @@
   .invitation-fields, .invitation-meta { grid-template-columns: minmax(0, 1fr); }
 }
 
-/* Account forms use the same proportions as invitation controls. */
-.account-page { width: 100%; max-width: 480px; margin: 32px auto; font: 15px/1.55 ui-sans-serif, system-ui, sans-serif; }
+/* Account forms */
+.account-page { width: 100%; max-width: 480px; margin: 32px auto; font: var(--comfy-text-base)/1.55 var(--comfy-font); }
 .account-page.panel, .account-page.paper, .account-page .panel { padding: 24px; }
 .account-page.stack, .account-page form.stack { gap: 0; }
-.account-page h1 { font: 700 26px/1.25 ui-sans-serif, system-ui, sans-serif; letter-spacing: -.02em; margin: 0 0 12px; }
-.account-page h2 { font-size: 20px; margin: 0 0 16px; }
+.account-page h1 { margin-bottom: 12px; }
 .account-page form { margin: 16px 0 0; }
-.account-page label { display: block; font-size: 14px; font-weight: 600; margin: 16px 0 6px; }
+.account-page label { display: block; font-size: var(--comfy-text-sm); font-weight: 600; margin: 16px 0 6px; }
 .account-page form > label:first-of-type { margin-top: 0; }
-.account-page input:not([type="hidden"]) { display: block; width: 100%; min-width: 0; min-height: 44px; padding: 9px 11px; margin: 6px 0 0; border-radius: 7px; font: 15px/1.55 ui-sans-serif, system-ui, sans-serif; }
-.account-page button[type="submit"] { width: 100%; min-height: 44px; margin-top: 20px; padding: 8px 14px; border-radius: 7px; font: 600 14px/1.5 ui-sans-serif, system-ui, sans-serif; }
-.account-page .field-help { font-size: 13px; margin: 6px 0 0; }
+.account-page input:not([type="hidden"]) { display: block; width: 100%; min-width: 0; min-height: 44px; padding: 9px 11px; margin: 6px 0 0; border-radius: var(--comfy-radius-small); font: var(--comfy-text-base)/1.55 var(--comfy-font); }
+.account-page button[type="submit"] { width: 100%; min-height: 44px; margin-top: 20px; padding: 8px 14px; border-radius: var(--comfy-radius-small); font: 600 var(--comfy-text-sm)/1.5 var(--comfy-font); }
+.account-page .field-help { font-size: var(--comfy-text-sm); margin: 6px 0 0; }
 .account-page .account-note { margin-top: 20px; }
 .welcome .account-page { margin: 0; }
 @media (max-width: 600px) {

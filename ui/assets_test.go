@@ -39,7 +39,7 @@ func TestAssetsContractAndIsolation(t *testing.T) {
 		".invitation-layout { display: grid; grid-template-columns: 360px minmax(0, 1fr)",
 		"@media (max-width: 900px)", "@media (max-width: 380px)",
 		".account-page { width: 100%; max-width: 480px", "min-height: 44px",
-		"var(--invitation-panel)", "var(--invitation-border)",
+		"var(--comfy-raised)", "var(--comfy-border)",
 	} {
 		if !strings.Contains(original, rule) {
 			t.Errorf("missing layout contract %q", rule)

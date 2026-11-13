@@ -19,7 +19,7 @@ func TestSummaryEscapesValuesAndShowsOperationalStates(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, want := range []string{"Instance overview", "2.0 KiB", "Last verified backup", "Restart required", "Apply immediately", "Community sign-in", "&lt;script&gt;", "role=\"alert\"", autobackup.FailureSummary} {
+	for _, want := range []string{"Instance overview", "2 KiB", "Last verified backup", "Restart required", "Apply immediately", "Community sign-in", "&lt;script&gt;", "role=\"alert\"", autobackup.FailureSummary} {
 		if !strings.Contains(string(html), want) {
 			t.Fatal("missing", want)
 		}
@@ -44,7 +44,7 @@ func TestMetricFormatsAndNoScriptDependency(t *testing.T) {
 	for _, test := range []struct {
 		n    int64
 		want string
-	}{{0, "0 bytes"}, {1 << 10, "1.0 KiB"}, {1 << 20, "1.0 MiB"}, {1 << 30, "1.0 GiB"}, {1 << 40, "1.0 TiB"}} {
+	}{{0, "0 bytes"}, {1 << 10, "1 KiB"}, {1 << 20, "1 MiB"}, {1 << 30, "1 GiB"}, {1 << 40, "1 TiB"}} {
 		if got := metricValue(Metric{Value: test.n, Bytes: true}); got != test.want {
 			t.Fatal(got, test.want)
 		}
@@ -96,7 +96,7 @@ func TestDashboardShowsHealthAndSecurityWithoutPeople(t *testing.T) {
 	}
 	text := string(html)
 	for _, want := range []string{"comfy-admin-dashboard", "Instance metrics", "Site health", "Daily traffic", "Slowest routes", "Routes with errors", "Security",
-		"Failed sign-ins", "Rate-limited attempts", "Rejected invitation and reset links", "Daily security events", "10.0%", "Up to 25 ms", "Over 10 s", "4.0 KiB",
+		"Failed sign-ins", "Rate-limited attempts", "Rejected invitation and reset links", "Daily security events", "10.0%", "Up to 25 ms", "Over 10 s", "4 KiB",
 		"90 days", "does not record who made a request", "No usernames, accounts or IP addresses", "Operations", `href="/settings"`, "&lt;script&gt;"} {
 		if !strings.Contains(text, want) {
 			t.Fatal("dashboard contract missing", want)

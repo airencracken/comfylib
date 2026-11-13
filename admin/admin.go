@@ -19,6 +19,7 @@ import (
 	"github.com/airencracken/comfylib/autobackup"
 	"github.com/airencracken/comfylib/displaytime"
 	"github.com/airencracken/comfylib/suite"
+	"github.com/airencracken/comfylib/ui"
 )
 
 // Metric is an aggregate, without member names, addresses, or content.
@@ -123,17 +124,7 @@ func metricValue(metric Metric) string {
 	return byteSize(metric.Value)
 }
 
-func byteSize(n int64) string {
-	for _, unit := range []struct {
-		size int64
-		name string
-	}{{1 << 40, "TiB"}, {1 << 30, "GiB"}, {1 << 20, "MiB"}, {1 << 10, "KiB"}} {
-		if n >= unit.size {
-			return fmt.Sprintf("%.1f %s", float64(n)/float64(unit.size), unit.name)
-		}
-	}
-	return fmt.Sprintf("%d bytes", n)
-}
+func byteSize(n int64) string { return ui.Size(n) }
 
 // latency describes a histogram percentile as an upper bound.
 func latency(h analytics.Histogram, p float64) string {

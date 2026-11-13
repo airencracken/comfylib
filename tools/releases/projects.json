@@ -13,7 +13,6 @@
     "imvault": {
       "layout": "contrib",
       "licenses": [
-        "internal/web/static/js/alpine.LICENSE",
         "internal/web/static/js/htmx.LICENSE"
       ],
       "debian": true,

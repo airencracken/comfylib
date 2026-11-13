@@ -6,7 +6,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"log/slog"
 	"os"
@@ -14,6 +13,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/airencracken/comfylib/ui"
 )
 
 // Status is an owner-only operational view. It contains private paths and
@@ -49,15 +50,7 @@ func (s Status) ArchiveCap() string { return formatBytes(s.MaxBytes) }
 
 // CopyCap formats the temporary uncompressed copy limit for an owner page.
 func (s Status) CopyCap() string { return formatBytes(s.CopyMaxBytes) }
-func formatBytes(n int64) string {
-	if n >= 1<<30 {
-		return fmt.Sprintf("%.2f GiB", float64(n)/(1<<30))
-	}
-	if n >= 1<<20 {
-		return fmt.Sprintf("%.2f MiB", float64(n)/(1<<20))
-	}
-	return fmt.Sprintf("%d bytes", n)
-}
+func formatBytes(n int64) string { return ui.Size(n) }
 
 type savedState struct {
 	Version     int       `json:"version"`

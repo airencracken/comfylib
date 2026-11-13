@@ -1,5 +1,13 @@
 # Release notes
 
+## 0.7.1
+
+- Sizes use powers of 2 across Comfyware. `ui.Size` now formats binary units
+  ("5 MiB", "2.5 GiB"), and the admin dashboard and backup status use it, so
+  every size reads the same way ("2 KiB", not "2.0 KiB").
+- The release tooling no longer expects an Alpine licence file in Imvault,
+  which dropped Alpine.
+
 ## 0.7.0
 
 ### Analytics measure site health, not people
@@ -51,7 +59,7 @@
   returns plain errors: `ErrTooShort` ("Use at least 12 characters."),
   `ErrTooLong` ("Use a shorter password.") and `ErrInvalid`. `password.Fits`
   checks the byte limit at sign-in.
-- `ui.Size` formats byte counts in decimal units ("5 MB") for user copy.
+- `ui.Size` formats byte counts for user copy. (0.7.1 switched it to binary units.)
 
 ### Maintenance
 

@@ -40,7 +40,35 @@
     });
   };
 
-  const refresh = () => { applyDensity(root.dataset.density); applyPalette(palette); };
+  // Copy buttons for one-time links: <input readonly data-comfy-copy value="...">.
+  const enhanceCopy = () => {
+    document.querySelectorAll('input[data-comfy-copy]:not([data-comfy-copy-ready])').forEach(input => {
+      input.dataset.comfyCopyReady = '1';
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'comfy-copy';
+      button.textContent = 'Copy link';
+      const status = document.createElement('p');
+      status.className = 'comfy-copy-status';
+      status.setAttribute('role', 'status');
+      const row = document.createElement('div');
+      row.className = 'comfy-copy-row';
+      input.parentNode.insertBefore(row, input);
+      row.append(input, button, status);
+      button.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(input.value);
+          status.textContent = 'Link copied.';
+        } catch {
+          input.focus();
+          input.select();
+          status.textContent = 'Copy the selected link.';
+        }
+      });
+    });
+  };
+
+  const refresh = () => { applyDensity(root.dataset.density); applyPalette(palette); enhanceCopy(); };
   applyDensity(storage.get(densityKey));
   applyPalette(storage.get(paletteKey));
 

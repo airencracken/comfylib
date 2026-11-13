@@ -136,6 +136,13 @@ main:has(> .comfy-admin-dashboard) { box-sizing: border-box; display: block; wid
 
 .comfy-admin-dashboard :focus-visible { outline: 3px solid var(--comfy-accent); outline-offset: 3px; }
 
+/* Copy buttons added by suite.js next to one-time links. */
+.comfy-copy-row { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.comfy-copy-row > input { flex: 1 1 14rem; min-width: 0; }
+.comfy-copy { min-height: 44px; padding: .5rem .9rem; border: 1px solid var(--comfy-control-border); border-radius: var(--comfy-radius-small); background: var(--comfy-raised); color: var(--comfy-text); font: 600 var(--comfy-text-sm)/1.5 var(--comfy-font); cursor: pointer; }
+.comfy-copy-status { flex-basis: 100%; margin: 0; color: var(--comfy-muted); font-size: var(--comfy-text-sm); }
+.comfy-copy-status:empty { display: none; }
+
 .comfy-timezone form { display: grid; gap: .75rem; max-width: 42rem; }
 .comfy-timezone input:not([type="hidden"]) { box-sizing: border-box; width: 100%; min-width: 0; }
 .comfy-timezone p { margin: 0; }

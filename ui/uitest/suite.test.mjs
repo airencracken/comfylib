@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Runs the shared suite.js against a small fake DOM.
+// Runs the shared suite.js against a small fake DOM: palettes, copy buttons.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -110,3 +110,31 @@ test('other tabs update the palette through storage events, keyed by app', () =>
   assert.equal(page.root.dataset.palette, 'slate');
 });
 
+test('one copy button is added to each one-time link and copies it', async () => {
+  const copied = [];
+  const page = load({ clipboard: { writeText: async text => { copied.push(text); } } });
+  page.events.DOMContentLoaded();
+  page.events['htmx:afterSwap']();
+  const buttons = page.document.querySelectorAll('.comfy-copy');
+  assert.equal(buttons.length, 1);
+  assert.equal(buttons[0].type, 'button');
+  assert.equal(buttons[0].textContent, 'Copy link');
+  await buttons[0].listeners.click();
+  assert.deepEqual(copied, ['https://family.example/join/secret']);
+  const status = buttons[0].parentNode.children.find(node => node.className === 'comfy-copy-status');
+  assert.equal(status.attributes.role, 'status');
+  assert.equal(status.textContent, 'Link copied.');
+  assert.equal(page.link.parentNode, buttons[0].parentNode, 'the link and its button share a row');
+});
+
+test('without clipboard access the link is selected for manual copying', async () => {
+  for (const clipboard of [undefined, { writeText: async () => { throw new Error('denied'); } }]) {
+    const page = load({ clipboard });
+    page.events.DOMContentLoaded();
+    const [button] = page.document.querySelectorAll('.comfy-copy');
+    await button.listeners.click();
+    assert.equal(page.link.selected, true);
+    assert.equal(page.link.focused, true);
+    assert.match(button.parentNode.children.at(-1).textContent, /selected link/);
+  }
+});

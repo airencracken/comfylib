@@ -12,6 +12,7 @@ HERE = Path(__file__).resolve().parent
 APPS = ('folkweave', 'imvault', 'songstead', 'tidings', 'witmoot')
 TOOLS = {
     'check': 'check_consumer.py',
+    'check-docs': 'check_docs.py',
     'service-config': 'check_service_config.py',
     'suite-deployment': 'test_suite_deployment.py',
     'release-dispatch': 'test_release_dispatch.py',

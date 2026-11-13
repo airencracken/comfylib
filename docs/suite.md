@@ -31,6 +31,7 @@ branch.
 
 ```sh
 python3 scripts/comfy.py check
+python3 scripts/comfy.py check-docs
 python3 scripts/comfy.py service-config
 python3 scripts/comfy.py suite-deployment
 python3 scripts/comfy.py release-dispatch
@@ -44,6 +45,11 @@ Apps keep their Dockerfiles, Compose and service examples, and
 `scripts/containers/config.json`. That file names the app, previous version,
 port, temporary space, owner command and lifecycle profile (`snapshot` or
 `commands`). Publishing needs both architectures and refuses to replace a tag.
+
+`check-docs` checks that the README's "Current release" line, the newest
+release-notes heading and documented container tags match `VERSION`, that the
+README has no release-note sections, and that it ends with License or Support.
+Add it to `make check`.
 
 `check` rejects copied suite packages, assets or tools, `replace` directives,
 missing pins and wrong launcher wiring. To upgrade, change the pinned version.

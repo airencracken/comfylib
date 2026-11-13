@@ -45,6 +45,11 @@
   `HX-Refresh` on expired htmx forms and logs internal detail capped at 512
   bytes.
 
+### Maintenance
+
+- `scripts/comfy.py check-docs` (`tools/check_docs.py`) checks that the README
+  and release notes agree with `VERSION`.
+
 ### Suite
 
 - `suite.DiscussionStore` holds pending discussion returns.

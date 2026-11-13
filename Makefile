@@ -63,6 +63,7 @@ test-suite: ## Check shared controls and release-independent suite tooling
 	python3 tools/test_suite_tools.py
 	python3 tools/test_app_tools.py
 	python3 tools/test_release_tools.py
+	python3 tools/test_check_docs.py
 	node --test --test-reporter=tap ui/uitest/runtime.test.mjs ui/uitest/suite.test.mjs ui/uitest/theme.test.mjs ui/uitest/metrics.test.mjs
 
 .PHONY: test-oidc

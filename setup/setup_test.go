@@ -259,7 +259,10 @@ func TestSetupStylesUseSharedTokens(t *testing.T) {
 	if strings.Count(style, "\n") < 40 {
 		t.Fatal("setup stylesheet is not formatted for reading")
 	}
-	rules := style[strings.Index(style, "* { box-sizing"):]
+	_, rules, ok := strings.Cut(style, "* { box-sizing")
+	if !ok {
+		t.Fatal("no rules after the token defaults")
+	}
 	for _, color := range regexp.MustCompile(`#[0-9a-fA-F]{3,8}\b`).FindAllString(rules, -1) {
 		t.Errorf("hard-coded color %s outside the token defaults", color)
 	}

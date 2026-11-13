@@ -86,10 +86,10 @@ func TestValidateMeasuresBytesAndExplainsPlainly(t *testing.T) {
 		{strings.Repeat("a", 12), nil},
 		{strings.Repeat("a", 72), nil},
 		{strings.Repeat("a", 73), ErrTooLong},
-		{strings.Repeat("é", 36), nil},         // 72 bytes, 36 characters
-		{strings.Repeat("é", 37), ErrTooLong},  // 74 bytes, well under 72 characters
-		{strings.Repeat("日", 11), ErrTooShort}, // 33 bytes but 11 characters
-		{strings.Repeat("\U0001F600", 18), nil},     // 72 bytes of emoji
+		{strings.Repeat("é", 36), nil},          // 72 bytes, 36 characters
+		{strings.Repeat("é", 37), ErrTooLong},   // 74 bytes, well under 72 characters
+		{strings.Repeat("日", 11), ErrTooShort},  // 33 bytes but 11 characters
+		{strings.Repeat("\U0001F600", 18), nil}, // 72 bytes of emoji
 		{strings.Repeat("\U0001F600", 19), ErrTooLong},
 		{"valid-start\xff\xfe-more", ErrInvalid},
 		{"", ErrTooShort},

@@ -79,3 +79,17 @@ mode after artifact verification and before publication. The scanner reads only
 regular archive members into a temporary file, refuses unsafe member paths and
 fails if an archive has no recognizable executable. Source vulnerability checks
 still run independently in CI.
+
+## Releasing an app
+
+App workflows pin `.github/workflows/containers.yml` and `browser.yml` to a
+commit. Before tagging, run:
+
+```sh
+python3 scripts/comfy.py release-plan --require-clean --cold-cache
+```
+
+`--output .release/plan.json` records input hashes and the source commit, and
+`--verify-plan` refuses changed sources. Add `--catalog
+../comfyware/release-catalog.json --suite-root ..` to check app versions,
+module pins, website mirrors and overlay recipes against the overlay's catalog.

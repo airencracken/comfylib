@@ -1,75 +1,159 @@
-# Comfylib 0.6.0
+# Release notes
 
-Adds shared saved display timezones, strict IANA validation, embedded timezone
-data, native account controls, device detection without autosaving, server-side
-formatters and a bounded concurrent template cache. The optional SQLite preference
-namespace is independently versioned and transactional. Apps retain their native
-permissions and account storage. Admin timestamp display follows the reader;
-analytics reporting days remain UTC. The core remains standard-library-only.
-See [account display timezones](display-time.md).
+## Unreleased (0.7.0)
 
-# Comfylib 0.5.0
+### Analytics measure site health, not people
 
-Adds shared first-party sign-in and content-view analytics with bounded retention, atomic sessions and page batches, concurrent deduplication, account-deletion cleanup, and snapshot reporting. Admin dashboards share their entire layout, typography, neutral theme palette and tables; real browser checks enforce the same appearance across all five apps. Core runtime dependencies remain standard-library-only. See [analytics](analytics.md) for the counting and privacy rules.
+- `analytics` now counts requests per UTC day and route pattern: status
+  classes, a latency histogram and bytes served, through
+  `Monitor.Middleware`. It also counts failed sign-ins, rate-limited attempts
+  and rejected invitation or reset links. It stores no account or content IDs,
+  usernames, IP addresses, user agents, referrers, paths or query strings.
+- `Initialize` drops the per-account sign-in and per-item view table. Use
+  `RemoveDetail` to run that step in your own migration.
+- The admin dashboard shows Site health (requests, error rate, median and 95th
+  percentile response time, data served, slowest routes, routes with errors)
+  and Security. It no longer shows sign-ins by account, most viewed content,
+  content views or active accounts.
+- `admin.RenderAccountSupport` shows one account's last sign-in and rate-limit
+  state. `ratelimit.Window.Peek` and `ratelimit.Limiter.Peek` read that state
+  without spending an attempt.
+- `analyticstest.Run` checks the new storage. `tools/check_metrics.mjs`
+  accepts dashboards with or without the Site health section and checks styles
+  against each app's tokens.
 
-# Comfylib 0.4.3
+### One token set and palettes
 
-Requests the selected module version explicitly during cold-cache preflight so Go returns immutable origin metadata on its first download. Adds regression checks for exact version selection, origin rejection and offline consumer verification.
+- Shared styles read only `--comfy-*` tokens with neutral defaults. Headings,
+  sizes and corners come from tokens; the metrics dashboard no longer has its
+  own palette.
+- `palettes.css` adds `sage` and `slate`, each with light and dark values.
+  `ui.ParsePalette`, `ui.SiteDefault`, `ui.PaletteAttrs` and `ui.PalettePicker`
+  let an owner set a site palette and members choose their own.
+- `suite.js` adds a Copy link button to inputs marked `data-comfy-copy`.
+- The setup page stylesheet is readable and uses the tokens.
 
-# Comfylib 0.4.2
+### Suite
 
-Makes browser checks a required publication gate and forwards the exact requested source reference. Validates native deployment archives against their declared file layouts while retaining complete source archive checks. Adds workflow, archive and publication regression tests.
+- `suite.DiscussionStore` holds pending discussion returns.
+  `suite.RenderDiscussionPage` takes a `DiscussionPage`.
 
-# Comfylib 0.4.1
+### Deprecated, removed in 0.8.0
 
-Fixes native metrics browser tooling for applications with bare module names, and makes container contracts follow immutable shared workflow references. Adds regression coverage for all five module names and the delegated workflow source.
+- `analytics.RecordLogin`, `RecordView`, `RecordViews`, `Track` and
+  `ForgetMember` do nothing. `Kind` and its constants, `Account`, `Login`,
+  `Content`, `Event`, `Label`, `MemberID` and `NumericID` remain unused.
+  `Summary.Logins`, `ActiveMembers`, `Views`, `LoginsByAccount`, `Popular` and
+  `Daily.Logins` and `Daily.Views` are always empty. `Collect` ignores its
+  accounts query.
+- The fallback from tokens to older app variables. See
+  [theming](theming.md#deprecated-fallback).
+- `suite.PrepareDiscussion`, `CheckDiscussion`, `FinishDiscussion` and
+  `RenderDiscussion`.
 
-# Comfylib 0.4.0
+### Breaking changes
 
-Adds the admin and rate-limit packages, native metrics browser contracts, shared immutable workflows, release preparation and artifact validation, and source-bound suite preflight. The core remains standard-library-only. The optional OIDC module stays at 0.1.0.
+All exported Go names still compile. These behave differently:
 
-# Comfylib releases
+- Upgrading deletes stored per-account sign-ins and content views.
+- Successful sign-ins and content views are no longer counted, so dashboards
+  that read the deprecated fields show zeros.
+- Dashboard headings and captions changed; browser tests that look for
+  "Activity" or "Recent sign-ins by account" must change.
+- Shared CSS no longer defines `--comfy-ink`, `--comfy-panel`, `--comfy-line` or
+  `--invitation-*`. Apps that read them must use the new tokens.
+- Without a token mapping or palette, the dashboard uses the app's older
+  variables or neutral system colors instead of its fixed blue-grey palette.
+
+## 0.6.0
+
+Adds saved display timezones: strict IANA validation, embedded timezone data,
+account controls, device detection without autosave, server-side formatters and
+a bounded template cache. Admin times follow the reader; reporting days stay
+UTC. See [display time](display-time.md).
+
+## 0.5.0
+
+Adds sign-in and content-view analytics with 90-day retention, and one shared
+admin dashboard layout and palette checked in all five apps.
+
+## 0.4.3
+
+Requests the selected module version explicitly during cold-cache preflight, so
+Go returns origin metadata on its first download.
+
+## 0.4.2
+
+Makes browser checks a required publication gate and passes the exact source
+reference. Checks native archives against their declared file layouts.
+
+## 0.4.1
+
+Fixes metrics browser tooling for apps with bare module names. Container
+contracts follow pinned shared workflow references.
+
+## 0.4.0
+
+Adds `admin` and `ratelimit`, native metrics browser contracts, pinned shared
+workflows (`containers.yml`, `browser.yml`), release preparation, artifact
+checks and source-bound release preflight.
 
 ## 0.3.0
 
-- Applications now consume the published `suite` package and embedded UI assets
-  directly; generated suite copies, adapter templates and synchronization manifests
-  are retired.
-- Add shared application maintenance commands for service configuration,
-  deployment forwarding, release validation, archive scanning, mutations and
-  container releases. A small application launcher resolves the exact module pin,
-  including with the proxy disabled. Container lifecycle profiles retain both
-  existing backup and restore flows.
-- Add consumer contracts, offline bootstrap tests, shared container schema,
-  property, atomicity and adversarial tests. Existing authentication mutations now
-  run centrally across the core and optional protocol module.
-- Add `--oidc-version` to coordinated dependency rollouts. Preserve all existing
-  exported Go APIs and the core module's standard-library-only dependency contract.
+- Apps import `suite` and serve `ui.Assets()` directly; generated copies and
+  sync manifests are gone.
+- Adds shared maintenance commands run through `scripts/comfy.py`: service
+  configuration, deployment, release checks, archive scans, mutations and
+  container releases.
+- Adds `--oidc-version` to coordinated dependency rollouts.
 
-## OIDC companion 0.1.0
+## OIDC module 0.1.0
 
-The new `github.com/airencracken/comfylib/oidc` module replaces application-local
-protocol adapters. It uses CoreOS go-oidc and OAuth2 for signed claims and PKCE,
-with bounded discovery requests and cached metadata. Applications keep their
-session and permission hooks. It requires Go 1.26.11 and is independently tagged
-as `oidc/v0.1.0`. Its integration tests cover explicit identity linking, CSRF,
-replay, account status and database atomicity; SQLite is a test dependency.
+`github.com/airencracken/comfylib/oidc` replaces app-local OpenID Connect
+adapters. Tagged `oidc/v0.1.0`. See [its README](../oidc/README.md).
 
 ## 0.2.0
 
-- Add optional app navigation, bounded OpenID Connect flow state, explicit local
-  identity bindings, and browser-confirmed discussion returns in `suite`.
-- Add shared menu controls, focus styles, form disclosures and saved density
-  preferences without changing application palettes or permissions.
-- Add coordinated audit, dependency rollout, synchronization and release archive
-  vulnerability scanning tools, with adversarial and mutation regression tests.
-- Redact service configuration values from errors so secrets do not reach logs.
-- Require Go 1.26.11 or newer. Comfylib continues to use only the standard library.
+- Adds app navigation, OpenID Connect flow state, explicit identity links and
+  discussion returns to `suite`.
+- Adds shared menus, focus styles, form disclosures and density preferences.
+- Adds audit, dependency rollout and release archive scanning tools.
+- Redacts service configuration values from errors.
+- Requires Go 1.26.11 or later.
 
-Applications retain account creation, authorization, sessions and database
-transactions. OpenID Connect requires an explicitly linked existing local account;
-there is no automatic email-based account matching or provisioning. Each app
-supplies its own signed-token verification adapter.
+## 0.1.8
 
-All existing exported APIs remain available. Application releases pin the published
-module with `GOWORK=off`; no local replacement is needed.
+Adds `password.Flags` and `password.Source` for account commands, and the
+`setup` package for the first-owner page. See [setup](setup.md).
+
+## 0.1.7
+
+Adds `ui.Assets()` with `accounts.css`, the browser helpers in `ui/uitest`, and
+`invitation.State.Status`.
+
+## 0.1.6
+
+Adds `autobackup`.
+
+## 0.1.5
+
+Adds `memberprofile`.
+
+## 0.1.4
+
+Adds `profileimage`: 2 MiB input, 512 by 512 pixels, up to 64 GIF frames, with
+still and animated versions.
+
+## 0.1.3
+
+Adds `password.WithHiddenInput`, which turns off terminal echo before the first
+prompt and restores it afterwards.
+
+## 0.1.2
+
+Adds `password.Confirm` and `brandimage.Normalize` (2 MiB, 2048 by 2048 pixels,
+one PNG out).
+
+## 0.1.1
+
+Adds `reference` for Witmoot discussion handoffs, and `token.SessionCSRF`.

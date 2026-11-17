@@ -1,0 +1,5 @@
+package tools // import "github.com/airencracken/comfylib/tools"
+
+func VerifyConsumer(root string) error
+
+func VerifyWorkflows(root, revision string) error

@@ -27,7 +27,9 @@ Returns expire after 20 minutes; a store holds at most 1024, and 16 per session.
 Each app has a small `scripts/comfy.py` launcher. It finds the exact comfylib
 version in `go.mod` (with `GOWORK=off`, and with `GOPROXY=off` from a filled
 module cache) and runs `tools/app.py`. It never uses a nearby checkout or a
-branch.
+branch. The consumer and workflow checks run in Go. The launcher disables
+Python bytecode writes for the remaining maintenance tools so they can run
+from a writable Go module cache without changing its contents.
 
 ```sh
 python3 scripts/comfy.py check

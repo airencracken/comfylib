@@ -8,6 +8,8 @@ import re
 import subprocess
 import sys
 
+sys.dont_write_bytecode = True
+
 HERE = Path(__file__).resolve().parent
 APPS = ('folkweave', 'imvault', 'songstead', 'tidings', 'witmoot')
 TOOLS = {
@@ -63,7 +65,7 @@ def main():
         root = application(os.environ.get('COMFYWARE_APP_ROOT', Path.cwd()))
     except (OSError, ValueError) as error:
         parser.error(str(error))
-    env = os.environ | {'GOWORK': 'off', 'COMFYWARE_APP_ROOT': str(root)}
+    env = os.environ | {'GOWORK': 'off', 'COMFYWARE_APP_ROOT': str(root), 'PYTHONDONTWRITEBYTECODE': '1'}
     return subprocess.call(command(args.tool, root) + args.arguments, cwd=root, env=env)
 
 

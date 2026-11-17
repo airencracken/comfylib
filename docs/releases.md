@@ -1,5 +1,12 @@
 # Release notes
 
+## 0.7.3
+
+- The shared app validator runs in Go. It checks dependency pins, reusable
+  workflow references, and the shared assets and launchers used by each app.
+- Maintenance commands leave the pinned Go module cache unchanged. Python
+  tools run with bytecode writes disabled, including in offline package builds.
+
 ## 0.7.2
 
 - Color palettes change colors only. Each app keeps its own fonts and heading

@@ -119,6 +119,7 @@ class ConsumerTests(unittest.TestCase):
             self.assertEqual(call.call_args.args[0][-2:], args[-2:])
             self.assertEqual(call.call_args.kwargs['cwd'], root)
             self.assertEqual(call.call_args.kwargs['env']['GOWORK'], 'off')
+            self.assertEqual(call.call_args.kwargs['env']['PYTHONDONTWRITEBYTECODE'], '1')
 
     def test_rollout_plans_explicit_core_and_optional_module_pins_without_mutation(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -140,12 +141,14 @@ class ConsumerTests(unittest.TestCase):
             binary.mkdir()
             shared = Path(directory) / 'cached module'
             (shared / 'tools').mkdir(parents=True)
-            (shared / 'tools/app.py').write_text('import os,sys\nassert os.environ["GOWORK"] == "off"\nassert os.environ["COMFYWARE_APP_ROOT"] == os.getcwd()\nassert sys.argv[1:] == ["mutate", "$(false)"]\nraise SystemExit(7)\n')
+            (shared / 'tools/helper.py').write_text('ready = True\n')
+            (shared / 'tools/app.py').write_text('import os,sys,helper\nassert helper.ready\nassert os.environ["GOWORK"] == "off"\nassert os.environ["COMFYWARE_APP_ROOT"] == os.getcwd()\nassert sys.argv[1:] == ["mutate", "$(false)"]\nraise SystemExit(7)\n')
             (binary / 'go').write_text('#!/bin/sh\n[ "$GOWORK" = off ] || exit 11\n[ "$GOPROXY" = off ] || exit 12\n[ "$*" = "list -m -f {{.Dir}} github.com/airencracken/comfylib" ] || exit 13\nprintf "%s\\n" "$FIXTURE_MODULE"\n')
             (binary / 'go').chmod(0o755)
             env = os.environ | {'PATH': str(binary), 'GOWORK': 'auto', 'GOPROXY': 'off', 'FIXTURE_MODULE': str(shared)}
             command = [sys.executable, str(root / 'scripts/comfy.py'), 'mutate', '$(false)']
             self.assertEqual(subprocess.run(command, cwd=directory, env=env, capture_output=True).returncode, 7)
+            self.assertFalse((shared / 'tools/__pycache__').exists())
             (shared / 'tools/app.py').unlink()
             failed = subprocess.run(command, cwd=directory, env=env, capture_output=True, text=True)
             self.assertNotEqual(failed.returncode, 0)

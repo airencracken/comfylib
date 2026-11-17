@@ -6,6 +6,7 @@ package tools
 import (
 	"bytes"
 	_ "embed"
+	"errors"
 	"fmt"
 	"io/fs"
 	"os"
@@ -87,9 +88,14 @@ func verifyFiles(root string) error {
 	return nil
 }
 
-func verifyAssets(internal string) error {
+func verifyAssets(internal string) (err error) {
+	root, err := os.OpenRoot(internal)
+	if err != nil {
+		return err
+	}
+	defer func() { err = errors.Join(err, root.Close()) }()
 	assets := map[string]bool{"components.css": false, "suite.js": false}
-	err := filepath.WalkDir(internal, func(path string, file fs.DirEntry, err error) error {
+	err = fs.WalkDir(root.FS(), ".", func(path string, file fs.DirEntry, err error) error {
 		if err != nil || file.IsDir() {
 			return err
 		}
@@ -99,7 +105,7 @@ func verifyAssets(internal string) error {
 		}
 		switch filepath.Ext(path) {
 		case ".go", ".html":
-			data, err := os.ReadFile(path)
+			data, err := root.ReadFile(path)
 			if err != nil {
 				return err
 			}

@@ -1,5 +1,10 @@
 # Release notes
 
+## 0.7.4
+
+- The Go consumer validator reads templates and source files within the
+  checkout's internal directory and rejects symlinks that lead outside it.
+
 ## 0.7.3
 
 - The shared app validator runs in Go. It checks dependency pins, reusable

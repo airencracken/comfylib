@@ -1,0 +1,33 @@
+package totp // import "github.com/airencracken/comfylib/totp"
+
+const (
+	Digits = 6
+
+	Period = 30 * time.Second
+
+	SecretBytes = 20
+)
+
+const RecoveryCodeCount = 10
+
+func Code(secret string, at time.Time) (string, error)
+
+func GenerateRecoveryCode() (string, error)
+
+func GenerateSecret() (string, error)
+
+func GroupSpaced(secret string) string
+
+func HashRecoveryCode(code string) string
+
+func IsCode(code string) bool
+
+func Match(secret, code string, at time.Time) (step uint64, ok bool)
+
+func Normalise(secret string) string
+
+func NormaliseRecoveryCode(code string) string
+
+func ProvisioningURI(issuer, account, secret string) string
+
+func Verify(secret, code string, at time.Time) bool

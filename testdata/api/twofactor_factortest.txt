@@ -1,0 +1,11 @@
+package factortest // import "github.com/airencracken/comfylib/twofactor/factortest"
+
+func Run(t *testing.T, cfg Config)
+
+type Config struct {
+	Handler  http.Handler
+	Origin   string
+	Username string
+	Password string
+	Home     string
+}

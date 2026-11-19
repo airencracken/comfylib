@@ -1,0 +1,36 @@
+package twofactor // import "github.com/airencracken/comfylib/twofactor"
+
+const AccountPath = "/account/two-factor"
+
+const LoginPath = "/login/2fa"
+
+func Install(ctx context.Context, tx *sql.Tx) error
+
+type HTTP struct {
+	// contains filtered or unexported fields
+}
+
+func New(ctx context.Context, db *sql.DB, key, issuer, home string, sessions Sessions, hooks Hooks) (*HTTP, error)
+
+func (h *HTTP) Enabled() bool
+
+func (h *HTTP) Register(mux *http.ServeMux)
+
+func (h *HTTP) Start(w http.ResponseWriter, r *http.Request, id int64, verifiedHash string) (target string, handled bool, err error)
+
+type Hooks struct {
+	Request       func(*http.Request) (user int64, session, csrf string)
+	CookieName    func(*http.Request) string
+	Session       func(http.ResponseWriter, *http.Request, string)
+	CheckPassword func(hash, plain string) bool
+	Render        func(http.ResponseWriter, *http.Request, int, string, template.HTML)
+	Fail          func(http.ResponseWriter, *http.Request, error)
+}
+
+type Sessions struct {
+	CredentialSQL string
+	TokenColumn   string
+	ExpiryColumn  string
+	Lifetime      time.Duration
+	Milliseconds  bool
+}

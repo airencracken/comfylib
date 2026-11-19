@@ -1,5 +1,13 @@
 # Release notes
 
+## 0.8.0
+
+- `totp` provides the same authenticator codes and recovery-code digests
+  Imvault has used for existing enrollments.
+- `twofactor` adds optional enrollment and sign-in to apps with SQLite accounts.
+  It encrypts secrets, rejects reused codes, limits attempts, and issues a session
+  only after verifying the second factor.
+
 ## 0.7.4
 
 - The Go consumer validator reads templates and source files within the

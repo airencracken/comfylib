@@ -38,6 +38,8 @@ Build with Go 1.26.11 or later on 1.26, or Go 1.27.4 or later on 1.27.
 | [`suite`](suite) | App navigation, linked sign-in and discussion returns. See [suite](docs/suite.md). |
 | [`svcconfig`](svcconfig) | Reads a service's settings the way OpenRC or systemd passes them. See [configuration](docs/configuration.md). |
 | [`token`](token) | Mints tokens, hashes them for storage and compares them in constant time. |
+| [`totp`](totp) | Authenticator code verification and compatible recovery-code generation. |
+| [`twofactor`](twofactor) | Optional authenticator enrollment and a second sign-in step for apps backed by SQLite. |
 | [`ui`](ui) | Shared styles, palettes, theme picker and browser scripts, plus `Size` for user-facing byte counts. See [theming](docs/theming.md). |
 | [`ui/uitest`](ui/uitest) | Browser checks for app test suites. Not served by `ui.Assets()`. |
 

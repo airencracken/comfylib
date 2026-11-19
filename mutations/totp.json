@@ -1,0 +1,10 @@
+[
+  {
+    "name": "recovery codes discard biased bytes",
+    "file": "totp/recovery.go",
+    "before": "\t\tif buf[0] >= limit {",
+    "after": "\t\tif buf[0] >= limit && limit == 0 {",
+    "package": "./totp",
+    "run": "^TestRecoveryCodesRejectBiasedBytes$"
+  }
+]
